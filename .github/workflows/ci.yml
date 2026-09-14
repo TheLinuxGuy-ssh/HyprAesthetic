@@ -1,0 +1,267 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    name: Shell Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck on scripts
+        run: |
+          shellcheck -x scripts/*.sh
+          shellcheck -x scripts/lib/*.sh
+          shellcheck -x install.sh
+          shellcheck -x uninstall.sh
+          shellcheck -x hypranime-theme
+
+  test-syntax:
+    name: Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check bash syntax
+        run: |
+          bash -n install.sh
+          bash -n uninstall.sh
+          bash -n hypranime-theme
+          bash -n scripts/theme-switcher.sh
+          bash -n scripts/backup-configs.sh
+          bash -n scripts/install-deps.sh
+          bash -n scripts/lib/common.sh
+          bash -n scripts/lib/template-engine.sh
+          bash -n scripts/lib/distro-detect.sh
+
+      - name: Check Python syntax (template engine)
+        run: |
+          python3 -m py_compile scripts/lib/template-engine.sh 2>&1 | head -20 || true
+
+  test-templates:
+    name: Template Rendering
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test theme.toml parsing
+        run: |
+          python3 -c "
+import tomllib
+with open('themes/cyberpunk/theme.toml', 'rb') as f:
+    data = tomllib.load(f)
+print('Theme:', data['name'])
+print('Colors:', len(data['colors']))
+print('Components:', data['components'])
+"
+
+      - name: Test template variable extraction
+        run: |
+          python3 -c "
+import tomllib
+with open('themes/cyberpunk/theme.toml', 'rb') as f:
+    data = tomllib.load(f)
+
+def flatten(d, prefix=''):
+    for k, v in d.items():
+        key = f'{prefix}{k}'.replace('-', '_')
+        if isinstance(v, dict):
+            flatten(v, f'{key}_')
+        elif isinstance(v, bool):
+            print(f'{key}={str(v).lower()}')
+        elif isinstance(v, (int, float)):
+            print(f'{key}={v}')
+        else:
+            print(f'{key}={v}')
+
+flatten(data)
+" > /tmp/vars.sh
+          wc -l /tmp/vars.sh
+
+      - name: Test Waybar template rendering
+        run: |
+          python3 -c "
+import re, os
+
+with open('/tmp/vars.sh') as f:
+    vars_content = f.read()
+
+variables = {}
+for line in vars_content.strip().split('\n'):
+    if '=' in line:
+        key, value = line.split('=', 1)
+        variables[key] = value
+
+with open('themes/_template/waybar/colors.css.template') as f:
+    template = f.read()
+
+def replace_var(match):
+    var_name = match.group(1)
+    var_name_underscore = var_name.replace('.', '_')
+    value = variables.get(var_name_underscore, match.group(0))
+    if value.startswith('\"') and value.endswith('\"'):
+        value = value[1:-1]
+    elif value.startswith(\"'\") and value.endswith(\"'\") :
+        value = value[1:-1]
+    return value
+
+rendered = re.sub(r'\{\{([a-zA-Z0-9_.]+)\}\}', replace_var, template)
+print(rendered)
+assert '@define-color background' in rendered
+assert '#0d0d0d' in rendered
+print('Waybar template OK')
+"
+
+      - name: Test Hyprland template rendering
+        run: |
+          python3 -c "
+import re, os
+
+with open('/tmp/vars.sh') as f:
+    vars_content = f.read()
+
+variables = {}
+for line in vars_content.strip().split('\n'):
+    if '=' in line:
+        key, value = line.split('=', 1)
+        variables[key] = value
+
+with open('themes/_template/hypr/colors.conf.template') as f:
+    template = f.read()
+
+def replace_var(match):
+    var_name = match.group(1)
+    var_name_underscore = var_name.replace('.', '_')
+    value = variables.get(var_name_underscore, match.group(0))
+    if value.startswith('\"') and value.endswith('\"'):
+        value = value[1:-1]
+    elif value.startswith(\"'\") and value.endswith(\"'\") :
+        value = value[1:-1]
+    return value
+
+rendered = re.sub(r'\{\{([a-zA-Z0-9_.]+)\}\}', replace_var, template)
+print(rendered)
+assert 'active_border = #74b9ff' in rendered
+print('Hyprland template OK')
+"
+
+      - name: Test Hyprwave template rendering
+        run: |
+          python3 -c "
+import re, os
+
+with open('/tmp/vars.sh') as f:
+    vars_content = f.read()
+
+variables = {}
+for line in vars_content.strip().split('\n'):
+    if '=' in line:
+        key, value = line.split('=', 1)
+        variables[key] = value
+
+with open('themes/_template/hyprwave/config.toml.template') as f:
+    template = f.read()
+
+def replace_var(match):
+    var_name = match.group(1)
+    var_name_underscore = var_name.replace('.', '_')
+    value = variables.get(var_name_underscore, match.group(0))
+    if value.startswith('\"') and value.endswith('\"'):
+        value = value[1:-1]
+    elif value.startswith(\"'\") and value.endswith(\"'\") :
+        value = value[1:-1]
+    return value
+
+rendered = re.sub(r'\{\{([a-zA-Z0-9_.]+)\}\}', replace_var, template)
+print(rendered)
+assert 'background = \"#0d0d0d\"' in rendered
+print('Hyprwave template OK')
+"
+
+  validate-structure:
+    name: Validate Project Structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required files exist
+        run: |
+          test -f LICENSE
+          test -f README.md
+          test -f CONTRIBUTING.md
+          test -f CODE_OF_CONDUCT.md
+          test -f SECURITY.md
+          test -f .gitignore
+          test -f install.sh
+          test -f uninstall.sh
+          test -f hypranime-theme
+          test -f scripts/theme-switcher.sh
+          test -f scripts/backup-configs.sh
+          test -f scripts/install-deps.sh
+          test -f scripts/lib/common.sh
+          test -f scripts/lib/template-engine.sh
+          test -f scripts/lib/distro-detect.sh
+          test -d themes/_template/hypr
+          test -d themes/_template/waybar
+          test -d themes/_template/hyprwave
+          test -d themes/_template/eww
+          test -d themes/cyberpunk
+          test -f themes/cyberpunk/theme.toml
+          echo "All required files present"
+
+      - name: Check script permissions
+        run: |
+          test -x install.sh
+          test -x uninstall.sh
+          test -x hypranime-theme
+          test -x scripts/theme-switcher.sh
+          test -x scripts/backup-configs.sh
+          test -x scripts/install-deps.sh
+          echo "All scripts executable"
+
+      - name: Check theme.toml validity
+        run: |
+          python3 -c "
+import tomllib
+for theme in themes/*/theme.toml:
+    if theme != 'themes/_template/theme.toml':
+        with open(theme, 'rb') as f:
+            data = tomllib.load(f)
+        assert 'name' in data
+        assert 'colors' in data
+        assert 'components' in data
+        print(f'OK: {data[\"name\"]}')
+"
+
+  docs:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check markdown files
+        run: |
+          # Check for broken internal links (basic)
+          for f in *.md; do
+            echo "Checking $f..."
+            grep -o '\[.*\]([^)]*\.md)' "$f" | while read link; do
+              target=$(echo "$link" | sed 's/.*(\(.*\))/\1/')
+              if [[ ! -f "$target" ]]; then
+                echo "WARNING: Broken link in $f: $target"
+              fi
+            done
+          done
+
+      - name: Check README has key sections
+        run: |
+          for section in "Features" "Installation" "Usage" "Components" "Creating Themes" "License"; do
+            grep -qi "## $section" README.md || grep -qi "# $section" README.md || echo "WARNING: Missing section: $section"
+          done

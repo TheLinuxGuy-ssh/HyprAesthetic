@@ -1,0 +1,43 @@
+# hypranime - Git ignore rules
+
+# Rendered configs (generated during install/switch)
+config/
+
+# Backup directories
+.config.backup/
+
+# Temporary files
+/tmp/hypranime_vars_*.sh
+*.tmp
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor
+.vscode/
+.idea/
+*.sublime-*
+
+# Logs
+*.log
+
+# Theme screenshots (large binary files - use Git LFS or host elsewhere)
+screenshots/*.png
+screenshots/*.jpg
+screenshots/*.webp
+
+# Package manager caches
+*.pkg.tar.zst
+*.deb
+*.rpm
+
+# Local user config (should not be committed)
+themes/*/local/
+themes/*/*.local.*
+
+# Python cache
+__pycache__/
+*.pyc
