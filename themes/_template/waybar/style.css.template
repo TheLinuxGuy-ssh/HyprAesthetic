@@ -1,0 +1,82 @@
+/* Waybar style - rendered from theme.toml color palette */
+
+@import "colors.css";
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "JetBrains Mono Nerd Font", "Noto Sans", sans-serif;
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: @background;
+    color: @foreground;
+    border-bottom: 2px solid @border;
+}
+
+#workspaces {
+    background: @surface;
+    border-radius: 8px;
+    margin: 4px 8px;
+    padding: 0 8px;
+}
+
+#workspaces button {
+    background: transparent;
+    color: @foreground_muted;
+    padding: 0 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+#workspaces button:hover {
+    background: @surface_hover;
+    color: @foreground;
+}
+
+#workspaces button.focused {
+    background: @primary;
+    color: @primary_fg;
+    font-weight: bold;
+}
+
+#workspaces button.urgent {
+    background: @error;
+    color: @error_fg;
+}
+
+#window {
+    background: @surface;
+    border-radius: 8px;
+    margin: 4px 8px;
+    padding: 0 12px;
+    color: @foreground_muted;
+}
+
+#clock, #battery, #cpu, #memory, #temperature, #network, #pulseaudio, #tray {
+    background: @surface;
+    border-radius: 8px;
+    margin: 4px 4px;
+    padding: 0 12px;
+    color: @foreground;
+}
+
+#clock:hover, #battery:hover, #cpu:hover, #memory:hover, #temperature:hover, #network:hover, #pulseaudio:hover {
+    background: @surface_hover;
+}
+
+#pulseaudio {
+    padding: 0 12px;
+}
+
+#tray {
+    padding: 0 8px;
+    margin-right: 8px;
+}
+
+#custom-separator {
+    color: @border;
+    margin: 0 8px;
+}

@@ -1,0 +1,106 @@
+// Eww SCSS template - rendered from theme.toml
+
+$background: {{colors.base00}};
+$foreground: {{colors.base05}};
+$primary: {{colors.base0D}};
+$secondary: {{colors.base0E}};
+$accent: {{colors.base0C}};
+$error: {{colors.base08}};
+$warning: {{colors.base0A}};
+$success: {{colors.base0B}};
+$surface: {{colors.base01}};
+$surface-hover: {{colors.base02}};
+$border: {{colors.base03}};
+$foreground-muted: {{colors.base04}};
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "JetBrains Mono Nerd Font", "Noto Sans", sans-serif;
+    font-size: 13px;
+    min-height: 0;
+    color: $foreground;
+    background: transparent;
+}
+
+.bar {
+    background: $background;
+    border-bottom: 2px solid $border;
+    padding: 0 12px;
+    height: 30px;
+}
+
+.bar-left, .bar-center, .bar-right {
+    spacing: 8px;
+}
+
+.workspaces {
+    spacing: 4px;
+}
+
+.workspace {
+    background: $surface;
+    border-radius: 6px;
+    padding: 0 10px;
+    color: $foreground-muted;
+    transition: all 200ms ease;
+    
+    &:hover {
+        background: $surface-hover;
+        color: $foreground;
+    }
+    
+    &.active {
+        background: $primary;
+        color: $background;
+        font-weight: bold;
+    }
+}
+
+.window-title {
+    background: $surface;
+    border-radius: 8px;
+    padding: 0 16px;
+    color: $foreground-muted;
+    max-width: 400px;
+}
+
+.cpu, .memory, .temperature, .network, .audio, .battery, .clock {
+    background: $surface;
+    border-radius: 8px;
+    padding: 0 12px;
+    spacing: 6px;
+    color: $foreground;
+    
+    &:hover {
+        background: $surface-hover;
+    }
+}
+
+.tray {
+    background: $surface;
+    border-radius: 8px;
+    padding: 0 8px;
+    margin-right: 8px;
+}
+
+# Custom scrollbar
+scrollbar {
+    background: transparent;
+}
+
+slider {
+    background: $surface;
+    border-radius: 4px;
+    min-height: 6px;
+    
+    trough {
+        background: $border;
+        border-radius: 4px;
+    }
+    
+    highlight {
+        background: $primary;
+        border-radius: 4px;
+    }
+}

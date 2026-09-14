@@ -1,0 +1,129 @@
+;; Cyberpunk Eww config - complete layout
+
+(defvar bar-height 30)
+
+(defvar colors
+  (list
+    :background "#0d0d0d"
+    :foreground "#ffffff"
+    :primary "#74b9ff"
+    :secondary "#a29bfe"
+    :accent "#5fe4ff"
+    :error "#ff6b6b"
+    :warning "#ffe66d"
+    :success "#69db7c"
+    :surface "#1a1a1a"
+    :surface-hover "#2a2a2a"
+    :border "#3a3a3a"
+    :foreground-muted "#cccccc"
+  )
+)
+
+;; Bar widget
+(defwidget bar []
+  (box :class "bar" :orientation "h" :space-evenly false :halign "fill"
+    ;; Left: workspaces
+    (box :class "bar-left" :orientation "h" :spacing 4
+      (workspaces :class "workspaces" :orientation "h" :spacing 2)
+    )
+    
+    ;; Center: window title
+    (box :class "bar-center" :orientation "h" :halign "center" :valign "center"
+      (window-title :class "window-title" :max-length 50)
+    )
+    
+    ;; Right: system modules
+    (box :class "bar-right" :orientation "h" :spacing 4 :halign "end"
+      (cpu :class "cpu")
+      (memory :class "memory")
+      (temperature :class "temperature")
+      (network :class "network")
+      (audio :class "audio")
+      (battery :class "battery")
+      (clock :class "clock")
+      (tray :class "tray")
+    )
+  )
+)
+
+;; Workspaces widget
+(defwidget workspaces []
+  (box :class "workspaces" :orientation "h" :spacing 2
+    (for i (range 1 11)
+      (button :class (if (eq i (hyprland-active-workspace)) "workspace active" "workspace")
+        :onclick (hyprland-dispatch-workspace i)
+        (label :text (to-string i))
+      )
+    )
+  )
+)
+
+;; Window title
+(defwidget window-title []
+  (label :class "window-title" :text (hyprland-active-window-title))
+)
+
+;; System widgets
+(defwidget cpu []
+  (box :class "cpu" :orientation "h" :spacing 6
+    (label :text "")
+    (label :text (concat (to-string (round (system-cpu-usage))) "%"))
+  )
+)
+
+(defwidget memory []
+  (box :class "memory" :orientation "h" :spacing 6
+    (label :text "")
+    (label :text (concat (to-string (round (system-memory-usage))) "%"))
+  )
+)
+
+(defwidget temperature []
+  (box :class "temperature" :orientation "h" :spacing 6
+    (label :text "")
+    (label :text (concat (to-string (round (system-temperature))) "°C"))
+  )
+)
+
+(defwidget network []
+  (box :class "network" :orientation "h" :spacing 6
+    (label :text (if (system-network-connected) "" ""))
+    (label :text (if (system-network-connected) (system-network-ssid) "Offline"))
+  )
+)
+
+(defwidget audio []
+  (box :class "audio" :orientation "h" :spacing 6
+    (label :text (if (audio-muted) "" (if (> (audio-volume) 50) "" "")))
+    (label :text (concat (to-string (audio-volume)) "%"))
+  )
+)
+
+(defwidget battery []
+  (box :class "battery" :orientation "h" :spacing 6
+    (label :text (battery-icon (battery-percentage) (battery-charging)))
+    (label :text (concat (to-string (battery-percentage)) "%"))
+  )
+)
+
+(defwidget clock []
+  (label :class "clock" :text (date "%H:%M"))
+)
+
+(defwidget tray []
+  (tray :class "tray")
+)
+
+;; Helper functions
+(deffunction battery-icon [percentage charging]
+  (if charging
+    ""
+    (cond
+      [(> percentage 80) ""]
+      [(> percentage 60) ""]
+      [(> percentage 40) ""]
+      [(> percentage 20) ""]
+      [true ""]
+    )
+  )
+)

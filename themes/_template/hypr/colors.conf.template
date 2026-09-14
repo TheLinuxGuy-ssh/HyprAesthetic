@@ -1,0 +1,18 @@
+# Hyprland color overrides - rendered from theme.toml
+
+$colors = {
+    active_border = {{colors.hyprland.border_active}}
+    inactive_border = {{colors.hyprland.border_inactive}}
+    shadow = {{colors.hyprland.shadow}}
+    
+    bg = {{colors.base00}}
+    fg = {{colors.base05}}
+    
+    red = {{colors.base08}}
+    green = {{colors.base0B}}
+    yellow = {{colors.base0A}}
+    blue = {{colors.base0D}}
+    magenta = {{colors.base0E}}
+    cyan = {{colors.base0C}}
+    orange = {{colors.base09}}
+}

@@ -1,0 +1,16 @@
+/* Waybar colors - rendered from theme.toml color palette */
+
+@define-color background {{colors.waybar.background}};
+@define-color foreground {{colors.waybar.foreground}};
+@define-color surface {{colors.waybar.surface}};
+@define-color surface_hover {{colors.waybar.surface_hover}};
+@define-color border {{colors.waybar.border}};
+@define-color foreground_muted {{colors.waybar.foreground_muted}};
+@define-color primary {{colors.waybar.primary}};
+@define-color primary_fg {{colors.waybar.primary_fg}};
+@define-color error {{colors.waybar.error}};
+@define-color error_fg {{colors.waybar.error_fg}};
+@define-color warning {{colors.waybar.warning}};
+@define-color warning_fg {{colors.waybar.warning_fg}};
+@define-color success {{colors.waybar.success}};
+@define-color success_fg {{colors.waybar.success_fg}};

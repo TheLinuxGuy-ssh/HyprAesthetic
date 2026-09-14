@@ -1,0 +1,120 @@
+// Cyberpunk Eww SCSS
+
+$background: #0d0d0d;
+$foreground: #ffffff;
+$primary: #74b9ff;
+$secondary: #a29bfe;
+$accent: #5fe4ff;
+$error: #ff6b6b;
+$warning: #ffe66d;
+$success: #69db7c;
+$surface: #1a1a1a;
+$surface-hover: #2a2a2a;
+$border: #3a3a3a;
+$foreground-muted: #cccccc;
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "JetBrains Mono Nerd Font", "Noto Sans", sans-serif;
+    font-size: 13px;
+    min-height: 0;
+    color: $foreground;
+    background: transparent;
+}
+
+.bar {
+    background: $background;
+    border-bottom: 2px solid $border;
+    padding: 0 12px;
+    height: 30px;
+}
+
+.bar-left, .bar-center, .bar-right {
+    spacing: 8px;
+}
+
+.workspaces {
+    spacing: 4px;
+}
+
+.workspace {
+    background: $surface;
+    border-radius: 6px;
+    padding: 0 10px;
+    color: $foreground-muted;
+    transition: all 200ms ease;
+    
+    &:hover {
+        background: $surface-hover;
+        color: $foreground;
+    }
+    
+    &.active {
+        background: $primary;
+        color: $background;
+        font-weight: bold;
+    }
+}
+
+.window-title {
+    background: $surface;
+    border-radius: 8px;
+    padding: 0 16px;
+    color: $foreground-muted;
+    max-width: 400px;
+}
+
+.cpu, .memory, .temperature, .network, .audio, .battery, .clock {
+    background: $surface;
+    border-radius: 8px;
+    padding: 0 12px;
+    spacing: 6px;
+    color: $foreground;
+    
+    &:hover {
+        background: $surface-hover;
+    }
+}
+
+.tray {
+    background: $surface;
+    border-radius: 8px;
+    padding: 0 8px;
+    margin-right: 8px;
+}
+
+scrollbar {
+    background: transparent;
+}
+
+slider {
+    background: $surface;
+    border-radius: 4px;
+    min-height: 6px;
+    
+    trough {
+        background: $border;
+        border-radius: 4px;
+    }
+    
+    highlight {
+        background: $primary;
+        border-radius: 4px;
+    }
+}
+
+button {
+    background: transparent;
+    border-radius: 6px;
+    padding: 4px 8px;
+    transition: background 200ms ease;
+    
+    &:hover {
+        background: $surface-hover;
+    }
+}
+
+label {
+    padding: 0 2px;
+}
