@@ -71,8 +71,8 @@ install_shell_integration() {
         return
     fi
     
-    if confirm "Add Hypraesthetic to PATH and create 'hat' alias in $shell_rc?"; then
-        echo -e "\n# ha-theme\n$path_entry\n$alias_entry" >> "$shell_rc"
+    if confirm "Add HyprAesthetic to PATH and create 'hat' alias in $shell_rc?"; then
+        echo -e "\n# HyprAesthetic\n$path_entry\n$alias_entry" >> "$shell_rc"
         log_success "Added to $shell_rc (restart shell or source it)"
     fi
 }
@@ -106,8 +106,8 @@ Active theme: $theme
 
 Next steps:
   1. Restart your shell or run: source ~/.zshrc (or .bashrc/.config/fish/config.fish)
-  2. Switch themes anytime: ha-theme-theme switch <theme>
-  3. List themes: ha-theme-theme list
+  2. Switch themes anytime: ha-theme switch <theme>
+  3. List themes: ha-theme list
   4. Short alias: hat switch <theme>
 
 Config location: ~/.config/HyprAesthetic/

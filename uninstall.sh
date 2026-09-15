@@ -19,7 +19,7 @@ CONFIG_PATHS=(
 )
 
 uninstall() {
-    log_warn "This will remove all Hypraesthetic-managed configs from ~/.config"
+    log_warn "This will remove all HyprAesthetic-managed configs from ~/.config"
     confirm "Continue with uninstall?" || { log_info "Cancelled"; exit 0; }
     
     "$SCRIPT_DIR/backup-configs.sh" backup
