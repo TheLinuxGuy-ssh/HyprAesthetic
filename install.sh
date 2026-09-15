@@ -9,7 +9,7 @@ source "$SCRIPT_DIR/lib/distro-detect.sh"
 print_banner() {
     cat <<'EOF'
 ╔══════════════════════════════════════════════════════════════╗
-║                    hypranime installer                        ║
+║                   HyprAesthetic installer                     ║
 ║         Anime-themed Hyprland dotfiles system                 ║
 ╚══════════════════════════════════════════════════════════════╝
 EOF
@@ -64,15 +64,15 @@ install_shell_integration() {
     esac
     
     local path_entry="export PATH=\"$PROJECT_ROOT:\$PATH\""
-    local alias_entry="alias hat='hypranime-theme'"
+    local alias_entry="alias hat='ha-theme'"
     
-    if [[ -f "$shell_rc" ]] && grep -q "hypranime" "$shell_rc"; then
+    if [[ -f "$shell_rc" ]] && grep -q "ha-theme" "$shell_rc"; then
         log_info "Shell integration already present in $shell_rc"
         return
     fi
     
-    if confirm "Add hypranime to PATH and create 'hat' alias in $shell_rc?"; then
-        echo -e "\n# hypranime\n$path_entry\n$alias_entry" >> "$shell_rc"
+    if confirm "Add Hypraesthetic to PATH and create 'hat' alias in $shell_rc?"; then
+        echo -e "\n# ha-theme\n$path_entry\n$alias_entry" >> "$shell_rc"
         log_success "Added to $shell_rc (restart shell or source it)"
     fi
 }
@@ -92,25 +92,25 @@ main() {
     theme=$(select_theme)
     log_info "Selected theme: $theme"
     
-    "$PROJECT_ROOT/hypranime-theme" switch "$theme"
+    "$PROJECT_ROOT/ha-theme" switch "$theme"
     
     install_shell_integration
     
-    cat <<EOF
+cat <<EOF
 
-╔══════════════════════════════════════════════════════════════╗
+╔═══════════════════════════════════════════════════════════════╗
 ║                    Installation complete!                     ║
-╚══════════════════════════════════════════════════════════════╝
+╚═══════════════════════════════════════════════════════════════╝
 
 Active theme: $theme
 
 Next steps:
   1. Restart your shell or run: source ~/.zshrc (or .bashrc/.config/fish/config.fish)
-  2. Switch themes anytime: hypranime-theme switch <theme>
-  3. List themes: hypranime-theme list
+  2. Switch themes anytime: ha-theme-theme switch <theme>
+  3. List themes: ha-theme-theme list
   4. Short alias: hat switch <theme>
 
-Config location: ~/.config/hypranime/
+Config location: ~/.config/HyprAesthetic/
 Backups: ~/.config.backup/
 
 To uninstall: $SCRIPT_DIR/uninstall.sh

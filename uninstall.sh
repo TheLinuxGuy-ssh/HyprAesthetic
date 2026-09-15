@@ -19,7 +19,7 @@ CONFIG_PATHS=(
 )
 
 uninstall() {
-    log_warn "This will remove all hypranime-managed configs from ~/.config"
+    log_warn "This will remove all Hypraesthetic-managed configs from ~/.config"
     confirm "Continue with uninstall?" || { log_info "Cancelled"; exit 0; }
     
     "$SCRIPT_DIR/backup-configs.sh" backup
@@ -29,7 +29,7 @@ uninstall() {
         for path in $paths; do
             if [[ -L "$path" ]]; then
                 local target=$(readlink "$path")
-                if [[ "$target" == *"hypranime/themes/"* ]]; then
+                if [[ "$target" == *"Hypraesthetic/themes/"* ]]; then
                     rm "$path"
                     log_success "Removed symlink: $path"
                 fi
@@ -39,8 +39,8 @@ uninstall() {
         done
     done
     
-    rm -f "$HOME/.config/hypranime/current_theme"
-    rmdir "$HOME/.config/hypranime" 2>/dev/null || true
+    rm -f "$HOME/.config/HyprAesthetic/current_theme"
+    rmdir "$HOME/.config/HyprAesthetic" 2>/dev/null || true
     
     log_success "Uninstall complete. Configs backed up to ~/.config.backup/"
     log_info "To restore: $SCRIPT_DIR/backup-configs.sh restore <timestamp>"

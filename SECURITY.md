@@ -11,7 +11,7 @@ We provide security updates for the following versions:
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in hypranime, please report it responsibly:
+If you discover a security vulnerability in Hypraesthetic, please report it responsibly:
 
 1. **Do not** open a public GitHub issue
 2. Email the maintainers at: [your-email@example.com]
@@ -59,7 +59,7 @@ We will acknowledge receipt within 48 hours and provide a timeline for fix.
 
 - Only install themes from trusted sources
 - Review `theme.toml` and config files before switching
-- Run `hypranime-theme switch <theme> --dry-run` first
+- Run `Hypraesthetic-theme switch <theme> --dry-run` first
 - Keep backups (automatic) and know how to restore
 
 ### For Theme Authors

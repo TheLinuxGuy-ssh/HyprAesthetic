@@ -7,7 +7,7 @@ config/
 .config.backup/
 
 # Temporary files
-/tmp/hypranime_vars_*.sh
+/tmp/ha_vars_*.sh
 *.tmp
 *.swp
 *~

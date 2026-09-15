@@ -1,4 +1,4 @@
-# hypranime
+# HyprAesthetic
 
 **A modular, extensible theming system for anime-themed Hyprland setups.**
 
@@ -9,7 +9,7 @@ Transform your Hyprland desktop into a cohesive anime aesthetic with one command
 ## Features
 
 - **🎨 Multiple Themes** - Cyberpunk, Tokyo Night, Dracula, Gruvbox, and more (extensible)
-- **🔄 Instant Switching** - `hypranime-theme switch <theme>` applies all components atomically
+- **🔄 Instant Switching** - `ha-theme switch <theme>` applies all components atomically
 - **🧩 9 Components** - Hyprland, Waybar, Hyprwave, Eww, Rofi, Kitty, GTK, Dunst, Neovim
 - **📦 Template Engine** - Base configs + color palettes = zero duplication
 - **💾 Auto Backup** - Timestamped backups before every switch
@@ -22,12 +22,12 @@ Transform your Hyprland desktop into a cohesive anime aesthetic with one command
 
 ```bash
 # Clone and install
-git clone https://github.com/yourusername/hypranime
-cd hypranime
+git clone https://github.com/yourusername/HyprAesthetic
+cd HyprAesthetic
 ./install.sh
 
 # Switch themes anytime
-hypranime-theme switch cyberpunk
+ha-theme switch cyberpunk
 # or short alias
 hat switch tokyonight
 ```
@@ -92,8 +92,8 @@ hat switch tokyonight
 
 ```bash
 # 1. Clone
-git clone https://github.com/yourusername/hypranime ~/.local/share/hypranime
-cd ~/.local/share/hypranime
+git clone https://github.com/yourusername/HyprAesthetic ~/.local/share/HyprAesthetic
+cd ~/.local/share/HyprAesthetic
 
 # 2. Run installer (installs deps, backs up configs, applies theme)
 ./install.sh
@@ -163,10 +163,10 @@ hat doctor
 ## Project Structure
 
 ```
-hypranime/
+HyprAesthetic/
 ├── install.sh              # Main installer
 ├── uninstall.sh            # Clean uninstaller
-├── hypranime-theme         # CLI entry point (symlink)
+├── ha-theme                # CLI entry point (symlink)
 ├── scripts/
 │   ├── theme-switcher.sh   # Core switching logic
 │   ├── switch-*.sh         # Per-component scripts
@@ -226,7 +226,7 @@ See [ADDING_THEMES.md](ADDING_THEMES.md) for complete documentation on:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    hypranime-theme                         │
+│                  ha-theme                      │
 └─────────────────────────────────────────────────────────┘
                             │
         ┌───────────────────┼───────────────────┐
@@ -367,8 +367,8 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 ## Support
 
-- **Issues:** [GitHub Issues](https://github.com/yourusername/hypranime/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/yourusername/hypranime/discussions)
+- **Issues:** [GitHub Issues](https://github.com/yourusername/HyprAesthetic/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/yourusername/HyprAesthetic/discussions)
 - **Discord:** [Hyprland Community](https://discord.gg/hyprland)
 
 ---

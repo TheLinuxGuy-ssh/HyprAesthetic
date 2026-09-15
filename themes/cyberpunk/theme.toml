@@ -1,7 +1,7 @@
 name = "cyberpunk"
 display_name = "Cyberpunk 2077"
 description = "Neon-drenched futuristic aesthetic inspired by Night City"
-author = "hypranime"
+author = "Hypraesthetic"
 version = "1.0.0"
 
 [colors]

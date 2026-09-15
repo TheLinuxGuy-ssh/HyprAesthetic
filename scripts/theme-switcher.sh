@@ -19,7 +19,7 @@ theme_exists() {
 
 validate_theme() {
     local theme="$1"
-    theme_exists "$theme" || die "Theme not found: $theme (run 'hypranime-theme list' to see available)"
+    theme_exists "$theme" || die "Theme not found: $theme (run 'ha-theme list' to see available)"
     [[ -f "$THEMES_DIR/$theme/theme.toml" ]] || die "Theme missing theme.toml: $theme"
 }
 
@@ -28,7 +28,7 @@ switch_hyprland() {
     local theme_dir="$THEMES_DIR/$theme"
     local template_dir="$THEMES_DIR/_template/hypr"
     local output_dir="$CONFIG_DIR/hypr"
-    local vars_file="/tmp/hypranime_vars_$$.sh"
+    local vars_file="/tmp/ha_vars_$.sh"
     
     prepare_theme_vars "$theme_dir" "$vars_file"
     render_template_dir "$template_dir" "$output_dir" "$vars_file"
@@ -49,7 +49,7 @@ switch_waybar() {
     local theme_dir="$THEMES_DIR/$theme"
     local template_dir="$THEMES_DIR/_template/waybar"
     local output_dir="$CONFIG_DIR/waybar"
-    local vars_file="/tmp/hypranime_vars_$$.sh"
+    local vars_file="/tmp/ha_vars_$.sh"
     
     prepare_theme_vars "$theme_dir" "$vars_file"
     render_template_dir "$template_dir" "$output_dir" "$vars_file"
@@ -77,7 +77,7 @@ switch_hyprwave() {
     local theme_dir="$THEMES_DIR/$theme"
     local template_dir="$THEMES_DIR/_template/hyprwave"
     local output_dir="$CONFIG_DIR/hyprwave"
-    local vars_file="/tmp/hypranime_vars_$$.sh"
+    local vars_file="/tmp/ha_vars_$.sh"
     
     prepare_theme_vars "$theme_dir" "$vars_file"
     render_template_dir "$template_dir" "$output_dir" "$vars_file"
@@ -107,7 +107,7 @@ switch_eww() {
     else
         local template_dir="$THEMES_DIR/_template/eww"
         local output_dir="$CONFIG_DIR/eww"
-        local vars_file="/tmp/hypranime_vars_$$.sh"
+        local vars_file="/tmp/ha_vars_$.sh"
         
         prepare_theme_vars "$theme_dir" "$vars_file"
         render_template_dir "$template_dir" "$output_dir" "$vars_file"

@@ -6,6 +6,7 @@ PROJECT_ROOT="$(cd "$_COMMON_SCRIPT_DIR/../.." && pwd)"
 THEMES_DIR="$PROJECT_ROOT/themes"
 CONFIG_DIR="$PROJECT_ROOT/config"
 BACKUP_DIR="$HOME/.config.backup"
+CONFIG_DIR_NAME="HyprAesthetic"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -46,13 +47,13 @@ flatten(data)
 }
 
 get_current_theme() {
-    local theme_file="$HOME/.config/hypranime/current_theme"
+    local theme_file="$HOME/.config/HyprAesthetic/current_theme"
     [[ -f "$theme_file" ]] && cat "$theme_file" || echo ""
 }
 
 set_current_theme() {
-    mkdir -p "$HOME/.config/hypranime"
-    echo "$1" > "$HOME/.config/hypranime/current_theme"
+    mkdir -p "$HOME/.config/HyprAesthetic"
+    echo "$1" > "$HOME/.config/HyprAesthetic/current_theme"
 }
 
 get_timestamp() { date '+%Y-%m-%d_%H-%M-%S'; }

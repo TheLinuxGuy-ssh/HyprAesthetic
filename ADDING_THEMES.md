@@ -1,13 +1,13 @@
-# Adding Themes & Components to hypranime
+# Adding Themes & Components to ha-theme
 
-This guide explains how to extend hypranime with new themes and components.
+This guide explains how to extend ha-theme with new themes and components.
 
 ---
 
 ## Directory Structure Overview
 
 ```
-hypranime/
+ha-theme/
 ├── themes/
 │   ├── _template/          # Base templates for template-based components
 │   │   ├── hypr/           # Hyprland templates (.template files)
@@ -251,13 +251,13 @@ return M
 
 ```bash
 # Dry run to verify
-./hypranime-theme switch mytheme --dry-run
+./ha-theme-theme switch mytheme --dry-run
 
 # Actual switch
-./hypranime-theme switch mytheme
+./ha-theme-theme switch mytheme
 
 # Verify specific component
-./hypranime-theme switch-waybar mytheme
+./ha-theme-theme switch-waybar mytheme
 ```
 
 ### 5. Verify Rendered Output
@@ -292,7 +292,7 @@ switch_mycomponent() {
     
     # Template-based rendering
     if [[ -d "$THEMES_DIR/_template/mycomponent" ]]; then
-        local vars_file="/tmp/hypranime_vars_$$.sh"
+        local vars_file="/tmp/ha-theme_vars_$$.sh"
         prepare_theme_vars "$theme_dir" "$vars_file"
         render_template_dir "$THEMES_DIR/_template/mycomponent" "$CONFIG_DIR/mycomponent" "$vars_file"
         cp -r "$CONFIG_DIR/mycomponent"/* "$HOME/.config/mycomponent/"
@@ -404,14 +404,14 @@ render_template_dir "$template_dir" "$output_dir" "$vars_file"  # Entire directo
 
 | Task | Command |
 |------|---------|
-| List themes | `hypranime-theme list` |
-| Current theme | `hypranime-theme current` |
-| Switch theme | `hypranime-theme switch <theme>` |
-| Dry run | `hypranime-theme switch <theme> --dry-run` |
-| Switch single component | `hypranime-theme switch-<component> <theme>` |
-| Backup configs | `hypranime-theme backup` |
-| Restore backup | `hypranime-theme restore [timestamp]` |
-| Check deps | `hypranime-theme doctor` |
+| List themes | `ha-theme-theme list` |
+| Current theme | `ha-theme-theme current` |
+| Switch theme | `ha-theme-theme switch <theme>` |
+| Dry run | `ha-theme-theme switch <theme> --dry-run` |
+| Switch single component | `ha-theme-theme switch-<component> <theme>` |
+| Backup configs | `ha-theme-theme backup` |
+| Restore backup | `ha-theme-theme restore [timestamp]` |
+| Check deps | `ha-theme-theme doctor` |
 | Install deps | `./scripts/install-deps.sh install` |
 
 ---
@@ -431,6 +431,6 @@ cp -r themes/cyberpunk themes/tokyonight
 # ...
 
 # 4. Test
-./hypranime-theme switch tokyonight --dry-run
-./hypranime-theme switch tokyonight
+./ha-theme-theme switch tokyonight --dry-run
+./ha-theme-theme switch tokyonight
 ```

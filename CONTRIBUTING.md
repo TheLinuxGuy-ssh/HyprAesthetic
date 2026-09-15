@@ -1,4 +1,4 @@
-# Contributing to hypranime
+# Contributing to Hypraesthetic
 
 Thank you for your interest in contributing! This guide will help you get started.
 
@@ -19,8 +19,8 @@ See [ADDING_THEMES.md](ADDING_THEMES.md) for complete instructions.
 - [ ] Copy `themes/cyberpunk/` to `themes/yourtheme/`
 - [ ] Update `theme.toml` with your colors (base16 palette)
 - [ ] Adjust component color files (`waybar/colors.css`, `hypr/colors.conf`, etc.)
-- [ ] Test with `./hypranime-theme switch yourtheme --dry-run`
-- [ ] Test full switch: `./hypranime-theme switch yourtheme`
+- [ ] Test with `./Hypraesthetic-theme switch yourtheme --dry-run`
+- [ ] Test full switch: `./Hypraesthetic-theme switch yourtheme`
 - [ ] Add screenshot to `screenshots/yourtheme.png` (optional but appreciated)
 - [ ] Submit PR with title: `Add theme: yourtheme`
 
@@ -65,20 +65,20 @@ Before submitting:
 ./install.sh
 
 # Test theme switching
-./hypranime-theme list
-./hypranime-theme switch cyberpunk --dry-run
-./hypranime-theme switch cyberpunk
+./Hypraesthetic-theme list
+./Hypraesthetic-theme switch cyberpunk --dry-run
+./Hypraesthetic-theme switch cyberpunk
 
 # Test individual components
-./hypranime-theme switch-waybar tokyonight
-./hypranime-theme switch-hyprwave dracula
+./Hypraesthetic-theme switch-waybar tokyonight
+./Hypraesthetic-theme switch-hyprwave dracula
 
 # Test backup/restore
-./hypranime-theme backup
-./hypranime-theme restore
+./Hypraesthetic-theme backup
+./Hypraesthetic-theme restore
 
 # Check dependencies
-./hypranime-theme doctor
+./Hypraesthetic-theme doctor
 ./scripts/install-deps.sh check
 ```
 

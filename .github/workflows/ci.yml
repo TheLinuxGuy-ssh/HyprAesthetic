@@ -22,7 +22,7 @@ jobs:
           shellcheck -x scripts/lib/*.sh
           shellcheck -x install.sh
           shellcheck -x uninstall.sh
-          shellcheck -x hypranime-theme
+          shellcheck -x hypraesthetic-theme
 
   test-syntax:
     name: Syntax Check
@@ -34,7 +34,7 @@ jobs:
         run: |
           bash -n install.sh
           bash -n uninstall.sh
-          bash -n hypranime-theme
+          bash -n hypraesthetic-theme
           bash -n scripts/theme-switcher.sh
           bash -n scripts/backup-configs.sh
           bash -n scripts/install-deps.sh
@@ -202,7 +202,7 @@ print('Hyprwave template OK')
           test -f .gitignore
           test -f install.sh
           test -f uninstall.sh
-          test -f hypranime-theme
+          test -f hypraesthetic-theme
           test -f scripts/theme-switcher.sh
           test -f scripts/backup-configs.sh
           test -f scripts/install-deps.sh
@@ -221,7 +221,7 @@ print('Hyprwave template OK')
         run: |
           test -x install.sh
           test -x uninstall.sh
-          test -x hypranime-theme
+          test -x hypraesthetic-theme
           test -x scripts/theme-switcher.sh
           test -x scripts/backup-configs.sh
           test -x scripts/install-deps.sh
