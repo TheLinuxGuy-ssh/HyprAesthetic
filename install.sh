@@ -9,8 +9,8 @@ source "$SCRIPT_DIR/lib/distro-detect.sh"
 print_banner() {
     cat <<'EOF'
 ╔══════════════════════════════════════════════════════════════╗
-║                   HyprAesthetic installer                     ║
-║         Anime-themed Hyprland dotfiles system                 ║
+║                   HyprAesthetic installer                    ║
+║         Anime-themed Hyprland dotfiles system                ║
 ╚══════════════════════════════════════════════════════════════╝
 EOF
 }
