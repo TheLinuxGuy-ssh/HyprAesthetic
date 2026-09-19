@@ -33,10 +33,17 @@ backup_configs() {
         local paths="${CONFIG_PATHS[$component]}"
         for path in $paths; do
             if [[ -e "$path" ]]; then
-                mkdir -p "$backup_path/$(dirname "${path#$HOME/.config/}")"
-                cp -r "$path" "$backup_path/$(dirname "${path#$HOME/.config/}")/"
+                local rel_path="${path#$HOME/.config/}"
+                local dest_dir
+                if [[ "$rel_path" == */* ]]; then
+                    dest_dir="$backup_path/$(dirname "$rel_path")"
+                else
+                    dest_dir="$backup_path"
+                fi
+                mkdir -p "$dest_dir"
+                cp -r "$path" "$dest_dir/"
                 log_success "Backed up: $path"
-                ((backed_up++))
+                backed_up=$((backed_up + 1))
             fi
         done
     done

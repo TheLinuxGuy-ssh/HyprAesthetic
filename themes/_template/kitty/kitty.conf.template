@@ -1,0 +1,33 @@
+# Kitty colors - rendered from theme.toml
+
+foreground            {{colors.base05}}
+background            {{colors.base00}}
+selection_foreground  {{colors.base00}}
+selection_background  {{colors.base0D}}
+cursor                {{colors.base05}}
+cursor_text_color     {{colors.base00}}
+
+# Tabs
+active_tab_foreground   {{colors.base05}}
+active_tab_background   {{colors.base01}}
+inactive_tab_foreground {{colors.base04}}
+inactive_tab_background {{colors.base00}}
+tab_bar_background      {{colors.base00}}
+
+# Base16 palette
+color0  {{colors.base00}}
+color1  {{colors.base08}}
+color2  {{colors.base0B}}
+color3  {{colors.base0A}}
+color4  {{colors.base0D}}
+color5  {{colors.base0E}}
+color6  {{colors.base0C}}
+color7  {{colors.base05}}
+color8  {{colors.base03}}
+color9  {{colors.base08}}
+color10 {{colors.base0B}}
+color11 {{colors.base0A}}
+color12 {{colors.base0D}}
+color13 {{colors.base0E}}
+color14 {{colors.base0C}}
+color15 {{colors.base07}}

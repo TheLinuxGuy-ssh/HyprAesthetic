@@ -10,7 +10,7 @@
 @define-color primary_fg #0d0d0d;
 @define-color error #ff6b6b;
 @define-color error_fg #0d0d0d;
-@define-color warning {{colors.waybar.warning}};
-@define-color warning_fg {{colors.waybar.warning_fg}};
-@define-color success {{colors.waybar.success}};
-@define-color success_fg {{colors.waybar.success_fg}};
+@define-color warning #ffe66d;
+@define-color warning_fg #0d0d0d;
+@define-color success #69db7c;
+@define-color success_fg #0d0d0d;

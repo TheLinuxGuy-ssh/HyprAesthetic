@@ -1,6 +1,9 @@
 # Hyprland base configuration template
 # This file is rendered from theme.toml color palette
 
+# Session startup (eww widgets + monitor layout) — once per login only
+exec-once = $HOME/.local/bin/ha-theme session-start
+
 # Monitor
 monitor=,preferred,auto,1
 

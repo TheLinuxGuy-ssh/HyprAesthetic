@@ -1,0 +1,77 @@
+-- Neovim theme rendered from theme.toml
+
+local M = {}
+
+M.name = "{{name}}"
+M.display_name = "{{display_name}}"
+
+M.colors = {
+    base00 = "{{colors.base00}}",
+    base01 = "{{colors.base01}}",
+    base02 = "{{colors.base02}}",
+    base03 = "{{colors.base03}}",
+    base04 = "{{colors.base04}}",
+    base05 = "{{colors.base05}}",
+    base06 = "{{colors.base06}}",
+    base07 = "{{colors.base07}}",
+    base08 = "{{colors.base08}}",
+    base09 = "{{colors.base09}}",
+    base0A = "{{colors.base0A}}",
+    base0B = "{{colors.base0B}}",
+    base0C = "{{colors.base0C}}",
+    base0D = "{{colors.base0D}}",
+    base0E = "{{colors.base0E}}",
+    base0F = "{{colors.base0F}}",
+}
+
+M.groups = {
+    Normal = { fg = M.colors.base05, bg = M.colors.base00 },
+    NormalFloat = { fg = M.colors.base05, bg = M.colors.base01 },
+    Cursor = { fg = M.colors.base00, bg = M.colors.base05 },
+    Visual = { bg = M.colors.base02 },
+    Comment = { fg = M.colors.base03, italic = true },
+    Constant = { fg = M.colors.base0C },
+    String = { fg = M.colors.base0B },
+    Character = { fg = M.colors.base0B },
+    Number = { fg = M.colors.base0E },
+    Boolean = { fg = M.colors.base0E },
+    Identifier = { fg = M.colors.base08 },
+    Function = { fg = M.colors.base0D },
+    Statement = { fg = M.colors.base0E },
+    Keyword = { fg = M.colors.base0E },
+    Operator = { fg = M.colors.base0F },
+    Type = { fg = M.colors.base0A },
+    Special = { fg = M.colors.base0C },
+    Underlined = { fg = M.colors.base0D, underline = true },
+    Error = { fg = M.colors.base00, bg = M.colors.base08 },
+    ErrorMsg = { fg = M.colors.base08 },
+    WarningMsg = { fg = M.colors.base0A },
+    LineNr = { fg = M.colors.base03 },
+    CursorLineNr = { fg = M.colors.base0D, bold = true },
+    SignColumn = { fg = M.colors.base03 },
+    Folded = { fg = M.colors.base04, bg = M.colors.base01 },
+    FoldColumn = { fg = M.colors.base03 },
+    MatchParen = { bg = M.colors.base02, bold = true },
+    StatusLine = { fg = M.colors.base04, bg = M.colors.base01 },
+    StatusLineNC = { fg = M.colors.base03, bg = M.colors.base01 },
+    TabLine = { fg = M.colors.base03, bg = M.colors.base00 },
+    TabLineFill = { bg = M.colors.base00 },
+    TabLineSel = { fg = M.colors.base0D, bg = M.colors.base01 },
+    WinSeparator = { fg = M.colors.base03 },
+    Pmenu = { fg = M.colors.base05, bg = M.colors.base01 },
+    PmenuSel = { fg = M.colors.base00, bg = M.colors.base0D },
+    Directory = { fg = M.colors.base0D },
+    Title = { fg = M.colors.base0D, bold = true },
+}
+
+function M.setup()
+    vim.o.background = "dark"
+    vim.o.termguicolors = true
+    vim.g.colors_name = M.name
+
+    for group, opts in pairs(M.groups) do
+        vim.api.nvim_set_hl(0, group, opts)
+    end
+end
+
+return M

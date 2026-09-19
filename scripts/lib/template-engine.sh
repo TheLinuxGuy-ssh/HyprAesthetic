@@ -15,8 +15,9 @@ render_template() {
     mkdir -p "$(dirname "$output_file")"
     
     log_debug "Rendering $template_file -> $output_file"
-    
-    python3 << 'EOF'
+
+    TEMPLATE_FILE="$template_file" OUTPUT_FILE="$output_file" VARS_FILE="$vars_file" \
+        python3 << 'EOF'
 import sys
 import os
 
@@ -41,9 +42,13 @@ with open(template_file) as f:
 import re
 def replace_var(match):
     var_name = match.group(1)
-    # Convert dots to underscores to match bash variable names
     var_name_underscore = var_name.replace('.', '_')
-    return variables.get(var_name_underscore, match.group(0))
+    value = variables.get(var_name_underscore, match.group(0))
+    if value.startswith('"') and value.endswith('"'):
+        value = value[1:-1]
+    elif value.startswith("'") and value.endswith("'"):
+        value = value[1:-1]
+    return value
 
 rendered = re.sub(r'\{\{([a-zA-Z0-9_.]+)\}\}', replace_var, template)
 

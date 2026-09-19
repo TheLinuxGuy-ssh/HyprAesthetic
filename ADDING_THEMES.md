@@ -104,6 +104,15 @@ dunst = true
 nvim = true
 ```
 
+**`[eww]` default widgets (optional):** The eww windows to open on screen when the theme is applied. Widget names must match `defwindow` entries in the theme's `eww.yuck`.
+
+```toml
+[eww]
+default_widgets = ["background", "clock", "system", "matrix", "wakatime", "toji"]
+```
+
+If omitted, the theme's eww config is installed but no windows are auto-opened. When present, existing eww windows are closed and only the listed ones are opened.
+
 **Key Points:**
 - `name` must match the folder name
 - Use `{{colors.xxx}}` references for derived colors

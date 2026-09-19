@@ -1,0 +1,62 @@
+name = "toji_2"
+display_name = "Toji_2"
+description = "Sleek dark aesthetic inspired by Toji Fushiguro"
+author = "Hypraesthetic"
+version = "1.0.0"
+
+[misc]
+wallpaper = "toji_red.png"
+hw_theme = "octane"
+
+[colors]
+base00 = "#0d0d0d"
+base01 = "#1a1a1a"
+base02 = "#2a2a2a"
+base03 = "#3a3a3a"
+base04 = "#cccccc"
+base05 = "#ffffff"
+base06 = "#ffffff"
+base07 = "#ffffff"
+base08 = "#ff6b6b"
+base09 = "#ff9f43"
+base0A = "#ffe66d"
+base0B = "#69db7c"
+base0C = "#5fe4ff"
+base0D = "#74b9ff"
+base0E = "#a29bfe"
+base0F = "#ff7675"
+
+[colors.hyprland]
+border_active = "#74b9ff"
+border_inactive = "#3a3a3a"
+shadow = "#0d0d0daa"
+
+[colors.waybar]
+background = "#0d0d0d"
+foreground = "#ffffff"
+surface = "#1a1a1a"
+surface_hover = "#2a2a2a"
+border = "#3a3a3a"
+foreground_muted = "#cccccc"
+primary = "#74b9ff"
+primary_fg = "#0d0d0d"
+error = "#ff6b6b"
+error_fg = "#0d0d0d"
+warning = "#ffe66d"
+warning_fg = "#0d0d0d"
+success = "#69db7c"
+success_fg = "#0d0d0d"
+
+[eww]
+default_widgets = ["clock", "system", "matrix", "wakatime", "toji"]
+
+[components]
+hyprland = true
+waybar = true
+hyprwave = true
+eww = true
+rofi = true
+kitty = true
+gtk = true
+dunst = true
+nvim = true

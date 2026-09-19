@@ -4,6 +4,9 @@ description = "Neon-drenched futuristic aesthetic inspired by Night City"
 author = "Hypraesthetic"
 version = "1.0.0"
 
+[misc]
+wallpaper = "batman.gif"
+
 [colors]
 base00 = "#0d0d0d"
 base01 = "#1a1a1a"
@@ -38,6 +41,13 @@ primary = "#74b9ff"
 primary_fg = "#0d0d0d"
 error = "#ff6b6b"
 error_fg = "#0d0d0d"
+warning = "#ffe66d"
+warning_fg = "#0d0d0d"
+success = "#69db7c"
+success_fg = "#0d0d0d"
+
+[eww]
+default_widgets = ["clock", "system", "matrix", "wakatime", "toji"]
 
 [components]
 hyprland = true

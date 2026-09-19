@@ -57,6 +57,7 @@ detect_distro() {
     esac
     
     log_debug "Detected: distro=$DISTRO, pm=$PACKAGE_MANAGER"
+    true
 }
 
 install_packages() {
