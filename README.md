@@ -1,3 +1,5 @@
+<img width="1500" height="525" alt="hypraesthetic" src="https://github.com/user-attachments/assets/261e14f7-dc42-4a0d-bcd6-718b5793f7b9" />
+
 # HyprAesthetic
 
 **A modular, extensible theming system for anime-themed Hyprland setups.**
