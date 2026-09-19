@@ -10,13 +10,13 @@ Transform your Hyprland desktop into a cohesive anime aesthetic with one command
 
 ## Features
 
-- **🎨 Multiple Themes** - Cyberpunk, Tokyo Night, Dracula, Gruvbox, and more (extensible)
-- **🔄 Instant Switching** - `ha-theme switch <theme>` applies all components atomically
-- **🧩 9 Components** - Hyprland, Waybar, Hyprwave, Eww, Rofi, Kitty, GTK, Dunst, Neovim
-- **📦 Template Engine** - Base configs + color palettes = zero duplication
-- **💾 Auto Backup** - Timestamped backups before every switch
-- **🔧 Dependency Management** - Auto-detects distro, installs missing packages
-- **🐚 Shell Integration** - `hat` alias, PATH setup, fish/zsh/bash support
+- **Multiple Themes** - Cyberpunk, Tokyo Night, Dracula, Gruvbox, and more (extensible)
+- **Instant Switching** - `ha-theme switch <theme>` applies all components atomically
+- **9 Components** - Hyprland, Waybar, Hyprwave, Eww, Rofi, Kitty, GTK, Dunst, Neovim
+- **Template Engine** - Base configs + color palettes = zero duplication
+- **Auto Backup** - Timestamped backups before every switch
+- **Dependency Management** - Auto-detects distro, installs missing packages
+- **Shell Integration** - `hat` alias, PATH setup, fish/zsh/bash support
 
 ---
 
