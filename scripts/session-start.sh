@@ -2,7 +2,7 @@
 # Runs once per Hyprland session (login). Starts eww, waybar, wallpaper, etc.
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
 CACHE_DIR="${HOME}/.cache/HyprAesthetic"
