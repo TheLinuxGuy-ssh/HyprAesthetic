@@ -224,57 +224,55 @@ _deploy_eww_config() {
     fi
 }
 
-_show_eww_widgets() {
+_apply_eww_show() {
     local theme="$1"
+    local old_hash="$2"
+    local force_open="${3:-false}"
     local theme_dir="$THEMES_DIR/$theme"
-    local old_hash new_hash screen
+    local new_hash screen
     local -a widgets=()
 
-    old_hash="$(eww_config_hash "$(eww_config_dir)")"
+    new_hash="$(eww_config_hash "$(eww_config_dir)")"
     mapfile -t widgets < <(_get_eww_widgets_for_theme "$theme_dir")
+    screen="$(get_primary_screen)"
 
     mkdir -p "$(dirname "$_EWW_LOCK_FILE")"
     (
-        flock -w 20 200 || die "Timed out waiting for eww lock"
+        flock -w 5 200 || die "Timed out waiting for eww lock"
 
-        _deploy_eww_config "$theme"
-        new_hash="$(eww_config_hash "$(eww_config_dir)")"
-        screen="$(get_primary_screen)"
-
-        if eww ping >/dev/null 2>&1 && [[ "$old_hash" == "$new_hash" ]] && eww_widgets_match "${widgets[@]}"; then
-            if eww reload >/dev/null 2>&1; then
-                log_success "Eww configured"
-                flock -u 200
-                return 0
-            fi
-            log_warn "Eww reload failed — restarting daemon"
+        if [[ "$force_open" != "true" ]] && eww ping >/dev/null 2>&1 \
+            && [[ "$old_hash" == "$new_hash" ]] && eww_widgets_match "${widgets[@]}"; then
+            eww reload >/dev/null 2>&1 && log_success "Eww configured" && flock -u 200 && return 0
         fi
 
-        if eww ping >/dev/null 2>&1 && [[ "$old_hash" == "$new_hash" ]]; then
-            close_all_eww_windows
-            if eww reload >/dev/null 2>&1; then
-                if [[ ${#widgets[@]} -gt 0 ]]; then
-                    open_eww_widgets "$screen" "${widgets[@]}" || log_warn "Some eww widgets failed to open"
-                    log_info "Opened eww widgets: ${widgets[*]}"
-                fi
-                log_success "Eww configured"
-                flock -u 200
-                return 0
-            fi
-            log_warn "Eww reload failed — restarting daemon"
+        if [[ "$old_hash" != "$new_hash" ]]; then
+            kill_all_eww
+            ensure_eww_daemon || die "Failed to start eww daemon"
+        elif ! eww ping >/dev/null 2>&1; then
+            ensure_eww_daemon || die "Failed to start eww daemon"
+        else
+            eww reload >/dev/null 2>&1 || {
+                kill_all_eww
+                ensure_eww_daemon || die "Failed to start eww daemon"
+            }
         fi
 
-        kill_all_eww
-        ensure_eww_daemon || die "Failed to start eww daemon"
-
-        if [[ ${#widgets[@]} -gt 0 ]]; then
+        if [[ ${#widgets[@]} -gt 0 ]] && { [[ "$force_open" == "true" ]] || ! eww_widgets_match "${widgets[@]}"; }; then
             open_eww_widgets "$screen" "${widgets[@]}" || log_warn "Some eww widgets failed to open"
-            log_info "Opened eww widgets: ${widgets[*]}"
         fi
 
         log_success "Eww configured"
         flock -u 200
     ) 200>"$_EWW_LOCK_FILE"
+}
+
+_show_eww_widgets() {
+    local theme="$1"
+    local old_hash
+
+    old_hash="$(eww_config_hash "$(eww_config_dir)")"
+    _deploy_eww_config "$theme"
+    _apply_eww_show "$theme" "$old_hash" false
 }
 
 switch_eww() {
@@ -470,8 +468,11 @@ switch_theme() {
         return
     fi
     
-    # Eww hides first and shows last so widgets don't overlap the in-progress switch.
+    # Eww hides instantly, config deploys while other components switch, widgets reopen last.
     hide_eww_widgets
+    local eww_old_hash
+    eww_old_hash="$(eww_config_hash "$(eww_config_dir)")"
+    _deploy_eww_config "$theme"
 
     # Deploy hypr config without reload first — reload mid-switch races with eww/waybar
     deploy_hyprland_config "$theme"
@@ -485,7 +486,7 @@ switch_theme() {
     switch_nvim "$theme"
     reload_hyprland
 
-    switch_eww "$theme" show
+    _apply_eww_show "$theme" "$eww_old_hash" true
 
     set_current_theme "$theme"
     

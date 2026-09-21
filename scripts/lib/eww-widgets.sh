@@ -45,27 +45,8 @@ kill_all_eww() {
     _wait_eww_down
 }
 
-close_all_eww_windows() {
-    if ! eww ping >/dev/null 2>&1; then
-        return 0
-    fi
-
-    eww close-all >/dev/null 2>&1 || true
-
-    local _
-    for _ in {1..20}; do
-        [[ -z "$(eww active-windows 2>/dev/null)" ]] && return 0
-        sleep "$_EWW_POLL_INTERVAL"
-    done
-}
-
 hide_eww_widgets() {
-    mkdir -p "$(dirname "$_EWW_LOCK_FILE")"
-    (
-        flock -w 20 200 || die "Timed out waiting for eww lock"
-        close_all_eww_windows
-        flock -u 200
-    ) 200>"$_EWW_LOCK_FILE"
+    eww ping >/dev/null 2>&1 && eww close-all >/dev/null 2>&1 || true
 }
 
 eww_layout_has_windows() {

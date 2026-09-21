@@ -30,6 +30,13 @@ done
 
 touch "$FLAG"
 
+# Eww — start immediately, don't wait for wallpaper/bar
+if command -v eww >/dev/null 2>&1; then
+    "$SCRIPT_DIR/theme-switcher.sh" switch-eww "$theme" >>"$LOG_FILE" 2>&1 &
+    disown 2>/dev/null || true
+    log_session "Started eww"
+fi
+
 # Wallpaper
 if "$SCRIPT_DIR/theme-switcher.sh" switch-wallpaper "$theme" >>"$LOG_FILE" 2>&1; then
     log_session "Wallpaper set"
@@ -58,15 +65,6 @@ if command -v hyprwave >/dev/null 2>&1 && ! pgrep -x hyprwave >/dev/null; then
     hyprwave >>"$LOG_FILE" 2>&1 &
     disown 2>/dev/null || true
     log_session "Started hyprwave"
-fi
-
-# Eww widgets
-if "$SCRIPT_DIR/theme-switcher.sh" switch-eww "$theme" >>"$LOG_FILE" 2>&1; then
-    log_session "Eww widgets opened"
-else
-    log_session "Eww switch failed — retrying once"
-    "$SCRIPT_DIR/theme-switcher.sh" switch-eww "$theme" >>"$LOG_FILE" 2>&1 || \
-        log_session "Eww retry failed"
 fi
 
 # Monitor layout helper (toji layouts)
