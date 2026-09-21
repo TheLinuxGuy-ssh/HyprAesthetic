@@ -173,43 +173,10 @@ switch_hyprwave() {
     log_success "Hyprwave configured"
 }
 
-_sync_switch_eww() {
-    local theme="$1"
-    local theme_dir="$THEMES_DIR/$theme"
-    local eww_src="$theme_dir/eww"
-    local fallback_src=""
-
-    mkdir -p "$HOME/.config/eww"
-
-    if [[ -d "$eww_src" ]] && eww_layout_has_windows "$eww_src"; then
-        rsync -a --delete "$eww_src/" "$HOME/.config/eww/"
-    elif fallback_src="$(resolve_fallback_theme_dir "eww" "toji" || true)" && [[ -n "$fallback_src" ]]; then
-        log_info "Using fallback eww layout from $(basename "$(dirname "$fallback_src")")"
-        rsync -a --delete "$fallback_src/" "$HOME/.config/eww/"
-        [[ -f "$eww_src/eww.scss" ]] && cp "$eww_src/eww.scss" "$HOME/.config/eww/eww.scss"
-    else
-        local template_dir="$THEMES_DIR/_template/eww"
-        local output_dir="$CONFIG_DIR/eww"
-        local vars_file="/tmp/ha_vars_$.sh"
-
-        prepare_theme_vars "$theme_dir" "$vars_file"
-        render_template_dir "$template_dir" "$output_dir" "$vars_file"
-        rsync -a "$output_dir/" "$HOME/.config/eww/"
-        rm -f "$vars_file"
-    fi
-
-    close_all_eww_windows
-    kill_all_eww
-}
-
-_start_switch_eww() {
-    local theme="$1"
-    local theme_dir="$THEMES_DIR/$theme"
-    local screen
+_get_eww_widgets_for_theme() {
+    local theme_dir="$1"
     local -a widgets=()
-
-    restart_eww_daemon
-    screen="$(get_primary_screen)"
+    local w
 
     while IFS= read -r w; do
         [[ -n "$w" ]] && widgets+=("$w")
@@ -221,23 +188,110 @@ _start_switch_eww() {
         done < <(get_toml_array "$THEMES_DIR/toji/theme.toml" "eww.default_widgets")
     fi
 
-    if [[ ${#widgets[@]} -gt 0 ]]; then
-        open_eww_widgets "$screen" "${widgets[@]}" || log_warn "Some eww widgets failed to open"
-        log_info "Opened eww widgets: ${widgets[*]}"
+    printf '%s\n' "${widgets[@]}"
+}
+
+_deploy_eww_config() {
+    local theme="$1"
+    local theme_dir="$THEMES_DIR/$theme"
+    local eww_src="$theme_dir/eww"
+    local dest="$HOME/.config/eww"
+    local fallback_src=""
+
+    # Replacing a symlink removes the config path and kills a running daemon.
+    if [[ -L "$dest" ]]; then
+        kill_all_eww
+        rm -f "$dest"
     fi
 
-    log_success "Eww configured"
+    mkdir -p "$dest"
+
+    if [[ -d "$eww_src" ]] && eww_layout_has_windows "$eww_src"; then
+        rsync -a --delete "$eww_src/" "$dest/"
+    elif fallback_src="$(resolve_fallback_theme_dir "eww" "toji" || true)" && [[ -n "$fallback_src" ]]; then
+        log_info "Using fallback eww layout from $(basename "$(dirname "$fallback_src")")"
+        rsync -a --delete "$fallback_src/" "$dest/"
+        [[ -f "$eww_src/eww.scss" ]] && cp "$eww_src/eww.scss" "$dest/eww.scss"
+    else
+        local template_dir="$THEMES_DIR/_template/eww"
+        local output_dir="$CONFIG_DIR/eww"
+        local vars_file="/tmp/ha_vars_$.sh"
+
+        prepare_theme_vars "$theme_dir" "$vars_file"
+        render_template_dir "$template_dir" "$output_dir" "$vars_file"
+        rsync -a "$output_dir/" "$dest/"
+        rm -f "$vars_file"
+    fi
+}
+
+_show_eww_widgets() {
+    local theme="$1"
+    local theme_dir="$THEMES_DIR/$theme"
+    local old_hash new_hash screen
+    local -a widgets=()
+
+    old_hash="$(eww_config_hash "$(eww_config_dir)")"
+    mapfile -t widgets < <(_get_eww_widgets_for_theme "$theme_dir")
+
+    mkdir -p "$(dirname "$_EWW_LOCK_FILE")"
+    (
+        flock -w 20 200 || die "Timed out waiting for eww lock"
+
+        _deploy_eww_config "$theme"
+        new_hash="$(eww_config_hash "$(eww_config_dir)")"
+        screen="$(get_primary_screen)"
+
+        if eww ping >/dev/null 2>&1 && [[ "$old_hash" == "$new_hash" ]] && eww_widgets_match "${widgets[@]}"; then
+            if eww reload >/dev/null 2>&1; then
+                log_success "Eww configured"
+                flock -u 200
+                return 0
+            fi
+            log_warn "Eww reload failed — restarting daemon"
+        fi
+
+        if eww ping >/dev/null 2>&1 && [[ "$old_hash" == "$new_hash" ]]; then
+            close_all_eww_windows
+            if eww reload >/dev/null 2>&1; then
+                if [[ ${#widgets[@]} -gt 0 ]]; then
+                    open_eww_widgets "$screen" "${widgets[@]}" || log_warn "Some eww widgets failed to open"
+                    log_info "Opened eww widgets: ${widgets[*]}"
+                fi
+                log_success "Eww configured"
+                flock -u 200
+                return 0
+            fi
+            log_warn "Eww reload failed — restarting daemon"
+        fi
+
+        kill_all_eww
+        ensure_eww_daemon || die "Failed to start eww daemon"
+
+        if [[ ${#widgets[@]} -gt 0 ]]; then
+            open_eww_widgets "$screen" "${widgets[@]}" || log_warn "Some eww widgets failed to open"
+            log_info "Opened eww widgets: ${widgets[*]}"
+        fi
+
+        log_success "Eww configured"
+        flock -u 200
+    ) 200>"$_EWW_LOCK_FILE"
 }
 
 switch_eww() {
     local theme="$1"
-    mkdir -p "$(dirname "$_EWW_LOCK_FILE")"
-    (
-        flock -w 20 200 || die "Timed out waiting for eww lock"
-        _sync_switch_eww "$theme"
-        flock -u 200
-        _start_switch_eww "$theme"
-    ) 200>"$_EWW_LOCK_FILE"
+    local phase="${2:-show}"
+
+    case "$phase" in
+        hide)
+            hide_eww_widgets
+            ;;
+        show)
+            _show_eww_widgets "$theme"
+            ;;
+        *)
+            die "Unknown eww switch phase: $phase"
+            ;;
+    esac
 }
 
 switch_rofi() {
@@ -416,18 +470,22 @@ switch_theme() {
         return
     fi
     
+    # Eww hides first and shows last so widgets don't overlap the in-progress switch.
+    hide_eww_widgets
+
     # Deploy hypr config without reload first — reload mid-switch races with eww/waybar
     deploy_hyprland_config "$theme"
     switch_wallpaper "$theme"
     switch_waybar "$theme" "$restart"
     switch_hyprwave "$theme" "$restart"
-    switch_eww "$theme"
     switch_rofi "$theme"
     switch_kitty "$theme"
     switch_gtk "$theme"
     switch_dunst "$theme" "$restart"
     switch_nvim "$theme"
     reload_hyprland
+
+    switch_eww "$theme" show
 
     set_current_theme "$theme"
     
@@ -470,7 +528,7 @@ main() {
         switch-eww)
             local theme="${2:-$(get_current_theme)}"
             [[ -n "$theme" ]] || die "No theme set (run ha-theme switch <theme> first)"
-            switch_eww "$theme"
+            switch_eww "$theme" show
             ;;
         switch-rofi) switch_rofi "${2:-}" ;;
         switch-kitty) switch_kitty "${2:-}" ;;

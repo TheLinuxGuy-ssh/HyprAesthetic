@@ -60,13 +60,11 @@ if command -v hyprwave >/dev/null 2>&1 && ! pgrep -x hyprwave >/dev/null; then
     log_session "Started hyprwave"
 fi
 
-# Eww widgets — give compositor a moment after wallpaper/bar
-sleep 1
+# Eww widgets
 if "$SCRIPT_DIR/theme-switcher.sh" switch-eww "$theme" >>"$LOG_FILE" 2>&1; then
     log_session "Eww widgets opened"
 else
     log_session "Eww switch failed — retrying once"
-    sleep 2
     "$SCRIPT_DIR/theme-switcher.sh" switch-eww "$theme" >>"$LOG_FILE" 2>&1 || \
         log_session "Eww retry failed"
 fi
