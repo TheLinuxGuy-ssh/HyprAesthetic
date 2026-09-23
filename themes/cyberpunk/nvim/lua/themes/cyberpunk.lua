@@ -2,8 +2,8 @@
 
 local M = {}
 
-M.name = "toji"
-M.display_name = "Toji"
+M.name = "a70"
+M.display_name = "A70"
 
 M.colors = {
     base00 = "#0d0d0d",

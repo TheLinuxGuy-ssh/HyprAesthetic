@@ -29,17 +29,16 @@
     "custom/separator3",
     "backlight",
     "custom/separator4",
-    "battery",
-    "custom/separator4",
     "power-profiles-daemon",
-    "custom/separator3",
-    "network",
     "custom/separator3",
     "pulseaudio",
     "custom/separator3",
-    "memory",
+    "cpu",
     "custom/separator3",
-    "cpu"
+    "memory",
+    "custom/separator4",
+    "battery",
+
   ],
   "hyprland/workspaces": {
     "disable-scroll": true,
