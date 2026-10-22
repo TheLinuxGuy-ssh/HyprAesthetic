@@ -166,6 +166,40 @@ class UndoTests(unittest.TestCase):
         self.assertEqual(Prefs.load().get("bar_style"), "compact")
         self.assertEqual(deployed.read_text(encoding="utf-8"), "COMPACT\n")
 
+    def test_second_undo_toggles_back_to_the_theme_just_left(self) -> None:
+        _write_theme(self.repo, "other", bar_style="compact")
+        self._mark_current("sample")
+        prefs = Prefs.load()
+        prefs.set("wallpaper", "/tmp/a.png")
+        prefs.set("bar_style", "default")
+        prefs.set("bar", "waybar")
+        prefs.set("widgets", ["clock"])
+        prefs.save()
+
+        self.engine.apply("other")
+        on_other = Prefs.load()
+        on_other.set("wallpaper", "/tmp/b.png")
+        on_other.set("widgets", ["matrix"])
+        on_other.save()
+        self.assertEqual(Prefs.load().get("bar_style"), "compact")
+
+        first = undo(self.engine)
+        self.assertEqual(first, "sample")
+        self.assertEqual(self._current().read_text(encoding="utf-8").strip(), "sample")
+        back = Prefs.load()
+        self.assertEqual(back.get("wallpaper"), "/tmp/a.png")
+        self.assertEqual(back.get("bar_style"), "default")
+        self.assertEqual(back.get("widgets"), ["clock"])
+
+        second = undo(self.engine)
+        self.assertEqual(second, "other")
+        self.assertEqual(self._current().read_text(encoding="utf-8").strip(), "other")
+        toggled = Prefs.load()
+        self.assertEqual(toggled.get("wallpaper"), "/tmp/b.png")
+        self.assertEqual(toggled.get("bar_style"), "compact")
+        self.assertEqual(toggled.get("widgets"), ["matrix"])
+        self.assertEqual(toggled.get("bar"), "waybar")
+
     def test_undo_without_snapshot_raises(self) -> None:
         with self.assertRaises(FileNotFoundError):
             undo(self.engine)

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from hypraesthetic.apply import ApplyEngine
-from hypraesthetic.paths import user_config_dir
+from hypraesthetic.paths import current_theme_file, user_config_dir
 from hypraesthetic.prefs import Prefs, _copy_spec, _dump_toml, _is_widget_spec
 
 try:
@@ -54,6 +54,10 @@ def undo(engine: ApplyEngine) -> str:
     theme = str((saved or {}).get("theme") or "").strip()
     if saved is None or not theme:
         raise FileNotFoundError(snapshot_path())
+    # Keep the theme being left, with its own live prefs, so a second undo
+    # toggles back. Must run before restore: apply() would otherwise snapshot
+    # the restored prefs under this still-current theme name.
+    _snapshot_outgoing()
     prefs = Prefs.load()
     for key in _SNAPSHOT_FIELDS:
         if key in saved:
@@ -64,7 +68,7 @@ def undo(engine: ApplyEngine) -> str:
     if "widgets_by_theme" in saved:
         prefs.set("widgets_by_theme", deepcopy(saved["widgets_by_theme"]))
     prefs.save()
-    engine.apply(theme)
+    engine.apply(theme, snapshot=False)
     # A full apply copies the theme's bar_style over the restored pref.
     # Put that pref back and deploy only the bar when the theme replaced it.
     restored_style = saved.get("bar_style")
@@ -76,6 +80,13 @@ def undo(engine: ApplyEngine) -> str:
             if current.get("bar") != "none":
                 engine.apply(theme, components=["waybar"])
     return theme
+
+
+def _snapshot_outgoing() -> None:
+    prefs = Prefs.load()
+    path = current_theme_file()
+    theme = path.read_text(encoding="utf-8").strip() if path.is_file() else ""
+    snapshot(prefs, theme)
 
 
 def _geometry_for_theme(prefs: Prefs, theme: str) -> dict[str, Any]:

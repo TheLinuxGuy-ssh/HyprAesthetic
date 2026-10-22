@@ -135,6 +135,7 @@ class ApplyEngine:
         dry_run: bool = False,
         restart: bool = False,
         components: list[str] | None = None,
+        snapshot: bool = True,
     ) -> ApplyResult:
         pkg = self.catalog.get(name)
         result = ApplyResult(theme=name, dry_run=dry_run)
@@ -148,8 +149,9 @@ class ApplyEngine:
             return result
 
         prefs = Prefs.load()
-        if components is None:
+        if components is None and snapshot:
             # Record the pre-switch prefs before this apply rewrites bar_style.
+            # undo() passes snapshot=False: it already stored the outgoing theme.
             from hypraesthetic.undo import snapshot
 
             current_path = current_theme_file()
