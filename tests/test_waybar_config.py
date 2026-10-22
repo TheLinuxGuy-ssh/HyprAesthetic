@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 from hypraesthetic.waybar_config import sanitize_waybar_config
 
@@ -72,6 +73,24 @@ class WaybarConfigTests(unittest.TestCase):
         out = sanitize_waybar_config('{"modules": ["clock"]}\n\x00')
         self.assertNotIn("\x00", out)
         self.assertIn("clock", out)
+
+    def test_missing_exclusive_is_injected(self) -> None:
+        out = sanitize_waybar_config('{\n  "position": "top"\n}\n')
+        self.assertIn('"exclusive"', out)
+        self.assertIn('"exclusive": true', out)
+        self.assertLess(out.find("{"), out.find('"exclusive"'))
+
+    def test_explicit_exclusive_false_is_kept(self) -> None:
+        raw = '{\n  "exclusive": false,\n  "position": "top"\n}\n'
+        out = sanitize_waybar_config(raw)
+        self.assertIn('"exclusive": false', out)
+        self.assertNotIn('"exclusive": true', out)
+        self.assertEqual(out.count('"exclusive"'), 1)
+
+    def test_cyberpunk_config_sets_exclusive(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        text = (root / "layouts" / "bars" / "cyberpunk" / "config.jsonc").read_text(encoding="utf-8")
+        self.assertIn('"exclusive": true', text)
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ from gi.repository import Adw, Gdk, GdkPixbuf, Gtk, Pango
 from hypraesthetic.apply import ApplyEngine
 from hypraesthetic.catalog import ThemeCatalog
 from hypraesthetic.discover import (
+    FIRST_PARTY_BAR_IDS,
     WIDGET_CATALOG,
     WIDGET_DEFAULT_GEOMETRY,
     current_theme_name,
@@ -30,6 +31,7 @@ from hypraesthetic.discover import (
     resolve_wallpaper,
     spec_to_fractions,
     theme_preview_image,
+    visible_bar_ids,
     widget_ids_from_prefs,
 )
 from hypraesthetic.paths import layouts_dir
@@ -288,30 +290,41 @@ def bar_page() -> Gtk.Widget:
     if prefs.get("bar") == "none":
         current_style = "none"
     search = Gtk.SearchEntry(placeholder_text="Search bar layouts")
-    flow = Gtk.FlowBox(
-        max_children_per_line=5,
-        min_children_per_line=2,
-        selection_mode=Gtk.SelectionMode.NONE,
-        homogeneous=True,
-        row_spacing=12,
-        column_spacing=12,
-        valign=Gtk.Align.START,
-        hexpand=True,
-    )
+
+    def _flow_box() -> Gtk.FlowBox:
+        return Gtk.FlowBox(
+            max_children_per_line=5,
+            min_children_per_line=2,
+            selection_mode=Gtk.SelectionMode.NONE,
+            homogeneous=True,
+            row_spacing=12,
+            column_spacing=12,
+            valign=Gtk.Align.START,
+            hexpand=True,
+        )
+
+    first_flow = _flow_box()
+    imported_flow = _flow_box()
     buttons: dict[str, Gtk.Button] = {}
     accent = _accent_color()
-    catalog = [("none", "None", "Hide the status bar", None)]
+    first_party = [("none", "None", "Hide the status bar", None)]
+    imported: list[tuple[str, str, str, Path | None]] = []
     for style in list_bar_styles():
-        catalog.append((style.id, style.name, style.description, style.preview))
+        item = (style.id, style.name, style.description, style.preview)
+        if style.id in FIRST_PARTY_BAR_IDS:
+            first_party.append(item)
+        else:
+            imported.append(item)
 
     needle = [""]
 
-    def visible(child: Gtk.FlowBoxChild) -> bool:
+    def imported_visible(child: Gtk.FlowBoxChild) -> bool:
         button = child.get_child()
         hay = (button.get_name() if button is not None else "") or ""
-        return needle[0] in hay.lower()
+        style_id = hay.split(" ", 1)[0] if hay else ""
+        return bool(visible_bar_ids([(style_id, hay)], needle[0]))
 
-    flow.set_filter_func(visible)
+    imported_flow.set_filter_func(imported_visible)
 
     def apply_style(style_id: str) -> None:
         loaded = Prefs.load()
@@ -326,23 +339,31 @@ def bar_page() -> Gtk.Widget:
 
     def on_search(entry: Gtk.SearchEntry) -> None:
         needle[0] = entry.get_text().strip().lower()
-        flow.invalidate_filter()
+        imported_flow.invalidate_filter()
 
     search.connect("search-changed", on_search)
-    for style_id, title, blurb, preview in catalog:
-        tile = _tile(
-            title,
-            blurb,
-            image=preview if isinstance(preview, Path) else None,
-            color=accent if style_id != "none" else "#3a3a3a",
-            selected=style_id == current_style,
-        )
-        tile.set_name(f"{style_id} {title} {blurb}")
-        tile.connect("clicked", lambda _b, sid=style_id: apply_style(sid))
-        buttons[style_id] = tile
-        flow.append(tile)
+
+    def add_tiles(rows: list[tuple[str, str, str, Path | None]], parent: Gtk.FlowBox) -> None:
+        for style_id, title, blurb, preview in rows:
+            tile = _tile(
+                title,
+                blurb,
+                image=preview if isinstance(preview, Path) else None,
+                color=accent if style_id != "none" else "#3a3a3a",
+                selected=style_id == current_style,
+            )
+            tile.set_name(f"{style_id} {title} {blurb}")
+            tile.connect("clicked", lambda _b, sid=style_id: apply_style(sid))
+            buttons[style_id] = tile
+            parent.append(tile)
+
+    add_tiles(first_party, first_flow)
+    add_tiles(imported, imported_flow)
     box.append(search)
-    box.append(flow)
+    box.append(_status_label("First-party"))
+    box.append(first_flow)
+    box.append(_status_label("Imported (search to filter)"))
+    box.append(imported_flow)
     return overlay
 
 

@@ -21,6 +21,7 @@ from hypraesthetic.discover import (
     resolve_wallpaper,
     spec_to_fractions,
     theme_preview_image,
+    visible_bar_ids,
     widget_window,
 )
 
@@ -187,6 +188,70 @@ class DiscoverTests(unittest.TestCase):
         styles = list_bar_styles(repo)
         self.assertEqual(styles[0].preview.name, "preview.gif")
         tmp.cleanup()
+
+    def test_first_party_bars_have_preview_files(self) -> None:
+        styles = {s.id: s for s in list_bar_styles()}
+        for sid in ("default", "compact", "a70", "cyberpunk"):
+            self.assertIn(sid, styles)
+            self.assertIsNotNone(styles[sid].preview, sid)
+            self.assertTrue(styles[sid].preview.is_file(), sid)
+
+    def test_bar_preview_finds_screenshot_and_v29e_png(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        repo = Path(tmp.name)
+        shot = repo / "layouts" / "bars" / "compact"
+        shot.mkdir(parents=True)
+        (shot / "config.jsonc").write_text("{}\n", encoding="utf-8")
+        (shot / "screenshot-b.png").write_bytes(b"b")
+        (shot / "screenshot-a.png").write_bytes(b"a")
+        named = repo / "layouts" / "bars" / "a70"
+        named.mkdir(parents=True)
+        (named / "config.jsonc").write_text("{}\n", encoding="utf-8")
+        (named / "V2.9e.png").write_bytes(b"v")
+        (named / "screenshot-z.png").write_bytes(b"s")
+        jpg = repo / "layouts" / "bars" / "plain"
+        jpg.mkdir(parents=True)
+        (jpg / "config.jsonc").write_text("{}\n", encoding="utf-8")
+        (jpg / "screenshot-1.jpg").write_bytes(b"j")
+        styles = {s.id: s for s in list_bar_styles(repo)}
+        self.assertEqual(styles["compact"].preview.name, "screenshot-a.png")
+        self.assertEqual(styles["a70"].preview.name, "V2.9e.png")
+        self.assertEqual(styles["plain"].preview.name, "screenshot-1.jpg")
+        tmp.cleanup()
+
+    def test_named_preview_beats_screenshot_and_v29e(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        repo = Path(tmp.name)
+        bar = repo / "layouts" / "bars" / "neon"
+        bar.mkdir(parents=True)
+        (bar / "config.jsonc").write_text("{}\n", encoding="utf-8")
+        (bar / "preview.png").write_bytes(b"p")
+        (bar / "V2.9e.png").write_bytes(b"v")
+        (bar / "screenshot-a.png").write_bytes(b"s")
+        styles = list_bar_styles(repo)
+        self.assertEqual(styles[0].preview.name, "preview.png")
+        tmp.cleanup()
+
+    def test_imported_bars_stay_hidden_until_search(self) -> None:
+        entries = [
+            ("none", "none None Hide the status bar"),
+            ("default", "default Capsule Rounded island bar"),
+            ("compact", "compact Compact Workspaces"),
+            ("a70", "a70 Dock Centered workspaces"),
+            ("cyberpunk", "cyberpunk Night City Flat modules"),
+            ("v1", "v1 V1 Waybar layout"),
+            ("v2.9e", "v2.9e Island Waybar layout"),
+        ]
+        idle = visible_bar_ids(entries, "")
+        self.assertEqual(idle, ["none", "default", "compact", "a70", "cyberpunk"])
+        hit = visible_bar_ids(entries, "v2.9")
+        self.assertIn("cyberpunk", hit)
+        self.assertIn("none", hit)
+        self.assertIn("v2.9e", hit)
+        self.assertNotIn("v1", hit)
+        blank = visible_bar_ids(entries, "   ")
+        self.assertNotIn("v1", blank)
+        self.assertIn("cyberpunk", blank)
 
 
 if __name__ == "__main__":

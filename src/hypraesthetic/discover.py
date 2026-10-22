@@ -140,6 +140,8 @@ def current_theme_name(default: str = "toji") -> str:
 
 _PREVIEW_FALLBACKS = ("preview.gif", "preview.png", "preview.jpg", "preview.jpeg", "preview.webp")
 _BAR_PREVIEW_NAMES = ("preview.png", "preview.jpg", "preview.jpeg", "preview.gif", "preview.webp")
+_BAR_SCREENSHOT_GLOBS = ("screenshot*.png", "screenshot*.jpg")
+FIRST_PARTY_BAR_IDS = frozenset({"none", "default", "compact", "a70", "cyberpunk"})
 
 
 def _preview_search_dirs(root: Path) -> list[Path]:
@@ -363,10 +365,35 @@ def list_bar_styles(repo: Path | None = None) -> list[BarStyle]:
     return styles
 
 
+def _bar_preview(path: Path) -> Path | None:
+    for name in (*_BAR_PREVIEW_NAMES, "V2.9e.png"):
+        candidate = path / name
+        if candidate.is_file():
+            return candidate
+    for pattern in _BAR_SCREENSHOT_GLOBS:
+        matches = sorted(candidate for candidate in path.glob(pattern) if candidate.is_file())
+        if matches:
+            return matches[0]
+    return None
+
+
+def visible_bar_ids(entries: list[tuple[str, str]], needle: str) -> list[str]:
+    """First-party ids stay visible. Imported ids appear only when the needle hits."""
+    text = (needle or "").strip().lower()
+    shown: list[str] = []
+    for style_id, haystack in entries:
+        if style_id in FIRST_PARTY_BAR_IDS:
+            shown.append(style_id)
+            continue
+        if text and text in (haystack or "").lower():
+            shown.append(style_id)
+    return shown
+
+
 def _bar_meta(path: Path) -> tuple[str, str, Path | None]:
     title = path.name.replace("_", " ")
     blurb = "Waybar layout"
-    preview = next((path / name for name in _BAR_PREVIEW_NAMES if (path / name).is_file()), None)
+    preview = _bar_preview(path)
     meta = path / "bar.toml"
     if meta.is_file():
         raw = tomllib.loads(meta.read_text(encoding="utf-8"))

@@ -37,6 +37,7 @@ OMARCHY_CLICK_RE = re.compile(
 )
 ARRAY_RE = re.compile(r'("modules(?:-(?:left|center|right))?"\s*:\s*)\[(.*?)\]', re.S)
 KEY_RE = re.compile(r'"((?:custom|hyprland)/[^"]+)"\s*:')
+EXCLUSIVE_KEY_RE = re.compile(r'"exclusive"\s*:')
 
 
 def sanitize_waybar_config(text: str) -> str:
@@ -55,10 +56,20 @@ def sanitize_waybar_config(text: str) -> str:
         if name not in used:
             text = _remove_key(text, name)
     text = re.sub(r'"class<org\.omarchy\.terminal>"\s*:\s*"[^"]*"\s*,?', "", text)
+    text = _inject_exclusive(text)
     text = re.sub(r"[\{\[]\s*,", lambda match: match.group(0)[0], text)
     text = re.sub(r",\s*,", ",", text)
     text = re.sub(r",\s*([\]}])", r"\1", text)
     return text
+
+
+def _inject_exclusive(text: str) -> str:
+    if EXCLUSIVE_KEY_RE.search(text):
+        return text
+    start = text.find("{")
+    if start < 0:
+        return text
+    return text[: start + 1] + '\n  "exclusive": true,' + text[start + 1 :]
 
 
 def _filter_array(match: re.Match[str], drop: set[str]) -> str:
