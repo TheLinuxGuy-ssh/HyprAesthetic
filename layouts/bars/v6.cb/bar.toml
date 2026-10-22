@@ -1,0 +1,4 @@
+name = "V6.cb"
+description = "bottom waybar - with alot of workspaces - Thanks to Astraeya for his window-script!"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.cb"

@@ -1,0 +1,4 @@
+name = "V2.9a"
+description = "bottom bar - shipped with some text based modules + accent colors"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.9a"

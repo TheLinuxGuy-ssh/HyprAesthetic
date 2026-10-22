@@ -1,0 +1,4 @@
+name = "V6.c"
+description = "long but minimal Style"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.c"

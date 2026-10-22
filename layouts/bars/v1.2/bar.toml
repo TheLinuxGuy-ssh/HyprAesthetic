@@ -1,0 +1,4 @@
+name = "V1.2"
+description = "Split left/right modules into separate groups with full rounded corners on both ends"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V1.2"

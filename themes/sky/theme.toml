@@ -1,0 +1,92 @@
+schema = 2
+name = "sky"
+display_name = "Sky"
+description = "Open-air minimal aesthetic inspired by a bright summer sky"
+author = "HyprAesthetic"
+version = "1.0.0"
+license = "MIT"
+min_hypraesthetic = "0.2.0"
+
+[misc]
+wallpaper = "sky.png"
+quotes = [
+  "Some days you just fall and the sky holds you anyway.",
+  "Blue is not empty. It is room.",
+  "Keep the windows open.",
+]
+
+[palette]
+base00 = "#0a1226"
+base01 = "#101c36"
+base02 = "#18294e"
+base03 = "#24406e"
+base04 = "#93a8c9"
+base05 = "#e8f0fb"
+base06 = "#f2f7fd"
+base07 = "#ffffff"
+base08 = "#ff6b81"
+base09 = "#ffb86b"
+base0A = "#ffe66d"
+base0B = "#7ce38b"
+base0C = "#6ec4e8"
+base0D = "#4f9cf9"
+base0E = "#9d8cff"
+base0F = "#7fd8ff"
+
+[colors.hyprland]
+border_active = "{{palette.base0D}}"
+border_inactive = "{{palette.base03}}"
+shadow = "{{palette.base00}}aa"
+
+[colors.waybar]
+background = "#0d1526"
+foreground = "{{palette.base05}}"
+surface = "{{palette.base01}}"
+surface_hover = "{{palette.base02}}"
+border = "{{palette.base03}}"
+foreground_muted = "{{palette.base04}}"
+primary = "{{palette.base0D}}"
+primary_fg = "#0d1526"
+error = "{{palette.base08}}"
+error_fg = "#0d1526"
+warning = "{{palette.base0A}}"
+warning_fg = "#0d1526"
+success = "{{palette.base0B}}"
+success_fg = "#0d1526"
+
+[colors.eww]
+background = "{{palette.base00}}"
+foreground = "#eef4ff"
+surface = "{{palette.base01}}"
+surface_hover = "{{palette.base02}}"
+border = "{{palette.base03}}"
+foreground_muted = "{{palette.base04}}"
+primary = "#5fa8fa"
+primary_fg = "{{palette.base00}}"
+error = "{{palette.base08}}"
+error_fg = "{{palette.base00}}"
+warning = "{{palette.base0A}}"
+warning_fg = "{{palette.base00}}"
+success = "{{palette.base0B}}"
+success_fg = "{{palette.base00}}"
+
+[layout]
+bar = "waybar"
+bar_style = "v7"
+launcher = "rofi"
+widgets = ["clock", "wakatime", "system"]
+
+[defaults]
+file_manager = "nautilus"
+terminal = "kitty"
+
+[components]
+hyprland = true
+waybar = true
+hyprwave = true
+eww = true
+rofi = true
+kitty = true
+gtk = true
+dunst = true
+nvim = true

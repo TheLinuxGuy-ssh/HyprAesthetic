@@ -1,0 +1,4 @@
+name = "V6.ab"
+description = "HANCORE Waybar layout"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.ab"

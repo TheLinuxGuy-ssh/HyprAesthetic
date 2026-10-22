@@ -1,0 +1,4 @@
+name = "V2.7"
+description = "base config V2 - now with dynamic colors according to theme scheme"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.7"

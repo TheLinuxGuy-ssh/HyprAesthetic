@@ -1,0 +1,4 @@
+name = "V6.ab2"
+description = "new version of double-top-min bar - dynamic colors"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.ab2"

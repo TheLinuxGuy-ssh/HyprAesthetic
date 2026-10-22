@@ -1,0 +1,4 @@
+name = "V2.5a"
+description = "static quartz color"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.5a"

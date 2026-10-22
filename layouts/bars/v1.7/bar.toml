@@ -1,0 +1,4 @@
+name = "V1.7"
+description = "short bar with text modules on right side"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V1.7"

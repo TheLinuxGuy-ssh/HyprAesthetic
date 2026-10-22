@@ -2,9 +2,9 @@
 
 @define-color bg @background;
 @define-color fg @foreground;
-@define-color red #df6124;
-@define-color grey #363636;
-@define-color blink-fg #2f4f4f;
+@define-color red @primary;
+@define-color grey @surface;
+@define-color blink-fg @surface;
 
 * {
     font-family: "JetBrainsMono Nerd Font";
@@ -75,7 +75,7 @@ margin-right: 5px;
 }
 
 #workspaces button.active {
-  color: @bg;
+  color: @primary_fg;
   border-radius: 2px;
   background-color: @red;
   padding: 0px 9px;
@@ -86,7 +86,7 @@ margin-right: 5px;
 #workspaces button.empty:hover, 
 #workspaces button:hover {
     background: transparent;
-    color: @fg;
+    color: @primary;
     transition: all 150ms ease;
     opacity: 1;
 }
@@ -105,7 +105,7 @@ margin-right: 5px;
   padding: 0px 9px;
   margin: 0px 1px;
   background-color: alpha(@fg, 0.5);
-  color: @bg;
+  color: @primary;
 }
 
 #custom-omarchy {  
@@ -206,7 +206,7 @@ tooltip {
 
 #custom-idle-indicator.active,
 #custom-notification-silencing-indicator.active {
-  color: #a55555;
+  color: @primary;
   opacity: 1;;
 }
 
@@ -233,7 +233,7 @@ tooltip label {
 }
 
 #custom-voxtype.recording {
-  color: #a55555;
+  color: @primary;
 }
 
 
@@ -282,7 +282,7 @@ tooltip label {
 }
 
 #custom-screenrecording-indicator.active {
-  color: #eb7087;
+  color: @primary;
   animation-name: blink-recording;
   animation-duration: 0.5s;
 }

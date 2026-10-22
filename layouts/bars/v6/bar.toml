@@ -1,0 +1,4 @@
+name = "V6"
+description = "Original version by [Adso](https://github.com/adsovetzky/Adso-dotfiles), adapted by me to fit my needs and style"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6"

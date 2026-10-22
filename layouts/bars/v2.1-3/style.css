@@ -1,0 +1,129 @@
+@import "colors.css";
+
+* {
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 12px;
+  font-weight: 600;
+}
+
+window#waybar {
+  background-color: transparent;
+}
+
+#waybar > box {
+  background-color: @base;
+  border-radius: 6px;
+  padding: 0 6px;
+  margin: 0px 8px 3px 8px;
+  border: .5px solid @highlightHigh;
+  box-shadow: 1px 1px 3px 1px @surface;
+}
+
+/* Workspace buttons */
+
+
+#workspaces label {
+  font-size: 14px;
+}
+
+#workspaces button {
+  color: @foam;
+  padding: 0 4px;
+  margin: 0;
+}
+
+#workspaces button.active {
+  color: @primary;
+}
+
+#workspaces button.empty {
+  color: @love;
+}
+
+#workspaces button.empty.active {
+  color: @primary_fg;
+}
+
+#workspaces button:hover {
+  color: @primary;
+  background-color: transparent;
+}
+
+#workspaces button.urgent {
+  color: @primary;
+}
+
+/* Muted/disabled state */
+#idle_inhibitor, #power-profiles-daemon, #tray, #bluetooth, #network.disconnected, #pulseaudio.muted {
+  color: @muted;
+}
+
+/* Connected/active colored states */
+#idle_inhibitor.activated {
+  color: @gold;
+}
+
+#power-profiles-daemon.performance {
+  color: @love;
+}
+
+#power-profiles-daemon.balanced {
+  color: @gold;
+}
+
+#power-profiles-daemon.power-saver {
+  color: @foam;
+}
+
+#bluetooth.connected {
+  color: @foam;
+}
+
+/* Module padding group */
+#window, #idle_inhibitor, #power-profiles-daemon, #mpris, #memory, #cpu, #pulseaudio, #bluetooth, #network, #backlight, #battery, #clock, #disk {
+  padding: 0 8px;
+}
+
+#tray {
+  padding: 0 8px;
+}
+
+#window { color: @subtle; }
+
+#mpris { color: @foam; }
+
+#memory { color: @iris; }
+
+#cpu { color: @rose; }
+
+#pulseaudio { color: @love; }
+
+#network { color: @foam; }
+
+#clock {
+  color: @rose;
+}
+
+#battery { color: @love; }
+
+#backlight { color: @subtle; }
+
+#disk { color: @gold; }
+
+tooltip {
+  background-color: @base;
+  border: 1px solid @highlightMed;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+tooltip label {
+  color: @text;
+}
+
+
+
+@keyframes blink-recording {to {
+        color: @bg;
+    }
+}

@@ -1,0 +1,4 @@
+name = "V1.9d"
+description = "midbar with new workspace bars"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V1.9d"

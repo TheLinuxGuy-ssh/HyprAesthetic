@@ -96,24 +96,18 @@
 )
 (defwidget matrix []
 	(box :class "matrix-container" :vexpland "false" :hexpand "false"
-		(box :class "card" :width 20 :height "100%"
-        		(label :text matrix_text :class "matrix-lbl" :justify "center")
-		)
+		(label :text matrix_text :class "matrix-lbl" :justify "center")
 	)
 )
 (defwidget wakatime []
         (box :class "waka-container" :vexpland "false" :hexpand "false"
-                (box :class "card" :width 115 :height 50
-                        (label :text waka_text :class "waka-text" :justify "end" :halign "end")
-                )
+		(label :text waka_text :class "waka-text" :justify "end" :halign "end")
         )
 )
 
 (defwidget toji []
         (box :class "toji-container" :vexpland "false" :hexpand "false"
-                (box :class "card" :width 300 :height 50
-                        (label :text toji_text :class "toji-text" :justify "end" :halign "center")
-                )
+		(label :text toji_text :class "toji-text" :justify "end" :halign "center")
         )
 )
 
@@ -264,7 +258,7 @@
 
 ;; system
 (defwindow system :stacking "bg" :focusable "false" :screen 0 
-	    :geometry (geometry :x "1%" :y "85%" :width 180 :height 125)
+	    :geometry (geometry :x "62%" :y "72%" :width 180 :height 125)
 					(system))
 ;; matrix
 (defwindow matrix :stacking "bg" :focusable "false" :screen 0
@@ -272,26 +266,26 @@
                                         (matrix))
 ;; wakatime
 (defwindow wakatime :stacking "bg" :focusable "false" :screen 0
-            :geometry (geometry :x "58.5%" :y "25.5%" :width 80 :height 50)
+            :geometry (geometry :x "62%" :y "28%" :width 160 :height 50)
                                         (wakatime))
 ;; toji
 (defwindow toji :stacking "bg" :focusable "false" :screen 0
-            :geometry (geometry :x "45%" :y "60%" :width 480 :height 50)
+            :geometry (geometry :x "62%" :y "88%" :width 520 :height 50)
                                         (toji))
 
 ;; clock
 (defwindow clock :stacking "bg" :focusable "false" :screen 0 
-	    :geometry (geometry :x "43%" :y "19.45%" :width 450 :height 155)
+	    :geometry (geometry :x "62%" :y "8%" :width 450 :height 155)
 					(clock))
 
 ;; uptime
-(defwindow uptime :stacking "fg" :focusable "false" :screen 1 
-	    :geometry (geometry :x 515 :y 320 :width 350 :height 155)
+(defwindow uptime :stacking "bg" :focusable "false" :screen 0 
+	    :geometry (geometry :x "80%" :y "72%" :width 240 :height 110)
 					(uptime))
 
 ;; music
-(defwindow music :stacking "fg" :focusable "false" :screen 1 
-	    :geometry (geometry :x 515 :y 490 :width 610 :height 280)
+(defwindow music :stacking "bg" :focusable "false" :screen 0 
+	    :geometry (geometry :x "62%" :y "54%" :width 420 :height 160)
 					(music))
 
 ;; github
@@ -315,8 +309,8 @@
 					(youtube))
 
 ;; weather
-(defwindow weather :stacking "fg" :focusable "false" :screen 1 
-	    :geometry (geometry :x 880 :y 150 :width 550 :height 325)
+(defwindow weather :stacking "bg" :focusable "false" :screen 0 
+	    :geometry (geometry :x "62%" :y "38%" :width 300 :height 160)
 					(weather))
 
 ;; apps

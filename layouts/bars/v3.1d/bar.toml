@@ -1,0 +1,4 @@
+name = "V3.1d"
+description = "stock fg & bg color support - no extra colors - base config V3.1c"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V3.1d"

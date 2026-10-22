@@ -1,0 +1,4 @@
+name = "V2.9e"
+description = "another top bar version with custom omarchy.svg logo as home button"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.9e"

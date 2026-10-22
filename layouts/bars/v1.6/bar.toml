@@ -1,0 +1,4 @@
+name = "V1.6"
+description = "long bar - dynamic **RAM/CPU rounded circle's**"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V1.6"

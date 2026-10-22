@@ -1,0 +1,4 @@
+name = "V7.2a"
+description = "extend version of V7.2a - Features gpu-usage-waybar ```yay -S gpu-usage-waybar```"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V7.2a"

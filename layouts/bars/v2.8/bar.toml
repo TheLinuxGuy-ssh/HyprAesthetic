@@ -1,0 +1,4 @@
+name = "V2.8"
+description = "similar to V2.6 , less borders and the lowest possible height without losing readability & functionality"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.8"

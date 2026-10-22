@@ -1,0 +1,4 @@
+name = "V7"
+description = "Base Waybar config/style derived from Omarchy by DHH – custom design modifications by me - Island version."
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V7"

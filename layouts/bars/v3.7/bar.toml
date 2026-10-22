@@ -1,0 +1,4 @@
+name = "V3.7"
+description = "\"Gnome\" style with Omarchy theme set module (set your \"home\" Theme and switch back to it on click)"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V3.7"

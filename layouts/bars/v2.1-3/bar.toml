@@ -1,0 +1,4 @@
+name = "V2.1-3"
+description = "New version with static Rose Pine Dark color scheme"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.1-3"

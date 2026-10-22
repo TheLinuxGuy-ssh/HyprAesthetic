@@ -1,0 +1,4 @@
+name = "V6.aa"
+description = "left-min bar - static colors - recommended for dark themes"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.aa"

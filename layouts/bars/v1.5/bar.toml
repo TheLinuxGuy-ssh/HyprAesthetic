@@ -1,0 +1,4 @@
+name = "V1.5"
+description = "V1 base evolved: numbered workspaces, ultra-minimal full-width bar with shadowed modules seamlessly integrated into the "
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V1.5"

@@ -1,0 +1,92 @@
+schema = 2
+name = "choso"
+display_name = "Choso"
+description = "Violet cursed-mark aesthetic inspired by Choso"
+author = "HyprAesthetic"
+version = "1.0.0"
+license = "MIT"
+min_hypraesthetic = "0.2.0"
+
+[misc]
+wallpaper = "choso.png"
+quotes = [
+  "My brothers are my everything.",
+  "Blood is thicker than any binding vow.",
+  "I will not lose anyone else.",
+]
+
+[palette]
+base00 = "#0a0a10"
+base01 = "#14141e"
+base02 = "#1e1e2c"
+base03 = "#2e2e42"
+base04 = "#a0a0ba"
+base05 = "#e8e8f4"
+base06 = "#f4f4ff"
+base07 = "#ffffff"
+base08 = "#ff6b81"
+base09 = "#ffb86b"
+base0A = "#f2e29b"
+base0B = "#7ce38b"
+base0C = "#9ae8e0"
+base0D = "#9d8cff"
+base0E = "#c5a3ff"
+base0F = "#ff92df"
+
+[colors.hyprland]
+border_active = "{{palette.base0D}}"
+border_inactive = "{{palette.base03}}"
+shadow = "{{palette.base00}}aa"
+
+[colors.waybar]
+background = "#0d0d14"
+foreground = "{{palette.base05}}"
+surface = "{{palette.base01}}"
+surface_hover = "{{palette.base02}}"
+border = "{{palette.base03}}"
+foreground_muted = "{{palette.base04}}"
+primary = "{{palette.base0D}}"
+primary_fg = "#0d0d14"
+error = "{{palette.base08}}"
+error_fg = "#0d0d14"
+warning = "{{palette.base0A}}"
+warning_fg = "#0d0d14"
+success = "{{palette.base0B}}"
+success_fg = "#0d0d14"
+
+[colors.eww]
+background = "{{palette.base00}}"
+foreground = "{{palette.base05}}"
+surface = "{{palette.base01}}"
+surface_hover = "{{palette.base02}}"
+border = "{{palette.base03}}"
+foreground_muted = "{{palette.base04}}"
+primary = "#b3a6ff"
+primary_fg = "{{palette.base00}}"
+error = "{{palette.base08}}"
+error_fg = "{{palette.base00}}"
+warning = "{{palette.base0A}}"
+warning_fg = "{{palette.base00}}"
+success = "{{palette.base0B}}"
+success_fg = "{{palette.base00}}"
+
+[layout]
+bar = "waybar"
+bar_style = "v3"
+launcher = "rofi"
+widgets = ["clock", "system", "matrix", "wakatime", "toji"]
+
+[defaults]
+file_manager = "nautilus"
+terminal = "kitty"
+
+[components]
+hyprland = true
+waybar = true
+hyprwave = true
+eww = true
+rofi = true
+kitty = true
+gtk = true
+dunst = true
+nvim = true

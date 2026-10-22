@@ -1,0 +1,4 @@
+name = "V3.1c"
+description = "waybar for my theme [Moodpeak](https://github.com/HANCORE-linux/omarchy-moodpeak-theme)"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V3.1c"

@@ -1,0 +1,4 @@
+name = "V2.2b"
+description = "long bar version of V2.2"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.2b"

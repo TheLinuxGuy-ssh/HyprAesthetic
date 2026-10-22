@@ -1,0 +1,4 @@
+name = "V2.1c"
+description = "monochrome waybar - static colors - inspired by OldJobobo monochrome-theme"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.1c"

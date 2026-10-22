@@ -1,0 +1,4 @@
+name = "V5.c"
+description = "\"3D\" style"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V5.c"

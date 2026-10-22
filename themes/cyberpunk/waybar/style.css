@@ -33,12 +33,12 @@ window#waybar {
 
 #workspaces button:hover {
     background: @surface-hover;
-    color: @foreground;
+    color: @primary;
 }
 
 #workspaces button.focused {
     background: @primary;
-    color: @primary-fg;
+    color: @primary_fg;
     font-weight: bold;
 }
 

@@ -1,0 +1,4 @@
+name = "V2.7b"
+description = "Waybar V2.7b (based on V2.7): Right-side modules moved into a click-expandable tray"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.7b"

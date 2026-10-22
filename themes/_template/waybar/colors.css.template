@@ -14,3 +14,25 @@
 @define-color warning_fg {{colors.waybar.warning_fg}};
 @define-color success {{colors.waybar.success}};
 @define-color success_fg {{colors.waybar.success_fg}};
+
+@define-color bg @background;
+@define-color fg @foreground;
+@define-color red @primary;
+@define-color accent @primary;
+@define-color base @background;
+@define-color text @foreground;
+@define-color muted @foreground_muted;
+@define-color subtle @foreground_muted;
+@define-color overlay @surface;
+@define-color love @primary;
+@define-color gold @primary;
+@define-color rose @primary;
+@define-color pine @primary;
+@define-color foam @primary;
+@define-color iris @primary;
+@define-color highlight @primary;
+@define-color highlightLow @surface;
+@define-color highlightMed @surface_hover;
+@define-color highlightHigh @primary;
+@define-color foreground-muted @foreground_muted;
+@define-color surface-hover @surface_hover;

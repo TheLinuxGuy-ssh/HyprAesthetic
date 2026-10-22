@@ -1,0 +1,4 @@
+name = "V6.cc"
+description = "lowered \"inactive\" opacity on modules, only clock and active modules set to 1"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.cc"

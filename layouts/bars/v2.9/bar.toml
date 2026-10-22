@@ -1,0 +1,4 @@
+name = "V2.9"
+description = "vertical bar - text based modules"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.9"

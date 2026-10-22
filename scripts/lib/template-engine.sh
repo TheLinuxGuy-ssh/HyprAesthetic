@@ -119,6 +119,14 @@ PYEOF
 prepare_theme_vars() {
     local theme_dir="$1"
     local vars_file="$2"
-    
-    parse_toml "$theme_dir/theme.toml" > "$vars_file"
+    PYTHONPATH="${PROJECT_ROOT}/src${PYTHONPATH:+:$PYTHONPATH}" \
+        HYPRAESTHETIC_ROOT="$PROJECT_ROOT" \
+        python3 - "$theme_dir" "$vars_file" <<'PY'
+from pathlib import Path
+import sys
+from hypraesthetic.theme import ThemePackage
+
+pkg = ThemePackage.load(Path(sys.argv[1]))
+Path(sys.argv[2]).write_text(pkg.flatten_shell(), encoding="utf-8")
+PY
 }

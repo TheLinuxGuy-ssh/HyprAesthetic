@@ -1,0 +1,92 @@
+schema = 2
+name = "jjk"
+display_name = "JJK"
+description = "Crimson cursed-energy aesthetic inspired by Jujutsu Kaisen"
+author = "HyprAesthetic"
+version = "1.0.0"
+license = "MIT"
+min_hypraesthetic = "0.2.0"
+
+[misc]
+wallpaper = "jjk.png"
+quotes = [
+  "I am you.",
+  "Don't worry. I'm the strongest.",
+  "A flower that blooms in a wasteland is still a flower.",
+]
+
+[palette]
+base00 = "#17090c"
+base01 = "#241014"
+base02 = "#33161c"
+base03 = "#4a1d25"
+base04 = "#c9a3a8"
+base05 = "#f8ecee"
+base06 = "#fdf4f5"
+base07 = "#ffffff"
+base08 = "#ff5c6a"
+base09 = "#ff9f43"
+base0A = "#f5c542"
+base0B = "#7ce38b"
+base0C = "#6ec4b0"
+base0D = "#f5c542"
+base0E = "#c79bd6"
+base0F = "#ff7ba0"
+
+[colors.hyprland]
+border_active = "{{palette.base0A}}"
+border_inactive = "{{palette.base03}}"
+shadow = "{{palette.base00}}aa"
+
+[colors.waybar]
+background = "#1c0d11"
+foreground = "{{palette.base05}}"
+surface = "{{palette.base01}}"
+surface_hover = "{{palette.base02}}"
+border = "{{palette.base03}}"
+foreground_muted = "{{palette.base04}}"
+primary = "{{palette.base0A}}"
+primary_fg = "#1c0d11"
+error = "{{palette.base08}}"
+error_fg = "#1c0d11"
+warning = "#ffdf7e"
+warning_fg = "#1c0d11"
+success = "{{palette.base0B}}"
+success_fg = "#1c0d11"
+
+[colors.eww]
+background = "{{palette.base00}}"
+foreground = "{{palette.base06}}"
+surface = "{{palette.base01}}"
+surface_hover = "{{palette.base02}}"
+border = "{{palette.base03}}"
+foreground_muted = "#d8c0c4"
+primary = "#ffd75e"
+primary_fg = "{{palette.base00}}"
+error = "#ff8a94"
+error_fg = "{{palette.base00}}"
+warning = "#ffdf7e"
+warning_fg = "{{palette.base00}}"
+success = "#9df0aa"
+success_fg = "{{palette.base00}}"
+
+[layout]
+bar = "waybar"
+bar_style = "v1"
+launcher = "rofi"
+widgets = ["clock", "system", "matrix", "wakatime", "toji"]
+
+[defaults]
+file_manager = "nautilus"
+terminal = "kitty"
+
+[components]
+hyprland = true
+waybar = true
+hyprwave = true
+eww = true
+rofi = true
+kitty = true
+gtk = true
+dunst = true
+nvim = true

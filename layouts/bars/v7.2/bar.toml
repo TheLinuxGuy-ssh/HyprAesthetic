@@ -1,0 +1,4 @@
+name = "V7.2"
+description = "Top bar inspired by [dothash](https://github.com/bjarneo/quickshell/tree/main) quickshell navbar – custom design modific"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V7.2"
