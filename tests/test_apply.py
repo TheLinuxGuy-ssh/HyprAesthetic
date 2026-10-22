@@ -628,6 +628,62 @@ class ApplyEngineTests(unittest.TestCase):
         self.assertTrue(any(line.startswith("eww open toji") for line in flat))
         self.assertFalse(any(line.startswith("eww open clock") for line in flat))
 
+    def test_eww_only_apply_adopts_legacy_flat_widgets_onto_current_theme(self) -> None:
+        (self.repo / "layouts" / "default" / "eww" / "eww.yuck").write_text(
+            "(defwindow clock [])\n(defwindow toji [])\n",
+            encoding="utf-8",
+        )
+        current = self.home / ".config" / "HyprAesthetic" / "current_theme"
+        current.parent.mkdir(parents=True, exist_ok=True)
+        current.write_text("sample\n", encoding="utf-8")
+        prefs = Prefs.load()
+        prefs.set("widgets", ["quote"])
+        prefs.save()
+
+        calls: list[list[str]] = []
+        ping_ok = {"value": True}
+
+        def runner(cmd, **kwargs):
+            calls.append([str(part) for part in cmd])
+            name = [str(part) for part in cmd]
+
+            class Result:
+                returncode = 0
+                stdout = '[{"id": 0, "focused": true}]'
+                stderr = ""
+
+            if name[:2] == ["eww", "kill"] or name[:3] == ["pkill", "-x", "eww"]:
+                ping_ok["value"] = False
+            if name[:2] == ["eww", "ping"]:
+                Result.returncode = 0 if ping_ok["value"] else 1
+            return Result()
+
+        def popen(cmd, **kwargs):
+            calls.append([str(part) for part in cmd])
+            if [str(part) for part in cmd][:2] == ["eww", "daemon"]:
+                ping_ok["value"] = True
+
+            class Proc:
+                pid = 1
+
+            return Proc()
+
+        engine = ApplyEngine(
+            repo_root=self.repo,
+            live=True,
+            runner=runner,
+            popen=popen,
+            which=lambda name: f"/usr/bin/{name}",
+        )
+        result = engine.apply("sample", components=["eww"])
+        self.assertEqual(result.errors, [])
+        loaded = Prefs.load()
+        self.assertEqual(loaded.widgets_for("sample"), ["quote"])
+        self.assertEqual(loaded.get("widgets"), ["quote"])
+        flat = [" ".join(cmd) for cmd in calls]
+        self.assertTrue(any(line.startswith("eww open toji") for line in flat))
+        self.assertFalse(any(line.startswith("eww open clock") for line in flat))
+
     def test_full_apply_does_not_wipe_wallpaper_pref(self) -> None:
         prefs = Prefs.load()
         prefs.set("wallpaper", "/tmp/custom.png")

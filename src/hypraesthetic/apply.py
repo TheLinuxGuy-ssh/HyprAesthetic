@@ -164,8 +164,10 @@ class ApplyEngine:
             if current_ids:
                 prefs.set("widgets", list(current_ids))
             snapshot(prefs, current_name)
+        # Component applies (login opens eww only) still need the flat list
+        # copied onto the theme that is current before this apply.
+        prefs.adopt_legacy_widgets(current_name)
         if components is None:
-            prefs.adopt_legacy_widgets(current_name)
             ids = [str(item) for item in (prefs.widgets_for(name) or pkg.widgets)]
             prefs.set_widgets_for(name, ids)
             prefs.set("widgets", ids)
