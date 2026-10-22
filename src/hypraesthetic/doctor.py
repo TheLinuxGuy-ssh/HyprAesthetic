@@ -31,6 +31,9 @@ class DoctorReport:
     def missing_required(self) -> list[DoctorCheck]:
         return [check for check in self.checks if check.required and not check.ok]
 
+    def missing_ids(self) -> list[str]:
+        return [check.id for check in self.checks if not check.ok]
+
 
 WhichFn = Callable[[str], str | None]
 
@@ -74,7 +77,7 @@ class Doctor:
                 id=cid,
                 ok=True,
                 required=required,
-                detail="no command probe",
+                detail="no extra binary to check",
                 friendly=friendly,
             )
         missing = [cmd for cmd in commands if not self.which(cmd)]

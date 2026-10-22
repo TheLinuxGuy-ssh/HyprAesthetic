@@ -961,9 +961,26 @@ def doctor_page() -> Gtk.Widget:
     report = Doctor().run()
     for check in report.checks:
         status = "OK" if check.ok else ("required missing" if check.required else "optional missing")
-        box.append(Adw.ActionRow(title=check.friendly or check.id, subtitle=f"{status}: {check.detail}"))
-    repair = Gtk.Button(label="Install missing packages", halign=Gtk.Align.START)
+        row = Adw.ActionRow(title=check.friendly or check.id, subtitle=f"{status}: {check.detail}")
+        if hasattr(row, "add_css_class"):
+            if check.ok:
+                row.add_css_class("success")
+            elif check.required:
+                row.add_css_class("error")
+            else:
+                row.add_css_class("warning")
+        box.append(row)
+    missing = report.missing_ids()
+    label = "Nothing to install" if not missing else f"Install missing ({', '.join(missing)})"
+    repair = Gtk.Button(label=label, halign=Gtk.Align.START)
     repair.add_css_class("suggested-action")
-    repair.connect("clicked", lambda *_: __import__("subprocess").Popen(["ha-theme", "install", "--mode", "automatic", "--yes"]))
+
+    def on_repair(*_args: object) -> None:
+        if not report.missing_ids():
+            _toast(overlay, "Nothing missing")
+            return
+        __import__("subprocess").Popen(["ha-theme", "install", "--mode", "automatic", "--yes"])
+
+    repair.connect("clicked", on_repair)
     box.append(repair)
     return overlay

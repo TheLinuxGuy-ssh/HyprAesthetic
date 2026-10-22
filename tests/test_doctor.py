@@ -36,6 +36,26 @@ class DoctorTests(unittest.TestCase):
         check = DoctorCheck(id="kitty", ok=True, required=True, detail="found")
         self.assertTrue(check.ok)
 
+    def test_empty_commands_are_not_called_ok_probe(self) -> None:
+        doctor = Doctor(
+            catalog_commands={"portal": []},
+            required=set(),
+            which=lambda cmd: None,
+        )
+        check = doctor.run().checks[0]
+        self.assertTrue(check.ok)
+        self.assertNotIn("no command probe", check.detail.lower())
+        self.assertIn("no extra binary", check.detail.lower())
+
+    def test_missing_packages_lists_ids(self) -> None:
+        doctor = Doctor(
+            catalog_commands={"dunst": ["dunst"], "nvim": ["nvim"]},
+            required=set(),
+            which=lambda cmd: None,
+        )
+        ids = doctor.run().missing_ids()  # add this helper: not-ok check ids
+        self.assertEqual(set(ids), {"dunst", "nvim"})
+
 
 if __name__ == "__main__":
     unittest.main()
