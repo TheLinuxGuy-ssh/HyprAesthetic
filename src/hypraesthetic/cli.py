@@ -70,6 +70,8 @@ def dispatch(cmd: str, rest: list[str]) -> int:
     if cmd == "backup":
         return _bash("backup-configs.sh", ["backup"])
     if cmd == "restore":
+        if not rest:
+            return _bash("backup-configs.sh", ["list"])
         return _bash("backup-configs.sh", ["restore", *rest])
     if cmd == "menu":
         extra = ["--restart"] if rest[:1] == ["--restart"] else []
@@ -124,7 +126,11 @@ def cmd_switch(rest: list[str]) -> int:
     theme = rest[0]
     dry = "--dry-run" in rest
     restart = "--restart" in rest
-    result = ApplyEngine(live=not dry).apply(theme, dry_run=dry, restart=restart)
+    try:
+        result = ApplyEngine(live=not dry).apply(theme, dry_run=dry, restart=restart)
+    except KeyError:
+        print(f"error: theme not found: {theme}", file=sys.stderr)
+        return 1
     if dry:
         print("DRY RUN - would switch:")
         for item in result.applied:
@@ -140,13 +146,23 @@ def cmd_switch(rest: list[str]) -> int:
 
 
 def cmd_switch_one(component: str, rest: list[str]) -> int:
-    if component == "wallpaper":
-        theme = rest[0] if rest else _current_or_die()
-        ApplyEngine().apply(theme, components=["wallpaper"])
-        return 0
     theme = rest[0] if rest and not rest[0].startswith("-") else _current_or_die()
+    dry = "--dry-run" in rest
     restart = "--restart" in rest
-    ApplyEngine().apply(theme, restart=restart, components=[component])
+    try:
+        ApplyEngine(live=not dry).apply(
+            theme,
+            dry_run=dry,
+            restart=restart,
+            components=[component],
+        )
+    except KeyError:
+        print(f"error: theme not found: {theme}", file=sys.stderr)
+        return 1
+    if dry:
+        print("DRY RUN - would switch:")
+        print(f"  - {component}")
+        return 0
     print(f"{component} configured")
     return 0
 
@@ -262,7 +278,8 @@ def cmd_prefs(rest: list[str]) -> int:
     if not rest or rest[0] == "get":
         key = rest[1] if len(rest) > 1 else None
         if key:
-            print(prefs.get(key))
+            value = prefs.get(key)
+            print("unset" if value is None else value)
         else:
             for key, value in sorted(prefs.data.items()):
                 print(f"{key} = {value}")

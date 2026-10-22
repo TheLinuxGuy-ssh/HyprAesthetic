@@ -14,19 +14,26 @@ from hypraesthetic.paths import REPO_ROOT
 
 
 class CliTests(unittest.TestCase):
-    def _run(self, args: list[str]) -> tuple[int, str]:
+    def _run3(self, args: list[str]) -> tuple[int, str, str]:
         os.environ["HYPRAESTHETIC_ROOT"] = str(REPO_ROOT)
         from io import StringIO
         import sys
 
-        buf = StringIO()
-        old = sys.stdout
-        sys.stdout = buf
+        out_buf = StringIO()
+        err_buf = StringIO()
+        old_out, old_err = sys.stdout, sys.stderr
+        sys.stdout = out_buf
+        sys.stderr = err_buf
         try:
             code = main(args)
         finally:
-            sys.stdout = old
-        return code, buf.getvalue()
+            sys.stdout = old_out
+            sys.stderr = old_err
+        return code, out_buf.getvalue(), err_buf.getvalue()
+
+    def _run(self, args: list[str]) -> tuple[int, str]:
+        code, out, _err = self._run3(args)
+        return code, out
 
     def test_help_exits_zero(self) -> None:
         code, out = self._run(["--help"])
@@ -115,6 +122,42 @@ source = "https://github.com/example/from-refresh.git"
                     os.environ.pop("HOME", None)
                 else:
                     os.environ["HOME"] = old_home
+
+    def test_switch_unknown_theme_says_not_found(self) -> None:
+        code, out, err = self._run3(["switch", "does-not-exist"])
+        self.assertEqual(code, 1)
+        self.assertIn("theme not found", (out + err).lower())
+        self.assertNotIn("KeyError", out + err)
+
+    def test_switch_waybar_dry_run_does_not_apply(self) -> None:
+        with patch("hypraesthetic.cli.ApplyEngine") as eng:
+            inst = eng.return_value
+            inst.apply.return_value = SimpleNamespace(applied=["waybar"], errors=[], theme="sky")
+            code, out, err = self._run3(["switch-waybar", "sky", "--dry-run"])
+        self.assertEqual(code, 0)
+        inst.apply.assert_called()
+        kwargs = inst.apply.call_args.kwargs
+        self.assertTrue(kwargs.get("dry_run") or inst.apply.call_args.args)
+        # Prefer kwargs dry_run=True; also accept ApplyEngine(live=False) if that is how dry-run is wired.
+        self.assertTrue(
+            kwargs.get("dry_run") is True
+            or (eng.call_args and eng.call_args.kwargs.get("live") is False)
+        )
+
+    def test_restore_without_timestamp_lists_and_exits_zero(self) -> None:
+        with patch("hypraesthetic.cli._bash", return_value=0) as bash:
+            code, out, err = self._run3(["restore"])
+        self.assertEqual(code, 0)
+        bash.assert_called_once()
+        args = bash.call_args.args
+        self.assertEqual(args[0], "backup-configs.sh")
+        self.assertEqual(list(args[1]), ["list"])
+
+    def test_prefs_get_unknown_is_unset(self) -> None:
+        code, out, err = self._run3(["prefs", "get", "no_such_pref"])
+        self.assertEqual(code, 0)
+        self.assertNotIn("None", out.strip())
+        self.assertIn("unset", out.lower())
 
 
 if __name__ == "__main__":
