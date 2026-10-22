@@ -7,6 +7,23 @@ source "$SCRIPT_DIR/lib/distro-detect.sh"
 
 COMPONENTS=("hypr" "waybar" "hyprwave" "eww" "rofi" "kitty" "gtk" "dunst" "nvim")
 
+# Print backup names, newest first. With no args, print every name.
+# Returns 1 when the backup directory is missing.
+read_backup_names() {
+    local limit="${1:-0}"
+    local -a names=()
+
+    [[ -d "$BACKUP_DIR" ]] || return 1
+    mapfile -t names < <(find "$BACKUP_DIR" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort -r)
+    if [[ "$limit" -gt 0 ]]; then
+        if [[ ${#names[@]} -gt 0 ]]; then
+            printf '%s\n' "${names[@]:0:$limit}"
+        fi
+    elif [[ ${#names[@]} -gt 0 ]]; then
+        printf '%s\n' "${names[@]}"
+    fi
+}
+
 declare -A CONFIG_PATHS
 CONFIG_PATHS=(
     ["hypr"]="$HOME/.config/hypr"
@@ -33,7 +50,7 @@ backup_configs() {
         local paths="${CONFIG_PATHS[$component]}"
         for path in $paths; do
             if [[ -e "$path" ]]; then
-                local rel_path="${path#$HOME/.config/}"
+                local rel_path="${path#"$HOME"/.config/}"
                 local dest_dir
                 if [[ "$rel_path" == */* ]]; then
                     dest_dir="$backup_path/$(dirname "$rel_path")"
@@ -62,7 +79,7 @@ restore_configs() {
     
     if [[ -z "$timestamp" ]]; then
         log_info "Available backups:"
-        ls -1 "$BACKUP_DIR" 2>/dev/null | sort -r | head -20 || log_warn "No backups found"
+        read_backup_names 20 || log_warn "No backups found"
         read -rp "Enter timestamp to restore: " timestamp
     fi
     
@@ -81,7 +98,7 @@ restore_configs() {
 
 list_backups() {
     log_info "Available backups in $BACKUP_DIR:"
-    ls -1 "$BACKUP_DIR" 2>/dev/null | sort -r || log_warn "No backups found"
+    read_backup_names || log_warn "No backups found"
 }
 
 main() {

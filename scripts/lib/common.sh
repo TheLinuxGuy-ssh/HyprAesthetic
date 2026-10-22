@@ -4,8 +4,12 @@ set -euo pipefail
 _COMMON_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$_COMMON_SCRIPT_DIR/../.." && pwd)"
 THEMES_DIR="$PROJECT_ROOT/themes"
+# Public globals for scripts that source this file. Unused when linted alone.
+# shellcheck disable=SC2034
 CONFIG_DIR="$PROJECT_ROOT/config"
+# shellcheck disable=SC2034
 BACKUP_DIR="$HOME/.config.backup"
+# shellcheck disable=SC2034
 CONFIG_DIR_NAME="HyprAesthetic"
 
 RED='\033[0;31m'
@@ -142,7 +146,9 @@ get_theme_waybar_color() {
         *) fallback_key="" ;;
     esac
 
-    [[ -n "$fallback_key" ]] && get_toml_value "$toml" "$fallback_key" 2>/dev/null || true
+    if [[ -n "$fallback_key" ]]; then
+        get_toml_value "$toml" "$fallback_key" 2>/dev/null || true
+    fi
 }
 
 list_theme_names() {
