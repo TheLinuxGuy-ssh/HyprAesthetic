@@ -23,6 +23,7 @@ class CommunityFilesTests(unittest.TestCase):
             ".github/ISSUE_TEMPLATE/config.yml",
             ".github/ISSUE_TEMPLATE/bug_report.yml",
             ".github/ISSUE_TEMPLATE/feature_request.yml",
+            "docs/store.md",
         ):
             path = ROOT / name
             self.assertTrue(path.is_file(), f"missing {name}")
