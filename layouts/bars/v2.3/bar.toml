@@ -1,0 +1,4 @@
+name = "V2.3"
+description = "base config v2.2 - all rounded and shadow boxed"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.3"

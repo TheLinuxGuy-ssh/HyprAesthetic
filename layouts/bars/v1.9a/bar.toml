@@ -1,0 +1,4 @@
+name = "V1.9a"
+description = "single rounded island version of base config V1.7"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V1.9a"

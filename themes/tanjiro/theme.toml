@@ -1,0 +1,92 @@
+schema = 2
+name = "tanjiro"
+display_name = "Tanjiro"
+description = "Warm ember aesthetic inspired by Tanjiro Kamado"
+author = "HyprAesthetic"
+version = "1.0.0"
+license = "MIT"
+min_hypraesthetic = "0.2.0"
+
+[misc]
+wallpaper = "tanjiro.png"
+quotes = [
+  "I can smell it. Your sadness.",
+  "Set your heart ablaze.",
+  "I will not let anyone else die.",
+]
+
+[palette]
+base00 = "#140d08"
+base01 = "#20160e"
+base02 = "#2e2013"
+base03 = "#452e1a"
+base04 = "#c2a68b"
+base05 = "#f4e9dc"
+base06 = "#faf3ea"
+base07 = "#ffffff"
+base08 = "#e25c4a"
+base09 = "#ff8f3d"
+base0A = "#ffc94d"
+base0B = "#8fae4e"
+base0C = "#6ec4b0"
+base0D = "#e8823c"
+base0E = "#c96f2f"
+base0F = "#d16d35"
+
+[colors.hyprland]
+border_active = "{{palette.base0D}}"
+border_inactive = "{{palette.base03}}"
+shadow = "{{palette.base00}}aa"
+
+[colors.waybar]
+background = "#171009"
+foreground = "{{palette.base05}}"
+surface = "{{palette.base01}}"
+surface_hover = "{{palette.base02}}"
+border = "{{palette.base03}}"
+foreground_muted = "{{palette.base04}}"
+primary = "{{palette.base0D}}"
+primary_fg = "#171009"
+error = "{{palette.base08}}"
+error_fg = "#171009"
+warning = "{{palette.base0A}}"
+warning_fg = "#171009"
+success = "{{palette.base0B}}"
+success_fg = "#171009"
+
+[colors.eww]
+background = "{{palette.base00}}"
+foreground = "{{palette.base05}}"
+surface = "{{palette.base01}}"
+surface_hover = "{{palette.base02}}"
+border = "{{palette.base03}}"
+foreground_muted = "{{palette.base04}}"
+primary = "#f0924a"
+primary_fg = "{{palette.base00}}"
+error = "{{palette.base08}}"
+error_fg = "{{palette.base00}}"
+warning = "{{palette.base0A}}"
+warning_fg = "{{palette.base00}}"
+success = "{{palette.base0B}}"
+success_fg = "{{palette.base00}}"
+
+[layout]
+bar = "waybar"
+bar_style = "v4"
+launcher = "rofi"
+widgets = ["clock", "system", "matrix", "wakatime", "toji"]
+
+[defaults]
+file_manager = "nautilus"
+terminal = "kitty"
+
+[components]
+hyprland = true
+waybar = true
+hyprwave = true
+eww = true
+rofi = true
+kitty = true
+gtk = true
+dunst = true
+nvim = true

@@ -1,0 +1,4 @@
+name = "V1.9c"
+description = "longbar , added cpu / mem / battery bar , changes color and width depends on load"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V1.9c"

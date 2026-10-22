@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/eww/weather"
+statf="$cache/stat"
+tempf="$cache/temp"
+iconf="$cache/icon"
+hexf="$cache/hex"
+quotef="$cache/quote"
+quote2f="$cache/quote2"
+
+mkdir -p "$cache"
+
+refresh() {
+  local raw icon temp cond
+  raw="$(curl -fsS --max-time 8 "https://wttr.in/?format=%c|%t|%C" 2>/dev/null || true)"
+  if [[ -z "$raw" ]]; then
+    printf '%s\n' "☁" >"$iconf"
+    printf '%s\n' "?" >"$tempf"
+    printf '%s\n' "Weather unavailable" >"$statf"
+    printf '%s\n' "#89b4fa" >"$hexf"
+    printf '%s\n' "No forecast right now" >"$quotef"
+    printf '%s\n' "" >"$quote2f"
+    return
+  fi
+  IFS='|' read -r icon temp cond <<<"$raw"
+  printf '%s\n' "${icon:-☁}" >"$iconf"
+  printf '%s\n' "${temp:-?}" >"$tempf"
+  printf '%s\n' "${cond:-Unknown}" >"$statf"
+  printf '%s\n' "#89b4fa" >"$hexf"
+  printf '%s\n' "${cond:-}" >"$quotef"
+  printf '%s\n' "" >"$quote2f"
+}
+
+stale=1
+if [[ -f "$statf" ]]; then
+  now="$(date +%s)"
+  stamp="$(stat -c %Y "$statf" 2>/dev/null || echo 0)"
+  if (( now - stamp < 900 )); then
+    stale=0
+  fi
+fi
+if (( stale )); then
+  refresh
+fi
+
+case "${1:-}" in
+  --icon) cat "$iconf" ;;
+  --stat) cat "$statf" ;;
+  --temp) cat "$tempf" ;;
+  --hex) cat "$hexf" ;;
+  --quote) cat "$quotef" ;;
+  --quote2) cat "$quote2f" ;;
+  *) refresh ;;
+esac

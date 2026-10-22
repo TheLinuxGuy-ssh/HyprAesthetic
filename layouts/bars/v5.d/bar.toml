@@ -1,0 +1,4 @@
+name = "V5.d"
+description = "centered workspaces"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V5.d"

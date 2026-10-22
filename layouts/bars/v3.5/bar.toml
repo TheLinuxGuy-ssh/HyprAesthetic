@@ -1,0 +1,4 @@
+name = "V3.5"
+description = "minimal setup (cpu, memory, tempature, hyprland/window are excluded)"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V3.5"

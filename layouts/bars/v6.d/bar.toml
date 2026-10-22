@@ -1,0 +1,4 @@
+name = "V6.d"
+description = "base config V6.c - tried to have less informations for \"minimal\" look / Style"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.d"

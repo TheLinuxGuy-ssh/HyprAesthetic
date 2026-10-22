@@ -1,0 +1,4 @@
+name = "V2.a"
+description = "New V2.a see [PR](https://github.com/HANCORE-linux/waybar-themes/commit/bc938ed7747fb520adbb01f540c6d16eba1b4e69) - stat"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.a"

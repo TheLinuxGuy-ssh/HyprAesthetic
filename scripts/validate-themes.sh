@@ -6,6 +6,9 @@ source "$SCRIPT_DIR/lib/common.sh"
 source "$SCRIPT_DIR/lib/template-engine.sh"
 source "$SCRIPT_DIR/lib/rofi-theme-style.sh"
 
+_CONTRAST_PY="$SCRIPT_DIR/lib/contrast_check.py"
+_WIDGET_CONTRAST_PY="$SCRIPT_DIR/lib/widget_contrast_check.py"
+
 TEMPLATES=(
     "rofi/colors.rasi"
     "rofi/wallpaper.rasi"
@@ -13,8 +16,59 @@ TEMPLATES=(
     "dunst/dunst.conf"
     "kitty/kitty.conf"
     "hypr/colors.conf"
+    "hypr/appearences.lua"
+    "hyprwave/config.toml"
+    "eww/eww.scss"
+    "eww/eww.yuck"
     "nvim/current_theme.lua"
 )
+
+validate_contrast() {
+    local theme="$1"
+    local vars_file="$2"
+
+    local out
+    out=$(VARS_FILE="$vars_file" python3 "$_CONTRAST_PY" 2>&1) || {
+        log_error "contrast check crashed: $out"
+        return 1
+    }
+
+    if [[ -z "$out" ]]; then
+        return 0
+    fi
+
+    while IFS= read -r line; do
+        log_error "$line"
+    done <<<"$out"
+    return 1
+}
+
+validate_widget_contrast() {
+    local theme="$1"
+    local vars_file="$2"
+
+    [[ -f "$HOME/.wallpapers/.keep" ]] && return 0
+
+    local wp
+    wp=$(get_theme_wallpaper_path "$theme" || true)
+    [[ -n "$wp" && -f "$wp" ]] || return 0
+
+    local yuck="$THEMES_DIR/$theme/eww/eww.yuck"
+    [[ -f "$yuck" ]] || return 0
+
+    local out
+    out=$(VARS_FILE="$vars_file" WALLPAPER="$wp" YUCK="$yuck" \
+        python3 "$_WIDGET_CONTRAST_PY" 2>&1) || true
+
+    if [[ -z "$out" ]]; then
+        return 0
+    fi
+
+    while IFS= read -r line; do
+        log_warn "$line"
+    done <<<"$out"
+    return 0
+}
 
 validate_theme() {
     local theme="$1"
@@ -29,7 +83,10 @@ validate_theme() {
     prepare_theme_vars "$theme_dir" "$vars_file"
 
     for key in colors_waybar_background colors_waybar_border colors_waybar_primary \
-        colors_waybar_warning colors_waybar_success colors_base00 name display_name; do
+        colors_waybar_warning colors_waybar_success colors_base00 \
+        colors_eww_background colors_eww_foreground colors_eww_primary \
+        colors_eww_error colors_eww_warning colors_eww_success colors_base0D \
+        name display_name; do
         if ! grep -q "^${key}=" "$vars_file"; then
             log_error "missing $key in theme.toml"
             errors=$((errors + 1))
@@ -55,6 +112,14 @@ validate_theme() {
             errors=$((errors + 1))
         fi
     done
+
+    if ! validate_contrast "$theme" "$vars_file"; then
+        errors=$((errors + 1))
+    fi
+
+    if ! validate_widget_contrast "$theme" "$vars_file"; then
+        errors=$((errors + 1))
+    fi
 
     local wp
     wp=$(get_theme_wallpaper_path "$theme" || true)

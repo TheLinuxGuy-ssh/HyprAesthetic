@@ -1,0 +1,4 @@
+name = "V6.ac"
+description = "top-min bar with **_dynamic colors_**"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.ac"

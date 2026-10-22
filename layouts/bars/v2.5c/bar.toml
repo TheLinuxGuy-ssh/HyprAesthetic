@@ -1,0 +1,4 @@
+name = "V2.5c"
+description = "static colors based of my new Theme [Ryū](https://github.com/HANCORE-linux/omarchy-ryu-theme)"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.5c"

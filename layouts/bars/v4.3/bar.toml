@@ -1,0 +1,4 @@
+name = "V4.3"
+description = "Enhancement release (Minimal build, mpris animation, wttrbar and gradient bottom color)"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V4.3"

@@ -1,0 +1,4 @@
+name = "V1"
+description = "first creation of my own Waybar config"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V1"

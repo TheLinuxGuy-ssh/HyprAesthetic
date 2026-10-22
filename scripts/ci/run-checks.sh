@@ -3,6 +3,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../.." && pwd)"
 cd "$ROOT"
+export HYPRAESTHETIC_ROOT="$ROOT"
+export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
 
 echo "=== Bash syntax ==="
 bash -n install.sh
@@ -30,13 +32,17 @@ else
     echo "shellcheck not installed — skipping (installed in CI)"
 fi
 
+echo "=== Unit tests ==="
+python3 -m unittest discover -s tests -v
+
 echo "=== Theme validation ==="
+python3 -m hypraesthetic validate
 bash scripts/validate-themes.sh
 
 echo "=== Rofi contrast validation ==="
 mkdir -p "$HOME/.config/HyprAesthetic" "$HOME/.config/rofi"
 echo "toji" >"$HOME/.config/HyprAesthetic/current_theme"
-rsync -a themes/toji/rofi/ "$HOME/.config/rofi/"
+rsync -a layouts/default/rofi/ "$HOME/.config/rofi/"
 bash scripts/validate-rofi-contrast.sh
 
 echo "=== Template tests ==="
@@ -54,8 +60,9 @@ test -f uninstall.sh
 test -f ha-theme
 test -f scripts/theme-switcher.sh
 test -d themes/_template/hypr
-test -d themes/_template/waybar
-test -d themes/_template/hyprwave
+test -d layouts/default/waybar
+test -f data/packages.toml
+test -f data/store-index.toml
 test -d themes/cyberpunk
 test -f themes/cyberpunk/theme.toml
 test -x install.sh

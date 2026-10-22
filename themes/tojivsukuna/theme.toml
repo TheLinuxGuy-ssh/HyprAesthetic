@@ -1,0 +1,92 @@
+schema = 2
+name = "tojivsukuna"
+display_name = "Toji vs Sukuna"
+description = "High-contrast light aesthetic inspired by the Toji vs Sukuna clash"
+author = "HyprAesthetic"
+version = "1.0.0"
+license = "MIT"
+min_hypraesthetic = "0.2.0"
+
+[misc]
+wallpaper = "tojivsukuna.png"
+quotes = [
+  "Let's see what a real monster looks like.",
+  "Two calamities. One grave.",
+  "I don't pray. I cut.",
+]
+
+[palette]
+base00 = "#101a2c"
+base01 = "#182338"
+base02 = "#243352"
+base03 = "#3a4a6e"
+base04 = "#6b7fa0"
+base05 = "#e8eef7"
+base06 = "#f0f4fa"
+base07 = "#ffffff"
+base08 = "#c0392b"
+base09 = "#d35400"
+base0A = "#b8860b"
+base0B = "#1e8449"
+base0C = "#0f766e"
+base0D = "#2563eb"
+base0E = "#7c3aed"
+base0F = "#be185d"
+
+[colors.hyprland]
+border_active = "{{palette.base0D}}"
+border_inactive = "#9db8cc"
+shadow = "#16213aaa"
+
+[colors.waybar]
+background = "#dff0f8"
+foreground = "#16213a"
+surface = "#c8dcee"
+surface_hover = "#b8d0e4"
+border = "#9db8cc"
+foreground_muted = "#3d5270"
+primary = "{{palette.base0D}}"
+primary_fg = "{{palette.base07}}"
+error = "{{palette.base08}}"
+error_fg = "{{palette.base07}}"
+warning = "#b45309"
+warning_fg = "{{palette.base07}}"
+success = "{{palette.base0B}}"
+success_fg = "{{palette.base07}}"
+
+[colors.eww]
+background = "#dbeaf5"
+foreground = "#1c2740"
+surface = "#f2f8fd"
+surface_hover = "#e2eef8"
+border = "#9db8cc"
+foreground_muted = "#3d5270"
+primary = "{{palette.base0D}}"
+primary_fg = "{{palette.base07}}"
+error = "#b3261e"
+error_fg = "{{palette.base07}}"
+warning = "#8a4b09"
+warning_fg = "{{palette.base07}}"
+success = "#15693c"
+success_fg = "{{palette.base07}}"
+
+[layout]
+bar = "waybar"
+bar_style = "v1.2"
+launcher = "rofi"
+widgets = ["clock", "system", "wakatime", "toji"]
+
+[defaults]
+file_manager = "nautilus"
+terminal = "kitty"
+
+[components]
+hyprland = true
+waybar = true
+hyprwave = true
+eww = true
+rofi = true
+kitty = true
+gtk = true
+dunst = true
+nvim = true

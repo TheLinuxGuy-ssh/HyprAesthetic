@@ -1,0 +1,4 @@
+name = "V3"
+description = "new waybar Style (without red accents)"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V3"

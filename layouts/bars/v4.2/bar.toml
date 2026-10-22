@@ -1,0 +1,4 @@
+name = "V4.2"
+description = "base config V4"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V4.2"

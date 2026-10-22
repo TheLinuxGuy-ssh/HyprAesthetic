@@ -6,16 +6,17 @@ We provide security updates for the following versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.x.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| 0.2.x   | :white_check_mark: |
+| < 0.2   | :x:                |
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in Hypraesthetic, please report it responsibly:
+If you discover a security vulnerability in HyprAesthetic, please report it responsibly:
 
 1. **Do not** open a public GitHub issue
-2. Email the maintainers at: [your-email@example.com]
-3. Include:
+2. Open a private [GitHub Security Advisory](https://github.com/thelinuxguy-ssh/HyprAesthetic/security/advisories/new)
+3. Or email the maintainers at: mr.linux.0@protonmail.com
+4. Include:
    - Description of the vulnerability
    - Steps to reproduce
    - Potential impact
@@ -27,7 +28,7 @@ We will acknowledge receipt within 48 hours and provide a timeline for fix.
 
 ### What This Project Does
 - Reads theme configuration files (TOML)
-- Renders templates with color values
+- Renders templates with color values via the Python renderer (`hat`)
 - Creates symlinks in `~/.config/`
 - Backs up existing configs to `~/.config.backup/`
 - Installs system packages via package manager (with user confirmation)
@@ -47,9 +48,9 @@ We will acknowledge receipt within 48 hours and provide a timeline for fix.
 
 **Potential Risks:**
 1. **Symlink attacks** - Malicious theme could symlink outside `~/.config/`
-   - Mitigation: Switcher validates paths, only creates symlinks to theme dir
+   - Mitigation: `hat` validates paths, only creates symlinks to theme dir
 2. **Template injection** - Malicious TOML could inject shell commands
-   - Mitigation: Python-based renderer only does string substitution, no eval
+   - Mitigation: Python renderer only does string substitution, no eval
 3. **Package installation** - Supply chain via package manager
    - Mitigation: Uses official distro repos, user confirms before install
 4. **Backup exposure** - Backups contain user's config files
@@ -59,7 +60,7 @@ We will acknowledge receipt within 48 hours and provide a timeline for fix.
 
 - Only install themes from trusted sources
 - Review `theme.toml` and config files before switching
-- Run `Hypraesthetic-theme switch <theme> --dry-run` first
+- Run `hat switch <theme> --dry-run` first
 - Keep backups (automatic) and know how to restore
 
 ### For Theme Authors
@@ -78,5 +79,4 @@ We regularly update:
 
 ## Contact
 
-Security contact: [your-email@example.com]
-PGP key: [link if available]
+Security contact: mr.linux.0@protonmail.com

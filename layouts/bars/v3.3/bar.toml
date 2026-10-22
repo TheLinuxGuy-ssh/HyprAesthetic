@@ -1,0 +1,4 @@
+name = "V3.3"
+description = "shadow bar with minimal concept (wttbar, mpris, pacmanupdates, hyprland/window)"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V3.3"

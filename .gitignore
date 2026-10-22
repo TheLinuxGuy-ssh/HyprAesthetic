@@ -1,4 +1,4 @@
-# hypranime - Git ignore rules
+# HyprAesthetic
 
 # Rendered configs (generated during install/switch)
 config/
@@ -38,6 +38,18 @@ screenshots/*.webp
 themes/*/local/
 themes/*/*.local.*
 
-# Python cache
+# Python cache / build
 __pycache__/
 *.pyc
+.pytest_cache/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+dist/
+build/
+
+# Local / generated
+1/
+.superpowers/
+docs/superpowers/

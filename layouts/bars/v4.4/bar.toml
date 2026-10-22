@@ -1,0 +1,4 @@
+name = "V4.4"
+description = "just an \"optimized\" adjustment of V4.3 modules (integration of modules in workspaces)"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V4.4"

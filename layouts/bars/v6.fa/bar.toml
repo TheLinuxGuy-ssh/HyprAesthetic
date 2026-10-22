@@ -1,0 +1,4 @@
+name = "V6.fa"
+description = "Changed from the previous version V6.f without shadows to a long bar version, providing a \"cleaner\" and more consistent "
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.fa"

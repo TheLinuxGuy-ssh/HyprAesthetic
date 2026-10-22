@@ -1,10 +1,9 @@
-/*@import "../omarchy/current/theme/waybar.css";*/
 @import "colors.css";
 
 @define-color bg @background;
 @define-color fg @foreground;
-@define-color red #c7c7c7;
-@define-color grey #353839;
+@define-color red @primary;
+@define-color grey @border;
 
 * {
     font-family: "JetBrainsMono Nerd Font";
@@ -65,7 +64,7 @@ margin-left: 4px;
 }
 
 #workspaces button.active {
-  color: @red;
+  color: @primary;
   background-color: @grey;
   padding: 0px 4px;
   margin: 4px 2px;
@@ -91,7 +90,7 @@ margin-left: 4px;
 #workspaces button.empty.active {
   opacity: 1;
   background-color: alpha(@fg, 0.5);
-  color: @bg;
+  color: @primary;
 }
 
 #custom-omarchy {
@@ -191,7 +190,7 @@ opacity: 1;
 
 #custom-idle-indicator.active,
 #custom-notification-silencing-indicator.active {
-  color: #a55555;
+  color: @primary;
   opacity: 1;
 }
 
@@ -218,7 +217,7 @@ tooltip label {
 }
 
 #custom-voxtype.recording {
-  color: #a55555;
+  color: @warning;
 }
 
 /* Specific animation Module */
@@ -232,7 +231,7 @@ tooltip label {
 }
 
 #custom-screenrecording-indicator.active {
-  color: #eb7087;
+  color: @primary;
   animation-name: blink-recording;
   animation-duration: 0.5s;
 }
@@ -262,25 +261,25 @@ animation: repeat;
 
 @keyframes blink {
     to {
-        color: #4a4a4a;
+        color: @foreground_muted;
         
     }
 }
 
 #battery.warning {
-  color: #c95d0f;
+  color: @warning;
 }
 
 @keyframes blink2 {
   to {
     background-color: transparent;
-    color: #f53c3c;
+    color: @error;
   }
 }
 
 #battery.critical:not(.charging) {
   background-color: transparent;
-  color: #e6d8ba;
+  color: @warning_fg;
   animation-name: blink2;
   animation-duration: 0.5s;
   animation-timing-function: steps(12);
@@ -291,11 +290,11 @@ animation: repeat;
 #pulseaudio.warning,
 #memory.warning,
 #cpu.warning {
-    color: #e3c1b1; /* medium load */
+    color: @warning; /* medium load */
 }
 
 #pulseaudio.critical,
 #memory.critical,
 #cpu.critical {
-    color: #df6124; /* high load */
+    color: @error; /* high load */
 }

@@ -1,0 +1,4 @@
+name = "V1.4"
+description = "new workspace style with static dark colors"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V1.4"

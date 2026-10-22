@@ -1,0 +1,4 @@
+name = "V6.cd"
+description = "long bar version of V6.cc - moved power-profile, backlight, bluetooth, network in group-extend"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.cd"

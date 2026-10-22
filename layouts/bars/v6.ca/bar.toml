@@ -1,0 +1,4 @@
+name = "V6.ca"
+description = "just waybar (no mpris, no hyprland/window) - bluetooth, backlight moved to into tray-group - shows only active workspace"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.ca"

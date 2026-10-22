@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+COVER="/tmp/.music_cover.jpg"
+MUSIC_DIR="${HOME}/Music"
+
+playerctl_ok() {
+  command -v playerctl >/dev/null 2>&1 && playerctl status >/dev/null 2>&1
+}
+
+mpc_ok() {
+  command -v mpc >/dev/null 2>&1 && mpc status >/dev/null 2>&1
+}
+
+get_status() {
+  if playerctl_ok; then
+    if [[ "$(playerctl status 2>/dev/null || true)" == "Playing" ]]; then
+      printf '\n'
+      return
+    fi
+    printf '喇\n'
+    return
+  fi
+  if mpc_ok && mpc status 2>/dev/null | grep -q '\[playing\]'; then
+    printf '\n'
+  else
+    printf '喇\n'
+  fi
+}
+
+get_song() {
+  local song=""
+  if playerctl_ok; then
+    song="$(playerctl metadata --format '{{title}}' 2>/dev/null || true)"
+  fi
+  if [[ -z "$song" ]] && mpc_ok; then
+    song="$(mpc -f %title% current 2>/dev/null || true)"
+  fi
+  printf '%s\n' "${song:-Offline}"
+}
+
+get_artist() {
+  local artist=""
+  if playerctl_ok; then
+    artist="$(playerctl metadata --format '{{artist}}' 2>/dev/null || true)"
+  fi
+  if [[ -z "$artist" ]] && mpc_ok; then
+    artist="$(mpc -f %artist% current 2>/dev/null || true)"
+  fi
+  printf '%s\n' "${artist:-Offline}"
+}
+
+get_time() {
+  local pos dur
+  if playerctl_ok; then
+    pos="$(playerctl position 2>/dev/null || echo 0)"
+    dur="$(playerctl metadata mpris:length 2>/dev/null || echo 0)"
+    if [[ "${dur}" != "0" && -n "${dur}" ]]; then
+      python3 - "$pos" "$dur" <<'PY'
+import sys
+pos = float(sys.argv[1] or 0)
+dur = float(sys.argv[2] or 0) / 1_000_000
+print(0 if dur <= 0 else int(pos / dur * 100))
+PY
+      return
+    fi
+  fi
+  if mpc_ok; then
+    mpc status 2>/dev/null | grep -o '([0-9]*%)' | tr -dc '0-9' || echo 0
+    return
+  fi
+  echo 0
+}
+
+get_ctime() {
+  if playerctl_ok; then
+    playerctl metadata --format '{{duration(position)}}' 2>/dev/null || echo "0:00"
+    return
+  fi
+  if mpc_ok; then
+    mpc status 2>/dev/null | awk '/#/{print $3}' | sed 's|/.*||' || echo "0:00"
+    return
+  fi
+  echo "0:00"
+}
+
+get_ttime() {
+  if playerctl_ok; then
+    playerctl metadata --format '{{duration(mpris:length)}}' 2>/dev/null || echo "0:00"
+    return
+  fi
+  if mpc_ok; then
+    mpc -f %time% current 2>/dev/null || echo "0:00"
+    return
+  fi
+  echo "0:00"
+}
+
+get_cover() {
+  if playerctl_ok; then
+    local art
+    art="$(playerctl metadata mpris:artUrl 2>/dev/null || true)"
+    if [[ "$art" == file://* ]]; then
+      printf '%s\n' "${art#file://}"
+      return
+    fi
+  fi
+  if mpc_ok && command -v ffmpeg >/dev/null 2>&1; then
+    ffmpeg -i "${MUSIC_DIR}/$(mpc current -f %file% 2>/dev/null || true)" "${COVER}" -y >/dev/null 2>&1 || true
+    if [[ -f "$COVER" ]]; then
+      printf '%s\n' "$COVER"
+      return
+    fi
+  fi
+  printf '%s\n' "images/music.png"
+}
+
+case "${1:-}" in
+  --song) get_song ;;
+  --artist) get_artist ;;
+  --status) get_status ;;
+  --time) get_time ;;
+  --ctime) get_ctime ;;
+  --ttime) get_ttime ;;
+  --cover) get_cover ;;
+  --toggle)
+    if playerctl_ok; then playerctl play-pause
+    elif mpc_ok; then mpc -q toggle
+    fi
+    ;;
+  --next)
+    if playerctl_ok; then playerctl next
+    elif mpc_ok; then mpc -q next
+    fi
+    ;;
+  --prev)
+    if playerctl_ok; then playerctl previous
+    elif mpc_ok; then mpc -q prev
+    fi
+    ;;
+esac

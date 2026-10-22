@@ -1,0 +1,174 @@
+@import "colors.css";
+
+* {
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+  font-family: 'JetBrainsMono Nerd Font';
+  font-size: 14px;
+  min-height: 0px;
+}
+
+#left1 {
+  background-color: @background; 
+  border-radius: 20px;          
+  padding: 0px 5px;
+  margin: 10px 5px;
+}
+
+.modules-center {
+  background-color: @background; 
+  border-radius: 20px;          
+  padding: 0px 5px;
+  margin: 10px 5px;
+}
+
+#right2, #right3 {
+  background-color: @background; 
+  border-radius: 20px;          
+  padding: 0px 5px;
+  margin: 10px 5px;
+}
+
+.modules-left {
+  margin-left: 5px;
+}
+
+.modules-right {
+  margin-right: 5px;
+}
+
+#waybar {
+  background: transparent;
+}
+
+window#waybar.empty #window {
+  background: transparent;
+  color: transparent;
+  padding: 0;
+  margin: 0;
+  transition: .5s;
+}
+
+mpris.empty {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+#workspaces {
+    background-color: alpha(@foreground, .05);
+    border: none;
+    padding: 0px;
+    margin: 5px 6px;
+    margin-right: 0px;
+    border-radius: 15px;
+}
+
+#workspaces button {
+    padding: 0px 8px;
+    margin: 0px 1px;
+    color: @background;
+    border-radius: 15px;
+    background-color: alpha(@foreground, .4);
+}
+
+#workspaces button.active {
+    padding: 0px 8px;
+    margin: 0px 1px;
+    background: @primary;
+    color: @primary_fg;
+    border-radius: 15px;
+    opacity: 1; 
+}
+
+#workspaces button.empty {
+    opacity: 0.2; 
+}
+
+#workspaces button.empty.active {
+opacity: 0.75; 
+}
+
+#workspaces button.active:hover, #workspaces button:hover {
+    background-color: alpha(@foreground, .3);
+    color: @primary;
+    opacity: 1; 
+    transition: .7s;
+}
+
+#tray, #memory, #backlight, #clock, #cpu, #battery, #network, #bluetooth, #pulseaudio {
+  background-color: alpha(@foreground, .6);
+  color: @background;
+  padding: 5px 12px;
+  margin: 5px 2px;
+  border-radius: 15px;
+}
+
+#clock:hover, #backlight:hover, #cpu:hover, #network:hover, #bluetooth:hover, #pulseaudio:hover {
+  background-color: alpha(@foreground, .4);
+  transition: .7s;
+}
+
+#tray, #memory {
+  padding: 5px 12px;
+  margin: 5px 2px;
+}
+
+#clock {
+  border-radius: 15px;
+  padding: 0 15px;
+  margin: 5px 0px;
+}
+
+.hidden {
+  opacity: 0;
+}
+
+#battery {
+  background-color: @foreground;
+  color: @background;
+  min-width: 10px;
+  border-radius: 15px;
+  padding: 0 8px;
+  margin: 5px 0 5px 0px;
+}
+
+#battery {
+  margin-left: 2px;
+}
+
+#mpris {
+  background: @background;
+  border-radius: 20px;          
+  padding: 0px 10px;
+  margin: 10px 5px;
+}
+
+#window {
+  background: @background;
+  border-radius: 20px;          
+  padding: 0px 10px;
+  margin: 10px 5px;
+}
+
+#network {
+  padding: 0 15px 0 10px;
+}
+
+#pulseaudio {
+  padding: 0 15px 0 10px;
+}
+
+tooltip {
+  border-radius: 15px;
+  background: @background;
+  border: 2px solid alpha(@foreground, .5);
+}
+
+
+
+@keyframes blink-recording {to {
+        color: @background;
+    }
+}

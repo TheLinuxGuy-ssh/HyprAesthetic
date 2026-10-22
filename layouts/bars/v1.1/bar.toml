@@ -1,0 +1,4 @@
+name = "V1.1"
+description = "island version of V1.6 with VOL dynamic circle status"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V1.1"

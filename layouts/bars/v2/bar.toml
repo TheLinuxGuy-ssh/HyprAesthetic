@@ -1,0 +1,4 @@
+name = "V2"
+description = "New V2 version with static Gruvbox color scheme - see color [source](https://github.com/morhetz/gruvbox)"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2"

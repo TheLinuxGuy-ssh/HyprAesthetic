@@ -1,0 +1,4 @@
+name = "V5"
+description = "solo bars"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V5"

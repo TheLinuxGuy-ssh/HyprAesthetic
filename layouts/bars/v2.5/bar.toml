@@ -1,0 +1,4 @@
+name = "V2.5"
+description = "black background with jap workspace buttons"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V2.5"

@@ -1,0 +1,4 @@
+name = "V6.e"
+description = "added shadow box and slightly higher"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V6.e"

@@ -1,0 +1,4 @@
+name = "V5.e"
+description = "added borders to all modules to fit the style of the workspaces"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V5.e"

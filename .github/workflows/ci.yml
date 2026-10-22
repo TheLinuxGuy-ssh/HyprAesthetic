@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck python3 rsync
 
       - name: Run CI checks
         run: bash scripts/ci/run-checks.sh
@@ -42,3 +42,10 @@ jobs:
           for section in "Features" "Installation" "Usage" "Components" "Creating Themes" "License"; do
             grep -qi "## $section" README.md || grep -qi "# $section" README.md || echo "WARNING: Missing section: $section"
           done
+
+      - name: No placeholder maintainer email
+        run: |
+          if grep -R -n --include='*.md' 'your-email@example.com' .; then
+            echo "Replace your-email@example.com with the real contact"
+            exit 1
+          fi

@@ -1,0 +1,74 @@
+# Default theme store index. Community entries use a git URL as source.
+# Official in-repo themes are marked builtin and are switched, not cloned.
+
+[[themes]]
+name = "toji"
+display_name = "Toji"
+description = "Sleek dark aesthetic inspired by Toji Fushiguro"
+author = "HyprAesthetic"
+source = "builtin"
+preview = "preview.png"
+
+[[themes]]
+name = "toji_2"
+display_name = "Toji 2"
+description = "Red-accent Toji variant"
+author = "HyprAesthetic"
+source = "builtin"
+preview = "preview.png"
+
+[[themes]]
+name = "a70"
+display_name = "A70"
+description = "Sleek modern aesthetic"
+author = "HyprAesthetic"
+source = "builtin"
+preview = "preview.png"
+
+[[themes]]
+name = "cyberpunk"
+display_name = "Cyberpunk 2077"
+description = "Neon-drenched Night City aesthetic"
+author = "HyprAesthetic"
+source = "builtin"
+preview = "preview.png"
+
+[[themes]]
+name = "choso"
+display_name = "Choso"
+description = "Violet cursed-mark aesthetic inspired by Choso"
+author = "HyprAesthetic"
+source = "builtin"
+preview = "preview.png"
+
+[[themes]]
+name = "jjk"
+display_name = "JJK"
+description = "Crimson cursed-energy aesthetic inspired by Jujutsu Kaisen"
+author = "HyprAesthetic"
+source = "builtin"
+preview = "preview.png"
+
+[[themes]]
+name = "sky"
+display_name = "Sky"
+description = "Open-air minimal aesthetic inspired by a bright summer sky"
+author = "HyprAesthetic"
+source = "builtin"
+preview = "preview.png"
+
+[[themes]]
+name = "tanjiro"
+display_name = "Tanjiro"
+description = "Warm ember aesthetic inspired by Tanjiro Kamado"
+author = "HyprAesthetic"
+source = "builtin"
+preview = "preview.png"
+
+[[themes]]
+name = "tojivsukuna"
+display_name = "Toji vs Sukuna"
+description = "High-contrast light aesthetic inspired by the Toji vs Sukuna clash"
+author = "HyprAesthetic"
+source = "builtin"
+preview = "preview.png"

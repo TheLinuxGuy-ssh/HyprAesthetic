@@ -1,0 +1,4 @@
+name = "V3.1a"
+description = "basic top bar with some red accents effects"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V3.1a"

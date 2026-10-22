@@ -1,0 +1,4 @@
+name = "V1.9b"
+description = "added cpu / mem / battery bar , changes color depends on load"
+source = "https://github.com/HANCORE-linux/waybar-themes"
+upstream = "V1.9b"

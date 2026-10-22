@@ -3,8 +3,8 @@
 
 @define-color bg @background;
 @define-color fg @foreground;
-@define-color red #c7c7c7;
-@define-color grey #353839;
+@define-color red @primary;
+@define-color grey @surface;
 
 * {
     font-family: "JetBrainsMono Nerd Font";
@@ -65,7 +65,7 @@ margin-left: 4px;
 }
 
 #workspaces button.active {
-  color: @red;
+  color: @primary;
   background-color: @grey;
   padding: 0px 4px;
   margin: 4px 2px;
@@ -91,7 +91,7 @@ margin-left: 4px;
 #workspaces button.empty.active {
   opacity: 1;
   background-color: alpha(@fg, 0.5);
-  color: @bg;
+  color: @primary;
 }
 
 #custom-omarchy {
@@ -191,7 +191,7 @@ opacity: 1;
 
 #custom-idle-indicator.active,
 #custom-notification-silencing-indicator.active {
-  color: #a55555;
+  color: @primary;
   opacity: 1;
 }
 
@@ -218,7 +218,7 @@ tooltip label {
 }
 
 #custom-voxtype.recording {
-  color: #a55555;
+  color: @primary;
 }
 
 /* Specific animation Module */
@@ -232,7 +232,7 @@ tooltip label {
 }
 
 #custom-screenrecording-indicator.active {
-  color: #eb7087;
+  color: @primary;
   animation-name: blink-recording;
   animation-duration: 0.5s;
 }
