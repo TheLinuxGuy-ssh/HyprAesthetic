@@ -5,6 +5,10 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   checks:
@@ -27,24 +31,40 @@ jobs:
 
       - name: Check markdown files
         run: |
+          set -euo pipefail
+          fail=0
           for f in *.md; do
             echo "Checking $f..."
-            grep -o '\[.*\]([^)]*\.md)' "$f" | while read -r link; do
+            while read -r link; do
+              [ -z "$link" ] && continue
               target=$(echo "$link" | sed 's/.*(\(.*\))/\1/')
-              if [[ ! -f "$target" ]]; then
-                echo "WARNING: Broken link in $f: $target"
+              target="${target%%#*}"
+              case "$target" in
+                http*|mailto:*) continue ;;
+              esac
+              if [ ! -f "$target" ]; then
+                echo "Broken link in $f: $target"
+                fail=1
               fi
-            done
+            done < <(grep -o '\[[^]]*\]([^)]*\.md[^)]*)' "$f" || true)
           done
+          exit "$fail"
 
       - name: Check README has key sections
         run: |
+          set -euo pipefail
+          fail=0
           for section in "Features" "Installation" "Usage" "Components" "Creating Themes" "License"; do
-            grep -qi "## $section" README.md || grep -qi "# $section" README.md || echo "WARNING: Missing section: $section"
+            if ! grep -q "## $section" README.md && ! grep -q "# $section" README.md; then
+              echo "Missing section: $section"
+              fail=1
+            fi
           done
+          exit "$fail"
 
       - name: No placeholder maintainer email
         run: |
+          set -euo pipefail
           if grep -R -n --include='*.md' 'your-email@example.com' .; then
             echo "Replace your-email@example.com with the real contact"
             exit 1
