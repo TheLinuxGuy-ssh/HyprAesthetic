@@ -67,6 +67,12 @@ def undo(engine: ApplyEngine) -> str:
         prefs.set_geometry_for(theme, geom)
     if "widgets_by_theme" in saved:
         prefs.set("widgets_by_theme", deepcopy(saved["widgets_by_theme"]))
+    # apply() rewrites `widgets` from widgets_for(theme) or the package list.
+    # Pin this theme to the snapshotted list first so that rewrite keeps it:
+    # a per-theme set copied into `widgets` before the snapshot, or a flat
+    # edit made after the last apply.
+    if theme and "widgets" in saved:
+        prefs.set_widgets_for(theme, list(saved["widgets"]))
     prefs.save()
     engine.apply(theme, snapshot=False)
     # A full apply copies the theme's bar_style over the restored pref.

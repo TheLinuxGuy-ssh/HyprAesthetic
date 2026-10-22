@@ -52,7 +52,7 @@ WIDGET_DEFAULT_GEOMETRY: dict[str, dict[str, str]] = {
     "system": {"x": "82%", "y": "80%", "width": "180", "height": "125"},
     "quote": {"x": "4%", "y": "86%", "width": "480", "height": "50"},
     "wakatime": {"x": "4%", "y": "26%", "width": "140", "height": "50"},
-    "matrix": {"x": "98.5%", "y": "-5%", "width": "30", "height": "100%"},
+    "matrix": {"x": "98.5%", "y": "0%", "width": "30", "height": "100%"},
     "music": {"x": "62%", "y": "52%", "width": "420", "height": "180"},
     "weather": {"x": "62%", "y": "36%", "width": "300", "height": "170"},
     "uptime": {"x": "82%", "y": "64%", "width": "240", "height": "110"},

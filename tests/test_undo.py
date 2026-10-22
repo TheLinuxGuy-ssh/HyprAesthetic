@@ -200,6 +200,31 @@ class UndoTests(unittest.TestCase):
         self.assertEqual(toggled.get("widgets"), ["matrix"])
         self.assertEqual(toggled.get("bar"), "waybar")
 
+    def test_undo_restores_per_theme_widget_set(self) -> None:
+        _write_theme(self.repo, "other")
+        other_toml = self.repo / "themes" / "other" / "theme.toml"
+        other_toml.write_text(
+            other_toml.read_text(encoding="utf-8").replace(
+                'widgets = ["clock", "system"]',
+                'widgets = ["quote"]',
+            ),
+            encoding="utf-8",
+        )
+        self._mark_current("sample")
+        prefs = Prefs.load()
+        prefs.set_widgets_for("sample", ["clock"])
+        prefs.save()
+        self.engine.apply("other")
+        on_other = Prefs.load()
+        self.assertEqual(on_other.widgets_for("other"), ["quote"])
+        self.assertEqual(on_other.widgets_for("sample"), ["clock"])
+        restored = undo(self.engine)
+        self.assertEqual(restored, "sample")
+        loaded = Prefs.load()
+        self.assertEqual(loaded.widgets_for("sample"), ["clock"])
+        self.assertEqual(loaded.get("widgets"), ["clock"])
+        self.assertNotEqual(loaded.widgets_for("other"), ["clock"])
+
     def test_undo_without_snapshot_raises(self) -> None:
         with self.assertRaises(FileNotFoundError):
             undo(self.engine)

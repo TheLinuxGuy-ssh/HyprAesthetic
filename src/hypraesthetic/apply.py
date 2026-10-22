@@ -149,16 +149,26 @@ class ApplyEngine:
             return result
 
         prefs = Prefs.load()
+        current_path = current_theme_file()
+        current_name = (
+            current_path.read_text(encoding="utf-8").strip() if current_path.is_file() else ""
+        )
         if components is None and snapshot:
             # Record the pre-switch prefs before this apply rewrites bar_style.
             # undo() passes snapshot=False: it already stored the outgoing theme.
+            # If this theme already has its own widget set, that set is the
+            # active list the snapshot should restore.
             from hypraesthetic.undo import snapshot
 
-            current_path = current_theme_file()
-            current_name = (
-                current_path.read_text(encoding="utf-8").strip() if current_path.is_file() else ""
-            )
+            current_ids = prefs.widgets_for(current_name)
+            if current_ids:
+                prefs.set("widgets", list(current_ids))
             snapshot(prefs, current_name)
+        if components is None:
+            prefs.adopt_legacy_widgets(current_name)
+            ids = [str(item) for item in (prefs.widgets_for(name) or pkg.widgets)]
+            prefs.set_widgets_for(name, ids)
+            prefs.set("widgets", ids)
         prefs.adopt_legacy_geometry(name)
         if components is None:
             theme_bar = str(pkg.layout.get("bar_style") or "").strip()
@@ -445,7 +455,8 @@ class ApplyEngine:
         if not self.which("eww"):
             self._errors.append("eww not found")
             return
-        widgets = [widget_window(item) for item in widget_ids_from_prefs(prefs.get("widgets") or pkg.widgets)]
+        ids = prefs.widgets_for(pkg.name) or list(pkg.widgets)
+        widgets = [widget_window(item) for item in widget_ids_from_prefs(ids)]
         if prefs.get("dashboard"):
             for extra in ("background", "profile"):
                 if extra not in widgets:

@@ -120,6 +120,37 @@ class Prefs:
             cur = nxt
         cur[parts[-1]] = value
 
+    def widgets_for(self, theme: str) -> list[str]:
+        raw = self.get("widgets_by_theme") or {}
+        if not isinstance(raw, dict) or not theme:
+            return []
+        items = raw.get(theme)
+        if not isinstance(items, list):
+            return []
+        return [str(item) for item in items]
+
+    def set_widgets_for(self, theme: str, widgets: list[str]) -> None:
+        raw = self.get("widgets_by_theme")
+        stored: dict[str, list[str]] = {}
+        if isinstance(raw, dict):
+            for key, value in raw.items():
+                if isinstance(value, list):
+                    stored[str(key)] = [str(item) for item in value]
+        if theme:
+            stored[str(theme)] = [str(item) for item in widgets]
+        self.set("widgets_by_theme", stored)
+
+    def adopt_legacy_widgets(self, theme: str) -> None:
+        if not theme:
+            return
+        raw = self.get("widgets_by_theme") or {}
+        if isinstance(raw, dict) and raw:
+            return
+        widgets = self.get("widgets") or []
+        if not isinstance(widgets, list) or not widgets:
+            return
+        self.set_widgets_for(theme, [str(item) for item in widgets])
+
     def geometry_for(self, theme: str) -> dict[str, dict[str, str]]:
         raw = self.get("widget_geometry") or {}
         if not isinstance(raw, dict) or not theme:

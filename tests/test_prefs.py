@@ -52,6 +52,33 @@ class PrefsTests(unittest.TestCase):
         self.assertEqual(prefs.geometry_for("toji")["clock"]["x"], "12%")
         self.assertEqual(prefs.geometry_for("choso"), {})
 
+    def test_widgets_are_namespaced_per_theme(self) -> None:
+        prefs = Prefs.load()
+        prefs.set_widgets_for("sky", ["clock"])
+        prefs.set_widgets_for("toji", ["clock", "quote"])
+        self.assertEqual(prefs.widgets_for("sky"), ["clock"])
+        self.assertEqual(prefs.widgets_for("toji"), ["clock", "quote"])
+
+    def test_unknown_theme_widgets_fall_back_to_package_not_other_theme(self) -> None:
+        prefs = Prefs.load()
+        prefs.set_widgets_for("toji", ["matrix"])
+        self.assertEqual(prefs.widgets_for("sky"), [])  # empty means caller uses pkg.widgets
+
+    def test_legacy_flat_widgets_adopt_onto_current_theme_only(self) -> None:
+        prefs = Prefs.load()
+        prefs.set("widgets", ["clock", "quote"])
+        prefs.adopt_legacy_widgets("sky")
+        self.assertEqual(prefs.widgets_for("sky"), ["clock", "quote"])
+        self.assertEqual(prefs.widgets_for("toji"), [])
+
+    def test_adopt_legacy_widgets_keeps_an_existing_map(self) -> None:
+        prefs = Prefs.load()
+        prefs.set_widgets_for("toji", ["matrix"])
+        prefs.set("widgets", ["clock"])
+        prefs.adopt_legacy_widgets("sky")
+        self.assertEqual(prefs.widgets_for("toji"), ["matrix"])
+        self.assertEqual(prefs.widgets_for("sky"), [])
+
     def test_roundtrip(self) -> None:
         prefs = Prefs.load()
         prefs.set("file_manager", "thunar")

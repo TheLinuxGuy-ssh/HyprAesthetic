@@ -18,7 +18,9 @@ from hypraesthetic.doctor import DoctorCheck, DoctorReport
 from hypraesthetic.prefs import Prefs
 from hypraesthetic.preset import prepare_preset_switch
 from hypraesthetic_gui.pages import PAGES
-from hypraesthetic_gui.widgets import apps_page, doctor_page, fonts_page, presets_page
+from hypraesthetic.discover import geom_to_fraction
+from hypraesthetic.paths import current_theme_file
+from hypraesthetic_gui.widgets import WidgetEditor, apps_page, doctor_page, fonts_page, presets_page, widgets_page
 
 
 def _descendants(widget: Gtk.Widget):
@@ -263,6 +265,137 @@ class AppsPageTests(unittest.TestCase):
                 self.assertEqual(by_title["Terminal"], ["kitty", "ghostty"])
                 self.assertEqual(by_title["Launcher"], ["rofi", "wofi"])
                 self.assertEqual(by_title["Browser"], ["firefox", "brave-browser", "zen-browser"])
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+
+
+def _header_side(widget: Gtk.Widget) -> str:
+    node: Gtk.Widget | None = widget
+    while node is not None:
+        parent = node.get_parent()
+        if parent is not None and type(parent).__name__ == "CenterBox":
+            children: list[Gtk.Widget] = []
+            child = parent.get_first_child()
+            while child is not None:
+                children.append(child)
+                child = child.get_next_sibling()
+            index = children.index(node)
+            if index == 0:
+                return "start"
+            if index == len(children) - 1:
+                return "end"
+            return "center"
+        node = parent
+    raise AssertionError("widget is not packed in a header bar")
+
+
+def _switch_by_title(root: Gtk.Widget, title: str) -> Gtk.Switch:
+    for row in _rows(root):
+        if row.get_title() != title:
+            continue
+        for widget in _descendants(row):
+            if isinstance(widget, Gtk.Switch):
+                return widget
+    raise AssertionError(f"no switch for {title}")
+
+
+class WidgetEditorTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.old_home = os.environ.get("HOME")
+        os.environ["HOME"] = self.tmp.name
+        current = current_theme_file()
+        current.parent.mkdir(parents=True, exist_ok=True)
+        current.write_text("sample\n", encoding="utf-8")
+
+    def tearDown(self) -> None:
+        if self.old_home is None:
+            os.environ.pop("HOME", None)
+        else:
+            os.environ["HOME"] = self.old_home
+        self.tmp.cleanup()
+
+    def _editor(self, widget_ids: list[str]) -> WidgetEditor:
+        overlay = Adw.ToastOverlay()
+        return WidgetEditor(None, widget_ids, overlay, lambda *_args: None)
+
+    def test_axis_labels_sit_above_entries_and_save_is_not_on_close(self) -> None:
+        editor = self._editor(["clock"])
+        labels = []
+        for widget in _descendants(editor):
+            if not isinstance(widget, Gtk.Label) or widget.get_label() not in {"x", "y", "width", "height"}:
+                continue
+            parent: Gtk.Widget | None = widget
+            inside_entry = False
+            while parent is not None:
+                if isinstance(parent, Gtk.Entry):
+                    inside_entry = True
+                    break
+                parent = parent.get_parent()
+            if not inside_entry:
+                labels.append(widget)
+        self.assertEqual([widget.get_label() for widget in labels], ["x", "y", "width", "height"])
+        for widget in labels:
+            self.assertTrue(widget.has_css_class("dim-label"))
+        save = next(button for button in _labeled_buttons(editor) if button.get_label() == "Save layout")
+        self.assertEqual(_header_side(save), "start")
+
+    def test_save_clamps_y_onto_the_canvas(self) -> None:
+        editor = self._editor(["matrix"])
+        editor._entries["matrix"]["y"].set_text("-5%")
+        editor._entries["matrix"]["height"].set_text("100%")
+        editor._save()
+        saved = Prefs.load().geometry_for("sample")["matrix"]
+        y = geom_to_fraction(saved["y"], "y", editor._screen)
+        height = geom_to_fraction(saved["height"], "y", editor._screen)
+        self.assertGreaterEqual(y, 0)
+        self.assertLessEqual(y + height, 1)
+        self.assertEqual(saved["y"], "0%")
+
+        editor = self._editor(["clock"])
+        editor._entries["clock"]["y"].set_text("90%")
+        editor._entries["clock"]["height"].set_text("20%")
+        editor._save()
+        saved = Prefs.load().geometry_for("sample")["clock"]
+        y = geom_to_fraction(saved["y"], "y", editor._screen)
+        height = geom_to_fraction(saved["height"], "y", editor._screen)
+        self.assertGreaterEqual(y, 0)
+        self.assertLessEqual(y + height, 1)
+        self.assertEqual(saved["y"], "80%")
+
+
+class WidgetsPageTests(unittest.TestCase):
+    def test_save_widgets_writes_the_current_theme_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = tmp
+            try:
+                current = current_theme_file()
+                current.parent.mkdir(parents=True, exist_ok=True)
+                current.write_text("sample\n", encoding="utf-8")
+                prefs = Prefs.load()
+                prefs.set_widgets_for("sample", ["clock"])
+                prefs.set_widgets_for("other", ["matrix"])
+                prefs.set("widgets", ["quote"])
+                prefs.save()
+                with patch("hypraesthetic_gui.widgets._apply", return_value=True) as apply:
+                    page = widgets_page()
+                    self.assertTrue(_switch_by_title(page, "Clock").get_active())
+                    self.assertFalse(_switch_by_title(page, "Quote").get_active())
+                    _switch_by_title(page, "Quote").set_active(True)
+                    save = next(
+                        button for button in _labeled_buttons(page) if button.get_label() == "Save widgets"
+                    )
+                    save.emit("clicked")
+                loaded = Prefs.load()
+                self.assertEqual(loaded.widgets_for("sample"), ["clock", "quote"])
+                self.assertEqual(loaded.widgets_for("other"), ["matrix"])
+                self.assertEqual(loaded.get("widgets"), ["clock", "quote"])
+                apply.assert_called_once()
+                self.assertEqual(apply.call_args.kwargs["components"], ["eww"])
             finally:
                 if old_home is None:
                     os.environ.pop("HOME", None)

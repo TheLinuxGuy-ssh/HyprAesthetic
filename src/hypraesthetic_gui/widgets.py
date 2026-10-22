@@ -396,7 +396,19 @@ def widgets_page() -> Gtk.Widget:
         "Choose overlay widgets, then save to apply them. Placement is per theme: switching presets restores that theme's layout, and Reset restores it too.",
     )
     prefs = Prefs.load()
-    enabled = set(widget_ids_from_prefs(prefs.get("widgets") or []))
+    theme = current_theme_name()
+    before = prefs.get("widgets_by_theme")
+    prefs.adopt_legacy_widgets(theme)
+    if prefs.get("widgets_by_theme") != before:
+        prefs.save()
+    enabled_ids = prefs.widgets_for(theme)
+    if not enabled_ids:
+        pkg = _safe_theme()
+        if pkg is not None and pkg.widgets:
+            enabled_ids = [str(item) for item in pkg.widgets]
+        else:
+            enabled_ids = [str(item) for item in (prefs.get("widgets") or [])]
+    enabled = set(widget_ids_from_prefs(enabled_ids))
     switches: dict[str, Gtk.Switch] = {}
     for item in WIDGET_CATALOG:
         row = Adw.ActionRow(title=item["title"], subtitle=item["blurb"])
@@ -419,7 +431,9 @@ def widgets_page() -> Gtk.Widget:
 
     def persist_and_apply(message: str) -> None:
         loaded = Prefs.load()
-        loaded.set("widgets", selected_ids())
+        ids = selected_ids()
+        loaded.set_widgets_for(current_theme_name(), ids)
+        loaded.set("widgets", ids)
         loaded.set("dashboard", dash.get_active())
         extras = list(loaded.get("extras") or [])
         if loaded.get("widgets") and "eww" not in extras:
@@ -496,7 +510,7 @@ class WidgetEditor(Adw.Window):
         save = Gtk.Button(label="Save layout")
         save.add_css_class("suggested-action")
         save.connect("clicked", self._save)
-        header.pack_end(save)
+        header.pack_start(save)
         toolbar.add_top_bar(header)
 
         split = Gtk.Box(
@@ -543,10 +557,15 @@ class WidgetEditor(Adw.Window):
             row = Gtk.Box(spacing=6)
             entries: dict[str, Gtk.Entry] = {}
             for key in ("x", "y", "width", "height"):
+                column = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                label = Gtk.Label(label=key, xalign=0)
+                label.add_css_class("dim-label")
                 entry = Gtk.Entry(text=spec.get(key) or "", width_chars=7, placeholder_text=key)
                 entry.connect("changed", self._on_entry, widget_id, key)
                 entries[key] = entry
-                row.append(entry)
+                column.append(label)
+                column.append(entry)
+                row.append(column)
             self._entries[widget_id] = entries
             group.append(row)
             fields.append(group)
@@ -715,6 +734,8 @@ class WidgetEditor(Adw.Window):
         geom: dict[str, dict[str, str]] = {}
         for widget_id, entries in self._entries.items():
             spec = {key: entry.get_text().strip() for key, entry in entries.items() if entry.get_text().strip()}
+            if "y" in spec:
+                spec["y"] = _clamp_y_text(spec["y"], spec.get("height") or "0", self._screen)
             if spec:
                 geom[widget_id] = spec
         prefs = Prefs.load()
@@ -722,6 +743,17 @@ class WidgetEditor(Adw.Window):
         prefs.save()
         self._persist("Layout applied")
         self.close()
+
+
+def _clamp_y_text(y_text: str, height_text: str, screen: tuple[int, int]) -> str:
+    y = geom_to_fraction(y_text or "0", "y", screen)
+    height = geom_to_fraction(height_text or "0", "y", screen)
+    clamped = max(y, 0.0)
+    if clamped + height > 1:
+        clamped = max(0.0, 1.0 - height)
+    if clamped == y:
+        return y_text
+    return format_percent(clamped)
 
 
 def _clamp_pos(x: float, y: float, width: float, height: float) -> tuple[float, float]:

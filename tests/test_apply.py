@@ -561,6 +561,73 @@ class ApplyEngineTests(unittest.TestCase):
         self.assertIn(':x "3%"', text)
         self.assertNotIn(':x "11%"', text)
 
+    def test_apply_uses_the_target_themes_widgets_not_another_themes(self) -> None:
+        other = self.repo / "themes" / "other"
+        other.mkdir(parents=True)
+        (other / "theme.toml").write_text(
+            V2_TOML.replace('name = "sample"', 'name = "other"').replace(
+                'widgets = ["clock", "system"]',
+                'widgets = ["quote"]',
+            ),
+            encoding="utf-8",
+        )
+        (self.repo / "layouts" / "default" / "eww" / "eww.yuck").write_text(
+            "(defwindow clock [])\n(defwindow toji [])\n",
+            encoding="utf-8",
+        )
+        current = self.home / ".config" / "HyprAesthetic" / "current_theme"
+        current.parent.mkdir(parents=True, exist_ok=True)
+        current.write_text("sample\n", encoding="utf-8")
+        prefs = Prefs.load()
+        prefs.set("widgets", ["clock"])
+        prefs.set_widgets_for("sample", ["clock"])
+        prefs.save()
+
+        calls: list[list[str]] = []
+        ping_ok = {"value": True}
+
+        def runner(cmd, **kwargs):
+            calls.append([str(part) for part in cmd])
+            name = [str(part) for part in cmd]
+
+            class Result:
+                returncode = 0
+                stdout = '[{"id": 0, "focused": true}]'
+                stderr = ""
+
+            if name[:2] == ["eww", "kill"] or name[:3] == ["pkill", "-x", "eww"]:
+                ping_ok["value"] = False
+            if name[:2] == ["eww", "ping"]:
+                Result.returncode = 0 if ping_ok["value"] else 1
+            return Result()
+
+        def popen(cmd, **kwargs):
+            calls.append([str(part) for part in cmd])
+            if [str(part) for part in cmd][:2] == ["eww", "daemon"]:
+                ping_ok["value"] = True
+
+            class Proc:
+                pid = 1
+
+            return Proc()
+
+        engine = ApplyEngine(
+            repo_root=self.repo,
+            live=True,
+            runner=runner,
+            popen=popen,
+            which=lambda name: f"/usr/bin/{name}",
+        )
+        result = engine.apply("other")
+        self.assertEqual(result.errors, [])
+        loaded = Prefs.load()
+        self.assertEqual(loaded.widgets_for("other"), ["quote"])
+        self.assertEqual(loaded.widgets_for("sample"), ["clock"])
+        self.assertEqual(loaded.get("widgets"), ["quote"])
+        flat = [" ".join(cmd) for cmd in calls]
+        self.assertTrue(any(line.startswith("eww open toji") for line in flat))
+        self.assertFalse(any(line.startswith("eww open clock") for line in flat))
+
     def test_full_apply_does_not_wipe_wallpaper_pref(self) -> None:
         prefs = Prefs.load()
         prefs.set("wallpaper", "/tmp/custom.png")

@@ -8,6 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from hypraesthetic.discover import (
+    WIDGET_DEFAULT_GEOMETRY,
     font_family_only,
     format_percent,
     geom_to_fraction,
@@ -137,6 +138,9 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(styles[0].id, "compact")
         self.assertEqual(styles[0].name, "Compact")
         tmp.cleanup()
+
+    def test_matrix_default_y_stays_on_the_canvas(self) -> None:
+        self.assertEqual(WIDGET_DEFAULT_GEOMETRY["matrix"]["y"], "0%")
 
     def test_geom_px_uses_axis_screen_size(self) -> None:
         screen = (1920, 1080)
