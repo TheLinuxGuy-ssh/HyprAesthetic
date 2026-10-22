@@ -1,0 +1,38 @@
+name: Bug report
+description: Something is broken
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Search existing issues first. Security bugs go to Advisories, not here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: HyprAesthetic version
+      placeholder: "0.2.0 / git SHA / hat version"
+    validations:
+      required: true
+  - type: input
+    id: distro
+    attributes:
+      label: Distro and Hyprland version
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true

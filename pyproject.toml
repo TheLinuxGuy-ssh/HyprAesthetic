@@ -1,0 +1,27 @@
+[project]
+name = "hypraesthetic"
+version = "0.2.0"
+description = "Hyprland made easy — installer, theme engine, and control center"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "thelinuxguy-ssh", email = "mr.linux.0@protonmail.com" },
+]
+keywords = ["hyprland", "wayland", "rice", "theme", "eww", "waybar"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Desktop Environment",
+  "Operating System :: POSIX :: Linux",
+]
+[project.urls]
+Homepage = "https://github.com/thelinuxguy-ssh/HyprAesthetic"
+Issues = "https://github.com/thelinuxguy-ssh/HyprAesthetic/issues"
+Changelog = "https://github.com/thelinuxguy-ssh/HyprAesthetic/blob/master/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
