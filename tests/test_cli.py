@@ -39,6 +39,7 @@ class CliTests(unittest.TestCase):
         code, out = self._run(["--help"])
         self.assertEqual(code, 0)
         self.assertIn("ha-theme", out)
+        self.assertIn("undo", out)
 
     def test_list_includes_toji(self) -> None:
         code, out = self._run(["list"])
@@ -152,6 +153,29 @@ source = "https://github.com/example/from-refresh.git"
         args = bash.call_args.args
         self.assertEqual(args[0], "backup-configs.sh")
         self.assertEqual(list(args[1]), ["list"])
+
+    def test_undo_without_snapshot_says_nothing_to_undo(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = tmp
+            try:
+                code, out, err = self._run3(["undo"])
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+        self.assertEqual(code, 1)
+        self.assertIn("Nothing to undo", err)
+        self.assertNotIn("Traceback", err)
+
+    def test_undo_prints_restored_theme(self) -> None:
+        with patch("hypraesthetic.undo.undo", return_value="sample") as undo:
+            code, out, err = self._run3(["undo"])
+        self.assertEqual(code, 0)
+        self.assertIn("Restored sample", out)
+        self.assertEqual(err, "")
+        undo.assert_called_once()
 
     def test_prefs_get_unknown_is_unset(self) -> None:
         code, out, err = self._run3(["prefs", "get", "no_such_pref"])

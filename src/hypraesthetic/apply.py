@@ -148,6 +148,15 @@ class ApplyEngine:
             return result
 
         prefs = Prefs.load()
+        if components is None:
+            # Record the pre-switch prefs before this apply rewrites bar_style.
+            from hypraesthetic.undo import snapshot
+
+            current_path = current_theme_file()
+            current_name = (
+                current_path.read_text(encoding="utf-8").strip() if current_path.is_file() else ""
+            )
+            snapshot(prefs, current_name)
         prefs.adopt_legacy_geometry(name)
         if components is None:
             theme_bar = str(pkg.layout.get("bar_style") or "").strip()

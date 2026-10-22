@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -12,8 +14,10 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk
 
 from hypraesthetic.doctor import DoctorCheck, DoctorReport
+from hypraesthetic.prefs import Prefs
+from hypraesthetic.preset import prepare_preset_switch
 from hypraesthetic_gui.pages import PAGES
-from hypraesthetic_gui.widgets import doctor_page
+from hypraesthetic_gui.widgets import doctor_page, presets_page
 
 
 def _descendants(widget: Gtk.Widget):
@@ -97,6 +101,62 @@ class DoctorPageTests(unittest.TestCase):
         self.assertFalse(by_title["Dunst"].has_css_class("warning"))
         self.assertTrue(by_title["Neovim"].has_css_class("warning"))
         self.assertFalse(by_title["Neovim"].has_css_class("error"))
+
+
+class PresetsUndoTests(unittest.TestCase):
+    def test_presets_page_has_undo_button(self) -> None:
+        page = presets_page()
+        labels = [button.get_label() for button in _labeled_buttons(page)]
+        self.assertIn("Undo last apply", labels)
+
+    def test_undo_button_toasts_nothing_or_restored_theme(self) -> None:
+        page = presets_page()
+        button = next(
+            item for item in _labeled_buttons(page) if item.get_label() == "Undo last apply"
+        )
+        with (
+            patch("hypraesthetic.undo.undo", side_effect=FileNotFoundError("last-apply.toml")),
+            patch("hypraesthetic_gui.widgets._toast") as toast,
+        ):
+            button.emit("clicked")
+        self.assertEqual(toast.call_args.args[1], "Nothing to undo")
+        with (
+            patch("hypraesthetic.undo.undo", return_value="sample"),
+            patch("hypraesthetic_gui.widgets._toast") as toast,
+        ):
+            button.emit("clicked")
+        self.assertIn("sample", toast.call_args.args[1])
+
+    def test_preset_click_keeps_wallpaper(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = tmp
+            try:
+                prefs = Prefs.load()
+                prefs.set("wallpaper", "/tmp/custom.png")
+                prefs.save()
+                with (
+                    patch("hypraesthetic_gui.widgets._apply", return_value=True),
+                    patch(
+                        "hypraesthetic_gui.widgets.prepare_preset_switch",
+                        wraps=prepare_preset_switch,
+                    ) as prepare,
+                ):
+                    page = presets_page()
+                    tiles = [
+                        widget
+                        for widget in _descendants(page)
+                        if isinstance(widget, Gtk.Button) and not widget.get_label()
+                    ]
+                    self.assertTrue(tiles)
+                    tiles[0].emit("clicked")
+                prepare.assert_called()
+                self.assertEqual(Prefs.load().get("wallpaper"), "/tmp/custom.png")
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ Usage: ha-theme <command>
   current                      Show the active theme
   switch <theme> [--dry-run] [--restart]
   switch-<component> <theme> [--restart]
+  undo                         Restore the last full apply
   validate [theme]
   doctor
   backup | restore [timestamp]
@@ -61,6 +62,8 @@ def dispatch(cmd: str, rest: list[str]) -> int:
         return cmd_current()
     if cmd == "switch":
         return cmd_switch(rest)
+    if cmd == "undo":
+        return cmd_undo()
     if cmd.startswith("switch-"):
         return cmd_switch_one(cmd.split("-", 1)[1], rest)
     if cmd == "validate":
@@ -142,6 +145,18 @@ def cmd_switch(rest: list[str]) -> int:
         print(f"Theme switch finished with {len(result.errors)} error(s): {result.theme}")
         return 1
     print(f"Theme switch complete: {result.theme}")
+    return 0
+
+
+def cmd_undo() -> int:
+    from hypraesthetic import undo as undo_mod
+
+    try:
+        theme = undo_mod.undo(ApplyEngine())
+    except FileNotFoundError:
+        print("Nothing to undo", file=sys.stderr)
+        return 1
+    print(f"Restored {theme}")
     return 0
 
 

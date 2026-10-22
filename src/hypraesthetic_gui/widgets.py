@@ -38,6 +38,7 @@ from hypraesthetic.paths import layouts_dir
 from hypraesthetic.doctor import Doctor
 from hypraesthetic.install_theme import ThemeInstaller
 from hypraesthetic.prefs import Prefs
+from hypraesthetic.preset import prepare_preset_switch
 from hypraesthetic.store import ThemeStore
 from hypraesthetic_gui.preview import cover_pixbuf, load_static_pixbuf, preview_widget
 
@@ -259,8 +260,7 @@ def presets_page() -> Gtk.Widget:
     active = current_theme_name()
 
     def apply_theme(name: str) -> None:
-        prefs = Prefs.load()
-        prefs.set("wallpaper", "")
+        prefs = prepare_preset_switch(Prefs.load())
         prefs.save()
         if _apply(overlay, theme=name, message=f"Applied {name}"):
             _set_selected(buttons, name)
@@ -276,8 +276,26 @@ def presets_page() -> Gtk.Widget:
         tile.connect("clicked", lambda _b, name=pkg.name: apply_theme(name))
         buttons[pkg.name] = tile
         flow.append(tile)
+    undo_button = Gtk.Button(label="Undo last apply", halign=Gtk.Align.START)
+    undo_button.connect("clicked", lambda *_a: _undo_last_apply(overlay, buttons))
+    box.append(undo_button)
     box.append(flow)
     return overlay
+
+
+def _undo_last_apply(overlay: Adw.ToastOverlay, buttons: dict[str, Gtk.Button]) -> None:
+    from hypraesthetic import undo as undo_mod
+
+    try:
+        theme = undo_mod.undo(ApplyEngine())
+    except FileNotFoundError:
+        _toast(overlay, "Nothing to undo")
+        return
+    except Exception as exc:  # noqa: BLE001 - surface undo errors in the UI
+        _toast(overlay, str(exc))
+        return
+    _toast(overlay, f"Restored {theme}")
+    _set_selected(buttons, theme)
 
 
 def bar_page() -> Gtk.Widget:

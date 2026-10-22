@@ -544,6 +544,13 @@ class ApplyEngineTests(unittest.TestCase):
         self.assertIn(':x "3%"', text)
         self.assertNotIn(':x "11%"', text)
 
+    def test_full_apply_does_not_wipe_wallpaper_pref(self) -> None:
+        prefs = Prefs.load()
+        prefs.set("wallpaper", "/tmp/custom.png")
+        prefs.save()
+        self.engine.apply("sample")
+        self.assertEqual(Prefs.load().get("wallpaper"), "/tmp/custom.png")
+
     def test_eww_card_has_no_box_fill(self) -> None:
         scss = (
             Path(__file__).resolve().parents[1]
