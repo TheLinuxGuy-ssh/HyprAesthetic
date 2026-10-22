@@ -1,0 +1,298 @@
+# Distro package catalog for HyprAesthetic.
+# Families map os-release IDs to a package manager. Components map to package
+# names per family. Empty package lists mean "not packaged; treat as optional".
+
+[families.arch]
+ids = ["arch", "manjaro", "endeavouros", "garuda"]
+manager = "pacman"
+
+[families.fedora]
+ids = ["fedora", "fedora-asahi-remix", "rhel", "centos", "rocky", "alma"]
+manager = "dnf"
+
+[families.debian]
+ids = ["ubuntu", "debian", "linuxmint", "pop", "kali"]
+manager = "apt"
+
+[families.suse]
+ids = ["opensuse", "opensuse-tumbleweed", "opensuse-leap", "suse"]
+manager = "zypper"
+
+[families.nix]
+ids = ["nixos"]
+manager = "nix"
+
+[components.hyprland]
+id = "hyprland"
+required = true
+friendly = "Hyprland compositor"
+commands = ["Hyprland"]
+packages.arch = ["hyprland"]
+packages.fedora = ["hyprland"]
+packages.debian = ["hyprland"]
+packages.suse = ["hyprland"]
+packages.nix = ["hyprland"]
+
+[components.portal]
+id = "portal"
+required = true
+friendly = "XDG desktop portal (Hyprland)"
+commands = []
+packages.arch = ["xdg-desktop-portal-hyprland", "xdg-desktop-portal"]
+packages.fedora = ["xdg-desktop-portal-hyprland", "xdg-desktop-portal"]
+packages.debian = ["xdg-desktop-portal-hyprland", "xdg-desktop-portal"]
+packages.suse = ["xdg-desktop-portal-hyprland", "xdg-desktop-portal"]
+packages.nix = ["xdg-desktop-portal-hyprland"]
+
+[components.polkit]
+id = "polkit"
+required = true
+friendly = "Polkit authentication agent"
+commands = []
+packages.arch = ["polkit-gnome"]
+packages.fedora = ["polkit-gnome"]
+packages.debian = ["policykit-1-gnome"]
+packages.suse = ["polkit-gnome"]
+packages.nix = ["polkit"]
+
+[components.fonts]
+id = "fonts"
+required = true
+friendly = "UI and Nerd fonts"
+commands = []
+packages.arch = ["ttf-jetbrains-mono-nerd", "ttf-iosevka-nerd", "noto-fonts-emoji", "papirus-icon-theme"]
+packages.fedora = ["jetbrains-mono-fonts", "google-noto-sans-fonts", "google-noto-emoji-fonts", "papirus-icon-theme"]
+packages.debian = ["fonts-jetbrains-mono", "fonts-noto-color-emoji", "papirus-icon-theme"]
+packages.suse = ["jetbrains-mono-fonts", "google-noto-coloremoji-fonts", "papirus-icon-theme"]
+packages.nix = ["nerd-fonts.jetbrains-mono"]
+
+[components.clipboard]
+id = "clipboard"
+required = true
+friendly = "Clipboard tools"
+commands = ["wl-copy"]
+packages.arch = ["wl-clipboard", "cliphist"]
+packages.fedora = ["wl-clipboard"]
+packages.debian = ["wl-clipboard"]
+packages.suse = ["wl-clipboard"]
+packages.nix = ["wl-clipboard"]
+
+[components.screenshot]
+id = "screenshot"
+required = true
+friendly = "Screenshot and color picker"
+commands = ["grim"]
+packages.arch = ["grim", "slurp", "hyprpicker"]
+packages.fedora = ["grim", "slurp"]
+packages.debian = ["grim", "slurp"]
+packages.suse = ["grim", "slurp"]
+packages.nix = ["grim", "slurp"]
+
+[components.gtk]
+id = "gtk"
+required = true
+friendly = "GTK 3/4"
+commands = []
+packages.arch = ["gtk3", "gtk4"]
+packages.fedora = ["gtk3", "gtk4"]
+packages.debian = ["libgtk-3-0", "libgtk-4-1"]
+packages.suse = ["gtk3", "gtk4"]
+packages.nix = ["gtk3", "gtk4"]
+
+[components.python]
+id = "python"
+required = true
+friendly = "Python 3.11+"
+commands = ["python3"]
+packages.arch = ["python"]
+packages.fedora = ["python3"]
+packages.debian = ["python3"]
+packages.suse = ["python3"]
+packages.nix = ["python3"]
+
+[components.waybar]
+id = "waybar"
+required = false
+choice_group = "bar"
+choice_value = "waybar"
+friendly = "Status bar"
+commands = ["waybar"]
+packages.arch = ["waybar"]
+packages.fedora = ["waybar"]
+packages.debian = ["waybar"]
+packages.suse = ["waybar"]
+packages.nix = ["waybar"]
+
+[components.eww]
+id = "eww"
+required = false
+choice_group = "widgets"
+choice_value = "eww"
+friendly = "Desktop widgets"
+commands = ["eww"]
+packages.arch = ["eww-git"]
+packages.fedora = ["eww"]
+packages.debian = []
+packages.suse = []
+packages.nix = ["eww"]
+
+[components.rofi]
+id = "rofi"
+required = false
+choice_group = "launcher"
+choice_value = "rofi"
+friendly = "Application launcher"
+commands = ["rofi"]
+packages.arch = ["rofi-wayland"]
+packages.fedora = ["rofi"]
+packages.debian = ["rofi"]
+packages.suse = ["rofi"]
+packages.nix = ["rofi"]
+
+[components.hyprlauncher]
+id = "hyprlauncher"
+required = false
+choice_group = "launcher"
+choice_value = "hyprlauncher"
+friendly = "Hyprlauncher"
+commands = ["hyprlauncher"]
+packages.arch = []
+packages.fedora = []
+packages.debian = []
+packages.suse = []
+packages.nix = []
+
+[components.kitty]
+id = "kitty"
+required = false
+choice_group = "terminal"
+choice_value = "kitty"
+friendly = "Kitty terminal"
+commands = ["kitty"]
+packages.arch = ["kitty"]
+packages.fedora = ["kitty"]
+packages.debian = ["kitty"]
+packages.suse = ["kitty"]
+packages.nix = ["kitty"]
+
+[components.alacritty]
+id = "alacritty"
+required = false
+choice_group = "terminal"
+choice_value = "alacritty"
+friendly = "Alacritty terminal"
+commands = ["alacritty"]
+packages.arch = ["alacritty"]
+packages.fedora = ["alacritty"]
+packages.debian = ["alacritty"]
+packages.suse = ["alacritty"]
+packages.nix = ["alacritty"]
+
+[components.foot]
+id = "foot"
+required = false
+choice_group = "terminal"
+choice_value = "foot"
+friendly = "Foot terminal"
+commands = ["foot"]
+packages.arch = ["foot"]
+packages.fedora = ["foot"]
+packages.debian = ["foot"]
+packages.suse = ["foot"]
+packages.nix = ["foot"]
+
+[components.nautilus]
+id = "nautilus"
+required = false
+choice_group = "file_manager"
+choice_value = "nautilus"
+friendly = "Nautilus file manager"
+commands = ["nautilus"]
+packages.arch = ["nautilus"]
+packages.fedora = ["nautilus"]
+packages.debian = ["nautilus"]
+packages.suse = ["nautilus"]
+packages.nix = ["nautilus"]
+
+[components.thunar]
+id = "thunar"
+required = false
+choice_group = "file_manager"
+choice_value = "thunar"
+friendly = "Thunar file manager"
+commands = ["thunar"]
+packages.arch = ["thunar"]
+packages.fedora = ["thunar"]
+packages.debian = ["thunar"]
+packages.suse = ["thunar"]
+packages.nix = ["xfce.thunar"]
+
+[components.nemo]
+id = "nemo"
+required = false
+choice_group = "file_manager"
+choice_value = "nemo"
+friendly = "Nemo file manager"
+commands = ["nemo"]
+packages.arch = ["nemo"]
+packages.fedora = ["nemo"]
+packages.debian = ["nemo"]
+packages.suse = ["nemo"]
+packages.nix = ["nemo"]
+
+[components.dunst]
+id = "dunst"
+required = false
+choice_group = "notifications"
+choice_value = "dunst"
+friendly = "Notification daemon"
+commands = ["dunst"]
+packages.arch = ["dunst"]
+packages.fedora = ["dunst"]
+packages.debian = ["dunst"]
+packages.suse = ["dunst"]
+packages.nix = ["dunst"]
+
+[components.neovim]
+id = "neovim"
+required = false
+friendly = "Neovim"
+commands = ["nvim"]
+packages.arch = ["neovim"]
+packages.fedora = ["neovim"]
+packages.debian = ["neovim"]
+packages.suse = ["neovim"]
+packages.nix = ["neovim"]
+
+[components.hyprwave]
+id = "hyprwave"
+required = false
+friendly = "Hyprwave media island"
+commands = ["hyprwave"]
+packages.arch = ["hyprwave-git"]
+packages.fedora = ["hyprwave"]
+packages.debian = []
+packages.suse = []
+packages.nix = ["hyprwave"]
+
+[components.wallpaper]
+id = "wallpaper"
+required = false
+friendly = "Wallpaper daemon"
+commands = ["swww"]
+packages.arch = ["swww"]
+packages.fedora = ["swww"]
+packages.debian = ["swww"]
+packages.suse = []
+packages.nix = ["swww"]
+
+[components.gui]
+id = "gui"
+required = false
+friendly = "HyprAesthetic control center"
+commands = []
+packages.arch = ["python-gobject", "gtk4", "libadwaita"]
+packages.fedora = ["python3-gobject", "gtk4", "libadwaita"]
+packages.debian = ["python3-gi", "gir1.2-gtk-4.0", "gir1.2-adw-1"]
+packages.suse = ["python3-gobject", "gtk4", "libadwaita"]
+packages.nix = ["python3Packages.pygobject3"]
