@@ -393,7 +393,10 @@ class ApplyEngine:
         if restart:
             self.runner(["eww", "kill"], check=False, capture_output=True, env=env)
             self.runner(["pkill", "-x", "eww"], check=False, capture_output=True)
-            time.sleep(0.15)
+            for _ in range(40):
+                if not self._eww_ping():
+                    break
+                time.sleep(0.05)
         elif self._eww_ping():
             return True
         if not self.which("eww"):
@@ -406,12 +409,18 @@ class ApplyEngine:
             env=env,
             start_new_session=True,
         )
+        ready = False
         for _ in range(40):
             if self._eww_ping():
-                return True
+                ready = True
+                break
             time.sleep(0.05)
-        self._errors.append("eww daemon did not start")
-        return False
+        if not ready:
+            self._errors.append("eww daemon did not start")
+            return False
+        if restart:
+            self.runner(["eww", "reload"], check=False, capture_output=True, env=env)
+        return True
 
     def _eww_windows(self) -> set[str]:
         yuck = self._config("eww") / "eww.yuck"

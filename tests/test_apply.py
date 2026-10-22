@@ -137,19 +137,27 @@ class ApplyEngineTests(unittest.TestCase):
             encoding="utf-8",
         )
         calls: list[list[str]] = []
+        ping_ok = {"value": True}
 
         def runner(cmd, **kwargs):
             calls.append([str(part) for part in cmd])
+            name = [str(part) for part in cmd]
 
             class Result:
                 returncode = 0
                 stdout = '[{"id": 0, "focused": true}]'
                 stderr = ""
 
+            if name[:2] == ["eww", "kill"] or name[:3] == ["pkill", "-x", "eww"]:
+                ping_ok["value"] = False
+            if name[:2] == ["eww", "ping"]:
+                Result.returncode = 0 if ping_ok["value"] else 1
             return Result()
 
         def popen(cmd, **kwargs):
             calls.append([str(part) for part in cmd])
+            if [str(part) for part in cmd][:2] == ["eww", "daemon"]:
+                ping_ok["value"] = True
 
             class Proc:
                 pid = 1
@@ -172,6 +180,59 @@ class ApplyEngineTests(unittest.TestCase):
             any(line.startswith("eww open clock") and "--screen" in line for line in flat)
         )
         self.assertFalse(any("eww open system" in line for line in flat))
+
+    def test_live_eww_reloads_after_kill_before_open(self) -> None:
+        enabled = self.repo / "themes" / "barred"
+        enabled.mkdir(parents=True)
+        (enabled / "theme.toml").write_text(
+            V2_TOML.replace('name = "sample"', 'name = "barred"').replace(
+                "waybar = false", "waybar = true"
+            ),
+            encoding="utf-8",
+        )
+        calls: list[list[str]] = []
+        ping_ok = {"value": True}
+
+        def runner(cmd, **kwargs):
+            calls.append([str(part) for part in cmd])
+            name = [str(part) for part in cmd]
+
+            class Result:
+                returncode = 0
+                stdout = '[{"id": 0, "focused": true}]'
+                stderr = ""
+
+            if name[:2] == ["eww", "kill"] or name[:3] == ["pkill", "-x", "eww"]:
+                ping_ok["value"] = False
+            if name[:2] == ["eww", "ping"]:
+                Result.returncode = 0 if ping_ok["value"] else 1
+            return Result()
+
+        def popen(cmd, **kwargs):
+            calls.append([str(part) for part in cmd])
+            if [str(part) for part in cmd][:2] == ["eww", "daemon"]:
+                ping_ok["value"] = True
+
+            class Proc:
+                pid = 1
+
+            return Proc()
+
+        engine = ApplyEngine(
+            repo_root=self.repo,
+            live=True,
+            runner=runner,
+            popen=popen,
+            which=lambda name: f"/usr/bin/{name}",
+        )
+        result = engine.apply("barred", components=["eww"])
+        self.assertEqual(result.errors, [])
+        flat = [" ".join(cmd) for cmd in calls]
+        kill_at = next(i for i, line in enumerate(flat) if line.startswith("eww kill") or line.startswith("pkill -x eww"))
+        reload_at = next(i for i, line in enumerate(flat) if line.startswith("eww reload"))
+        open_at = next(i for i, line in enumerate(flat) if line.startswith("eww open clock"))
+        self.assertLess(kill_at, reload_at)
+        self.assertLess(reload_at, open_at)
 
     def test_replaces_symlink_dest_without_same_file_error(self) -> None:
         gtk_src = self.repo / "themes" / "sample" / "gtk" / "gtk-3.0"
