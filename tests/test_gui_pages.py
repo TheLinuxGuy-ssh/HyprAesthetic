@@ -11,13 +11,14 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gtk
+gi.require_version("Pango", "1.0")
+from gi.repository import Adw, Gtk, Pango
 
 from hypraesthetic.doctor import DoctorCheck, DoctorReport
 from hypraesthetic.prefs import Prefs
 from hypraesthetic.preset import prepare_preset_switch
 from hypraesthetic_gui.pages import PAGES
-from hypraesthetic_gui.widgets import doctor_page, presets_page
+from hypraesthetic_gui.widgets import apps_page, doctor_page, fonts_page, presets_page
 
 
 def _descendants(widget: Gtk.Widget):
@@ -38,6 +39,18 @@ def _labeled_buttons(root: Gtk.Widget) -> list[Gtk.Button]:
 
 def _rows(root: Gtk.Widget) -> list[Adw.ActionRow]:
     return [widget for widget in _descendants(root) if isinstance(widget, Adw.ActionRow)]
+
+
+def _dropdown_values(dropdown: Gtk.DropDown) -> list[str]:
+    model = dropdown.get_model()
+    return [model.get_string(index) for index in range(model.get_n_items())]
+
+
+def _row_dropdown(row: Adw.ActionRow) -> Gtk.DropDown:
+    for widget in _descendants(row):
+        if isinstance(widget, Gtk.DropDown):
+            return widget
+    raise AssertionError(f"no dropdown on {row.get_title()}")
 
 
 class GuiPagesTests(unittest.TestCase):
@@ -152,6 +165,104 @@ class PresetsUndoTests(unittest.TestCase):
                     tiles[0].emit("clicked")
                 prepare.assert_called()
                 self.assertEqual(Prefs.load().get("wallpaper"), "/tmp/custom.png")
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+
+
+class FontsPageTests(unittest.TestCase):
+    def test_family_only_terminal_font_shows_size_11(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = tmp
+            try:
+                prefs = Prefs.load()
+                fonts = dict(prefs.get("fonts") or {})
+                fonts["terminal"] = "Iosevka"
+                prefs.set("fonts", fonts)
+                prefs.save()
+                page = fonts_page()
+                shown = [
+                    button.get_font_desc().to_string()
+                    for button in _descendants(page)
+                    if isinstance(button, Gtk.FontDialogButton) and button.get_font_desc() is not None
+                ]
+                self.assertIn("Iosevka 11", shown)
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+
+    def test_save_fonts_rewrites_zero_size(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = tmp
+            try:
+                Prefs.load().save()
+                with patch("hypraesthetic_gui.widgets._apply", return_value=True):
+                    page = fonts_page()
+                    buttons = [
+                        widget
+                        for widget in _descendants(page)
+                        if isinstance(widget, Gtk.FontDialogButton)
+                    ]
+                    buttons[0].set_font_desc(Pango.FontDescription.from_string("Cantarell 0"))
+                    save = next(
+                        button for button in _labeled_buttons(page) if button.get_label() == "Save fonts"
+                    )
+                    save.emit("clicked")
+                self.assertEqual(Prefs.load().get("fonts.ui"), "Cantarell 11")
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+
+
+class AppsPageTests(unittest.TestCase):
+    def test_apps_lists_binaries_on_path_and_names_super_b(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = tmp
+            try:
+                prefs = Prefs.load()
+                prefs.set("file_manager", "nautilus")
+                prefs.set("terminal", "kitty")
+                prefs.set("launcher", "rofi")
+                prefs.set("browser", "firefox")
+                prefs.save()
+                installed = {
+                    "nautilus",
+                    "dolphin",
+                    "kitty",
+                    "ghostty",
+                    "wofi",
+                    "brave-browser",
+                    "zen-browser",
+                }
+
+                def fake_which(name: str) -> str | None:
+                    return f"/usr/bin/{name}" if name in installed else None
+
+                with patch("shutil.which", side_effect=fake_which):
+                    page = apps_page()
+                blurbs = [
+                    widget.get_label()
+                    for widget in _descendants(page)
+                    if isinstance(widget, Gtk.Label) and widget.has_css_class("dim-label")
+                ]
+                self.assertIn(
+                    "Super+E file manager, Super+T terminal, Super+B browser.",
+                    blurbs,
+                )
+                by_title = {row.get_title(): _dropdown_values(_row_dropdown(row)) for row in _rows(page)}
+                self.assertEqual(by_title["File manager"], ["nautilus", "dolphin"])
+                self.assertEqual(by_title["Terminal"], ["kitty", "ghostty"])
+                self.assertEqual(by_title["Launcher"], ["rofi", "wofi"])
+                self.assertEqual(by_title["Browser"], ["firefox", "brave-browser", "zen-browser"])
             finally:
                 if old_home is None:
                     os.environ.pop("HOME", None)

@@ -289,7 +289,7 @@ class ApplyEngine:
                     'local mainMod = "SUPER"',
                     f'hl.bind(mainMod .. " + " .. "T", hl.dsp.exec_cmd("{terminal}"))',
                     f'hl.bind(mainMod .. " + " .. "E", hl.dsp.exec_cmd("{file_manager}"))',
-                    f'hl.bind(mainMod .. " + " .. "F11", hl.dsp.exec_cmd("{browser}"))',
+                    f'hl.bind(mainMod .. " + " .. "B", hl.dsp.exec_cmd("{browser}"))',
                     "",
                 ]
             ),

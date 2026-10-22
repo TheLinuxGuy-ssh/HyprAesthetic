@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 import tomllib
 from dataclasses import dataclass
@@ -29,6 +30,22 @@ WIDGET_ID_TO_WINDOW = {item["id"]: item["window"] for item in WIDGET_CATALOG}
 WIDGET_WINDOW_TO_ID = {item["window"]: item["id"] for item in WIDGET_CATALOG}
 
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
+
+APP_CANDIDATES: dict[str, list[str]] = {
+    "file_manager": ["nautilus", "thunar", "nemo", "dolphin", "pcmanfm", "nautilus"],
+    "terminal": ["kitty", "alacritty", "foot", "ghostty", "wezterm", "gnome-terminal"],
+    "launcher": ["rofi", "hyprlauncher", "fuzzel", "wofi"],
+    "browser": [
+        "firefox",
+        "chromium",
+        "brave",
+        "brave-browser",
+        "zen",
+        "zen-browser",
+        "google-chrome",
+        "librewolf",
+    ],
+}
 
 WIDGET_DEFAULT_GEOMETRY: dict[str, dict[str, str]] = {
     "clock": {"x": "4%", "y": "8%", "width": "450", "height": "155"},
@@ -418,3 +435,33 @@ def font_family_only(value: str) -> str:
     if parts and parts[-1].replace(".", "", 1).isdigit():
         return " ".join(parts[:-1]).strip() or text
     return text
+
+
+def normalize_font(value: str, default_size: int = 11) -> str:
+    text = (value or "").strip()
+    if not text:
+        return f"Sans {default_size}"
+    parts = text.split()
+    if parts and parts[-1].replace(".", "", 1).isdigit():
+        size = float(parts[-1])
+        if size > 0:
+            return text
+        return " ".join(parts[:-1] + [str(default_size)])
+    return f"{text} {default_size}"
+
+
+def list_on_path(
+    candidates: list[str],
+    which: Callable[[str], str | None] | None = None,
+    current: str | None = None,
+) -> list[str]:
+    lookup = which or shutil.which
+    found: list[str] = []
+    if current:
+        found.append(current)
+    for name in candidates:
+        if name in found:
+            continue
+        if lookup(name):
+            found.append(name)
+    return found

@@ -15,6 +15,7 @@ from gi.repository import Adw, Gdk, GdkPixbuf, Gtk, Pango
 from hypraesthetic.apply import ApplyEngine
 from hypraesthetic.catalog import ThemeCatalog
 from hypraesthetic.discover import (
+    APP_CANDIDATES,
     FIRST_PARTY_BAR_IDS,
     WIDGET_CATALOG,
     WIDGET_DEFAULT_GEOMETRY,
@@ -25,7 +26,9 @@ from hypraesthetic.discover import (
     list_font_families,
     list_gtk_themes,
     list_icon_themes,
+    list_on_path,
     list_wallpapers,
+    normalize_font,
     parse_eww_geometry,
     primary_screen_size,
     resolve_wallpaper,
@@ -240,14 +243,16 @@ def _selected_text(dropdown: Gtk.DropDown, values: list[str]) -> str:
 
 def _font_button(value: str) -> Gtk.FontDialogButton:
     button = Gtk.FontDialogButton(dialog=Gtk.FontDialog())
-    if value:
-        button.set_font_desc(Pango.FontDescription.from_string(value))
+    text = normalize_font(value)
+    if text:
+        button.set_font_desc(Pango.FontDescription.from_string(text))
     return button
 
 
 def _font_value(button: Gtk.FontDialogButton, fallback: str) -> str:
     desc = button.get_font_desc()
-    return desc.to_string() if desc is not None else fallback
+    raw = desc.to_string() if desc is not None else fallback
+    return normalize_font(raw)
 
 
 def presets_page() -> Gtk.Widget:
@@ -792,18 +797,20 @@ def fonts_page() -> Gtk.Widget:
 
 
 def apps_page() -> Gtk.Widget:
-    overlay, box = _page("Apps", "These rewrite Super+E / Super+T in the managed Hyprland overlay.")
+    overlay, box = _page("Apps", "Super+E file manager, Super+T terminal, Super+B browser.")
     groups = [
-        ("file_manager", "File manager", ["nautilus", "thunar", "nemo"]),
-        ("terminal", "Terminal", ["kitty", "alacritty", "foot"]),
-        ("launcher", "Launcher", ["rofi", "hyprlauncher"]),
-        ("browser", "Browser", ["firefox", "chromium", "brave"]),
+        ("file_manager", "File manager"),
+        ("terminal", "Terminal"),
+        ("launcher", "Launcher"),
+        ("browser", "Browser"),
     ]
     dropdowns: dict[str, tuple[Gtk.DropDown, list[str]]] = {}
     prefs = Prefs.load()
-    for key, title, options in groups:
+    for key, title in groups:
+        options = APP_CANDIDATES[key]
+        current = str(prefs.get(key) or options[0])
         row = Adw.ActionRow(title=title)
-        dropdown, values = _combo(options, str(prefs.get(key) or options[0]))
+        dropdown, values = _combo(list_on_path(options, current=current), current)
         dropdowns[key] = (dropdown, values)
         row.add_suffix(dropdown)
         box.append(row)

@@ -141,6 +141,7 @@ class ApplyEngineTests(unittest.TestCase):
         prefs = Prefs.load()
         prefs.set("file_manager", "thunar")
         prefs.set("terminal", "foot")
+        prefs.set("browser", "zen-browser")
         prefs.save()
         self.engine.apply("sample")
         apps = (self.home / ".config" / "hypr" / "hypraesthetic-apps.lua").read_text(
@@ -148,6 +149,8 @@ class ApplyEngineTests(unittest.TestCase):
         )
         self.assertIn("thunar", apps)
         self.assertIn("foot", apps)
+        self.assertIn('hl.bind(mainMod .. " + " .. "B", hl.dsp.exec_cmd("zen-browser"))', apps)
+        self.assertNotIn("F11", apps)
 
     def test_layout_owned_waybar_ignores_theme_copy(self) -> None:
         enabled = self.repo / "themes" / "barred"

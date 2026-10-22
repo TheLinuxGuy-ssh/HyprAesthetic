@@ -35,6 +35,69 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(font_family_only("Adwaita Sans 11"), "Adwaita Sans")
         self.assertEqual(font_family_only("JetBrainsMono Nerd Font"), "JetBrainsMono Nerd Font")
 
+    def test_list_on_path_keeps_current_and_found(self) -> None:
+        from hypraesthetic.discover import list_on_path
+
+        found = list_on_path(
+            ["firefox", "brave", "zen"],
+            which=lambda name: "/bin/brave" if name == "brave" else None,
+            current="firefox",
+        )
+        self.assertEqual(found[0], "firefox")
+        self.assertIn("brave", found)
+        self.assertNotIn("zen", found)
+
+    def test_list_on_path_skips_duplicates(self) -> None:
+        from hypraesthetic.discover import list_on_path
+
+        found = list_on_path(
+            ["nautilus", "thunar", "nautilus"],
+            which=lambda name: f"/bin/{name}",
+            current="nautilus",
+        )
+        self.assertEqual(found, ["nautilus", "thunar"])
+        self.assertEqual(list_on_path(["zen"], which=lambda _name: None, current=""), [])
+
+    def test_font_desc_with_zero_size_becomes_11(self) -> None:
+        from hypraesthetic.discover import normalize_font
+
+        self.assertEqual(normalize_font("JetBrainsMono Nerd Font"), "JetBrainsMono Nerd Font 11")
+        self.assertEqual(normalize_font("Cantarell 11"), "Cantarell 11")
+        self.assertEqual(normalize_font("Cantarell 11.5"), "Cantarell 11.5")
+        self.assertEqual(normalize_font("Cantarell 0"), "Cantarell 11")
+        self.assertEqual(normalize_font("Cantarell 0.0"), "Cantarell 11")
+        self.assertEqual(normalize_font(""), "Sans 11")
+        self.assertEqual(normalize_font("   "), "Sans 11")
+
+    def test_app_candidates_list_installed_desktop_apps(self) -> None:
+        from hypraesthetic.discover import APP_CANDIDATES
+
+        self.assertEqual(
+            APP_CANDIDATES["file_manager"],
+            ["nautilus", "thunar", "nemo", "dolphin", "pcmanfm", "nautilus"],
+        )
+        self.assertEqual(
+            APP_CANDIDATES["terminal"],
+            ["kitty", "alacritty", "foot", "ghostty", "wezterm", "gnome-terminal"],
+        )
+        self.assertEqual(
+            APP_CANDIDATES["launcher"],
+            ["rofi", "hyprlauncher", "fuzzel", "wofi"],
+        )
+        self.assertEqual(
+            APP_CANDIDATES["browser"],
+            [
+                "firefox",
+                "chromium",
+                "brave",
+                "brave-browser",
+                "zen",
+                "zen-browser",
+                "google-chrome",
+                "librewolf",
+            ],
+        )
+
     def test_lists_gtk_and_icon_themes_from_roots(self) -> None:
         tmp = tempfile.TemporaryDirectory()
         root = Path(tmp.name)
