@@ -271,9 +271,11 @@ class ApplyEngine:
         autostart_src = self.templates() / "hypr" / "autostart.lua"
         if autostart_src.is_file():
             copy_file(autostart_src, dest / "autostart.lua")
+        self._merge_hypr_look(prefs, variables)
         self._render_template("hypr/appearences.lua", dest / "appearences.lua", variables)
         self._render_template("hypr/colors.conf", dest / "colors.conf", variables)
         self._write_apps_overlay(dest, prefs)
+        self._write_gui_overlay(dest)
         self._ensure_hypr_entry(dest)
         if not existed:
             layout_custom = self.layout_root() / "hypr" / "custom.lua"
@@ -283,28 +285,85 @@ class ApplyEngine:
     def _ensure_hypr_entry(self, dest: Path) -> None:
         entry = dest / "hyprland.lua"
         text = entry.read_text(encoding="utf-8") if entry.is_file() else ""
+        apps_line = 'pcall(require, "hypraesthetic-apps")'
+        gui_line = 'pcall(require, "hypraesthetic-gui")'
         if 'require("hypraesthetic-apps")' not in text:
-            text += '\npcall(require, "hypraesthetic-apps")\n'
-        if 'require("custom")' not in text and "pcall(require, \"custom\")" not in text:
+            if text and not text.endswith("\n"):
+                text += "\n"
+            text += apps_line + "\n"
+        if 'require("hypraesthetic-gui")' not in text:
+            needle = 'require("hypraesthetic-apps")'
+            idx = text.find(needle)
+            if idx >= 0:
+                line_end = text.find("\n", idx)
+                if line_end < 0:
+                    text += "\n" + gui_line + "\n"
+                else:
+                    text = text[: line_end + 1] + gui_line + "\n" + text[line_end + 1 :]
+            else:
+                if text and not text.endswith("\n"):
+                    text += "\n"
+                text += gui_line + "\n"
+        if 'require("custom")' not in text and 'pcall(require, "custom")' not in text:
             text += 'pcall(require, "custom")\n'
         prepare_dest(entry).write_text(text, encoding="utf-8")
+
+    def _merge_hypr_look(self, prefs: Prefs, variables: dict[str, str]) -> None:
+        # render_string looks up {{hypr.gaps_in}} as hypr_gaps_in.
+        defaults = {
+            "gaps_in": 5,
+            "gaps_out": 7,
+            "border_size": 1,
+            "rounding": 10,
+        }
+        for key, default in defaults.items():
+            raw = prefs.get(f"hypr.{key}")
+            if raw is None or raw == "":
+                raw = default
+            try:
+                number = int(raw)
+            except (TypeError, ValueError):
+                number = default
+            variables[f"hypr_{key}"] = str(number)
+
+    def _write_gui_overlay(self, dest: Path) -> None:
+        prepare_dest(dest / "hypraesthetic-gui.lua").write_text(
+            "\n".join(
+                [
+                    "-- Managed by HyprAesthetic.",
+                    "---@module 'hl'",
+                    "hl.window_rule({",
+                    '    name = "hypraesthetic-gui",',
+                    '    match = { class = "dev.hypraesthetic.ControlCenter" },',
+                    "    float = true,",
+                    "    center = true,",
+                    "})",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
 
     def _write_apps_overlay(self, dest: Path, prefs: Prefs) -> None:
         terminal = prefs.get("terminal") or "kitty"
         file_manager = prefs.get("file_manager") or "nautilus"
         browser = prefs.get("browser") or "firefox"
+        lines = [
+            "-- Managed by HyprAesthetic. Edit prefs or the Apps page instead.",
+            "---@module 'hl'",
+            'local mainMod = "SUPER"',
+            f'hl.bind(mainMod .. " + " .. "T", hl.dsp.exec_cmd("{terminal}"))',
+            f'hl.bind(mainMod .. " + " .. "E", hl.dsp.exec_cmd("{file_manager}"))',
+            f'hl.bind(mainMod .. " + " .. "B", hl.dsp.exec_cmd("{browser}"))',
+        ]
+        cursor = str(prefs.get("cursor_theme") or "").strip()
+        if cursor:
+            escaped = cursor.replace("\\", "\\\\").replace('"', '\\"')
+            lines.append(f'hl.env("XCURSOR_THEME", "{escaped}")')
+            lines.append('hl.env("XCURSOR_SIZE", "26")')
+        lines.append("")
         prepare_dest(dest / "hypraesthetic-apps.lua").write_text(
-            "\n".join(
-                [
-                    "-- Managed by HyprAesthetic. Edit prefs or the Apps page instead.",
-                    "---@module 'hl'",
-                    'local mainMod = "SUPER"',
-                    f'hl.bind(mainMod .. " + " .. "T", hl.dsp.exec_cmd("{terminal}"))',
-                    f'hl.bind(mainMod .. " + " .. "E", hl.dsp.exec_cmd("{file_manager}"))',
-                    f'hl.bind(mainMod .. " + " .. "B", hl.dsp.exec_cmd("{browser}"))',
-                    "",
-                ]
-            ),
+            "\n".join(lines),
             encoding="utf-8",
         )
 
@@ -648,9 +707,12 @@ class ApplyEngine:
             "gtk-theme-name": prefs.get("gtk_theme"),
             "gtk-icon-theme-name": prefs.get("icon_theme"),
             "gtk-font-name": prefs.get("fonts.ui"),
+            "gtk-cursor-theme-name": prefs.get("cursor_theme"),
         }
         for key, value in mapping.items():
             if not value:
+                if key == "gtk-cursor-theme-name":
+                    text = re.sub(rf"^{re.escape(key)}=.*\n?", "", text, flags=re.M)
                 continue
             line = f"{key}={value}"
             if re.search(rf"^{re.escape(key)}=", text, re.M):

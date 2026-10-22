@@ -11,6 +11,7 @@ from hypraesthetic import __version__
 from hypraesthetic.apply import ApplyEngine
 from hypraesthetic.catalog import ThemeCatalog
 from hypraesthetic.doctor import Doctor
+from hypraesthetic.export_theme import export_theme
 from hypraesthetic.install_theme import ThemeInstaller
 from hypraesthetic.installer import Installer
 from hypraesthetic.paths import current_theme_file, repo_root
@@ -27,6 +28,7 @@ Usage: ha-theme <command>
   switch <theme> [--dry-run] [--restart]
   switch-<component> <theme> [--restart]
   undo                         Restore the last full apply
+  export-theme <name>          Copy the current look into your theme folder
   validate [theme]
   doctor
   backup | restore [timestamp]
@@ -64,6 +66,8 @@ def dispatch(cmd: str, rest: list[str]) -> int:
         return cmd_switch(rest)
     if cmd == "undo":
         return cmd_undo()
+    if cmd == "export-theme":
+        return cmd_export_theme(rest)
     if cmd.startswith("switch-"):
         return cmd_switch_one(cmd.split("-", 1)[1], rest)
     if cmd == "validate":
@@ -145,6 +149,15 @@ def cmd_switch(rest: list[str]) -> int:
         print(f"Theme switch finished with {len(result.errors)} error(s): {result.theme}")
         return 1
     print(f"Theme switch complete: {result.theme}")
+    return 0
+
+
+def cmd_export_theme(rest: list[str]) -> int:
+    if not rest or not rest[0].strip():
+        print("Usage: ha-theme export-theme <name>", file=sys.stderr)
+        return 2
+    dest = export_theme(rest[0])
+    print(f"Exported {rest[0]} -> {dest}")
     return 0
 
 

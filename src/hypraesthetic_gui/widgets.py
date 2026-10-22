@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import gi
@@ -23,6 +24,7 @@ from hypraesthetic.discover import (
     format_percent,
     geom_to_fraction,
     list_bar_styles,
+    list_cursor_themes,
     list_font_families,
     list_gtk_themes,
     list_icon_themes,
@@ -37,6 +39,7 @@ from hypraesthetic.discover import (
     visible_bar_ids,
     widget_ids_from_prefs,
 )
+from hypraesthetic.export_theme import generate_from_wallpaper
 from hypraesthetic.paths import layouts_dir
 from hypraesthetic.doctor import Doctor
 from hypraesthetic.install_theme import ThemeInstaller
@@ -190,6 +193,13 @@ def _set_selected(buttons: dict[str, Gtk.Button], active: str) -> None:
 
 def _toast(overlay: Adw.ToastOverlay, title: str) -> None:
     overlay.add_toast(Adw.Toast(title=title))
+
+
+def _palette_runner(cmd: list[str]) -> None:
+    from hypraesthetic.export_theme import export_theme
+
+    if len(cmd) >= 3 and cmd[1] == "export-theme":
+        export_theme(str(cmd[2]))
 
 
 def _apply(overlay: Adw.ToastOverlay, theme: str | None = None, components: list[str] | None = None, message: str = "Applied") -> bool:
@@ -861,6 +871,16 @@ def apps_page() -> Gtk.Widget:
     return overlay
 
 
+def _look_spin(value: object, lower: float, upper: float, fallback: int) -> Gtk.SpinButton:
+    try:
+        current = int(value)
+    except (TypeError, ValueError):
+        current = fallback
+    spin = Gtk.SpinButton.new_with_range(lower, upper, 1)
+    spin.set_value(current)
+    return spin
+
+
 def look_page() -> Gtk.Widget:
     overlay, box = _page(
         "Look",
@@ -887,42 +907,75 @@ def look_page() -> Gtk.Widget:
                 return image.name == live_wall.name
         return str(image) == current_wall or image.name == Path(current_wall).name
 
+    box.append(Gtk.Label(label="Wallpaper", xalign=0, css_classes=["heading"]))
     for image in list_wallpapers():
         tile = _tile(image.stem.replace("_", " "), image.name, image=image, selected=is_current(image))
         tile.connect("clicked", lambda _b, path=image: apply_wallpaper(path))
         wall_buttons[str(image)] = tile
         flow.append(tile)
-    box.append(Gtk.Label(label="Wallpapers", xalign=0, css_classes=["heading"]))
     box.append(flow)
     browse = Gtk.Button(label="Browse wallpaper…", halign=Gtk.Align.START)
     browse.connect("clicked", lambda *_: _browse_wallpaper(overlay, apply_wallpaper))
     box.append(browse)
+    if shutil.which("wallust") or shutil.which("matugen"):
+        generate = Gtk.Button(label="Generate palette from wallpaper", halign=Gtk.Align.START)
+
+        def on_generate(_button: Gtk.Button) -> None:
+            name = f"{current_theme_name()}-export"
+            try:
+                message = generate_from_wallpaper(
+                    name,
+                    which=shutil.which,
+                    runner=_palette_runner,
+                )
+            except Exception as exc:  # noqa: BLE001 - surface generator errors in the UI
+                _toast(overlay, str(exc))
+                return
+            _toast(overlay, message)
+
+        generate.connect("clicked", on_generate)
+        box.append(generate)
 
     gtk_themes = list_gtk_themes()
     icon_themes = list_icon_themes()
+    cursor_themes = list_cursor_themes()
     gtk_drop, gtk_values = _combo(gtk_themes, str(prefs.get("gtk_theme") or ""))
     icon_drop, icon_values = _combo(icon_themes, str(prefs.get("icon_theme") or ""))
+    cursor_options = [""] + [name for name in cursor_themes if name]
+    cursor_drop, cursor_values = _combo(cursor_options, str(prefs.get("cursor_theme") or ""))
     gtk_row = Adw.ActionRow(title="GTK theme", subtitle=f"{len(gtk_themes)} themes found")
     gtk_row.add_suffix(gtk_drop)
     icon_row = Adw.ActionRow(title="Icon theme", subtitle=f"{len(icon_themes)} icon sets found")
     icon_row.add_suffix(icon_drop)
-    box.append(gtk_row)
-    box.append(icon_row)
+    cursor_row = Adw.ActionRow(title="Cursor theme", subtitle=f"{len(cursor_themes)} cursor themes found")
+    cursor_row.add_suffix(cursor_drop)
 
     extras = list(prefs.get("extras") or [])
     hypr_row = Adw.ActionRow(title="Hyprwave", subtitle="Audio visualizer follows the active theme")
     hypr_switch = Gtk.Switch(valign=Gtk.Align.CENTER, active="hyprwave" in extras)
     hypr_row.add_suffix(hypr_switch)
     hypr_row.set_activatable_widget(hypr_switch)
-    box.append(hypr_row)
 
-    save = Gtk.Button(label="Save look", halign=Gtk.Align.START)
-    save.add_css_class("suggested-action")
+    gaps_in = _look_spin(prefs.get("hypr.gaps_in"), 0, 200, 5)
+    gaps_out = _look_spin(prefs.get("hypr.gaps_out"), 0, 200, 7)
+    border = _look_spin(prefs.get("hypr.border_size"), 0, 20, 1)
+    rounding = _look_spin(prefs.get("hypr.rounding"), 0, 50, 10)
+    hypr_rows = (
+        ("Gaps in", gaps_in),
+        ("Gaps out", gaps_out),
+        ("Border", border),
+        ("Rounding", rounding),
+    )
 
     def persist(_button: Gtk.Button) -> None:
         loaded = Prefs.load()
         loaded.set("gtk_theme", _selected_text(gtk_drop, gtk_values))
         loaded.set("icon_theme", _selected_text(icon_drop, icon_values))
+        loaded.set("cursor_theme", _selected_text(cursor_drop, cursor_values))
+        loaded.set("hypr.gaps_in", int(gaps_in.get_value()))
+        loaded.set("hypr.gaps_out", int(gaps_out.get_value()))
+        loaded.set("hypr.border_size", int(border.get_value()))
+        loaded.set("hypr.rounding", int(rounding.get_value()))
         extra = list(loaded.get("extras") or [])
         if hypr_switch.get_active():
             if "hyprwave" not in extra:
@@ -931,13 +984,35 @@ def look_page() -> Gtk.Widget:
             extra = [item for item in extra if item != "hyprwave"]
         loaded.set("extras", extra)
         loaded.save()
-        components = ["gtk"]
+        components = ["gtk", "hyprland"]
         if hypr_switch.get_active():
             components.append("hyprwave")
         _apply(overlay, components=components, message="Look applied")
 
+    save = Gtk.Button(label="Save look", halign=Gtk.Align.START)
+    save.add_css_class("suggested-action")
     save.connect("clicked", persist)
     box.append(save)
+
+    box.append(Gtk.Label(label="GTK and icons", xalign=0, css_classes=["heading"]))
+    theme_name = current_theme_name()
+    gtk_name = str(prefs.get("gtk_theme") or "")
+    if theme_name and theme_name not in gtk_name:
+        box.append(_status_label("GTK and icons are picked independently of the preset palette."))
+    box.append(gtk_row)
+    box.append(icon_row)
+    box.append(cursor_row)
+    box.append(hypr_row)
+    save_gtk = Gtk.Button(label="Save look", halign=Gtk.Align.START)
+    save_gtk.add_css_class("suggested-action")
+    save_gtk.connect("clicked", persist)
+    box.append(save_gtk)
+
+    box.append(Gtk.Label(label="Hyprland", xalign=0, css_classes=["heading"]))
+    for title, spin in hypr_rows:
+        row = Adw.ActionRow(title=title)
+        row.add_suffix(spin)
+        box.append(row)
     return overlay
 
 
@@ -982,9 +1057,16 @@ def store_page() -> Gtk.Widget:
     def render(query: str = "") -> None:
         while child := results.get_first_child():
             results.remove(child)
-        flow = _flow()
+        text = query.strip()
+        if not text:
+            results.append(
+                _status_label(
+                    "Builtin presets are on the Presets page. Paste a git URL or type to search the index."
+                )
+            )
+            return
         try:
-            hits = ThemeStore().search(query)
+            hits = ThemeStore().search(text)
         except Exception as exc:  # noqa: BLE001
             _toast(overlay, str(exc))
             return
@@ -992,27 +1074,27 @@ def store_page() -> Gtk.Widget:
             results.append(_status_label("No matching themes in the store index."))
             return
         for item in hits:
-            tile = _tile(
-                item.display_name,
-                item.description or item.source,
-                color=_accent_color() if not item.is_remote else "#5b8def",
+            row = Gtk.Box(spacing=8)
+            image = None
+            if not item.is_remote:
+                try:
+                    image = theme_preview_image(ThemeCatalog().get(item.name))
+                except (KeyError, OSError, ValueError):
+                    image = None
+            if image is not None:
+                row.append(_preview_widget(image))
+            title = Gtk.Label(label=item.display_name, xalign=0, hexpand=True)
+            row.append(title)
+            action = Gtk.Button(label="Install" if item.is_remote else "Apply")
+            action.connect(
+                "clicked",
+                lambda _b, entry=item, current=text: _store_install(entry, overlay, render, current),
             )
-            tile.connect("clicked", lambda _b, entry=item: _store_install(entry, overlay, render, query))
-            flow.append(tile)
-        results.append(flow)
+            row.append(action)
+            results.append(row)
 
-    def submit(*_args) -> None:
-        query = entry.get_text().strip()
-        if not query:
-            render("")
-            return
-        try:
-            found = ThemeStore().resolve(query)
-        except KeyError:
-            render(query)
-            _toast(overlay, f"No store match for {query}")
-            return
-        _store_install(found, overlay, render, query)
+    def submit(*_args: object) -> None:
+        render(entry.get_text().strip())
 
     add.connect("clicked", submit)
     entry.connect("activate", submit)

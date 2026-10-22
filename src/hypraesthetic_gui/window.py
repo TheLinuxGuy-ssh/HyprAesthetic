@@ -8,13 +8,16 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk
 
+from hypraesthetic.discover import current_theme_name
 from hypraesthetic_gui import widgets as pages
 from hypraesthetic_gui.pages import PAGES
 
 
 class HaWindow(Adw.ApplicationWindow):
     def __init__(self, application: Adw.Application):
-        super().__init__(application=application, title="HyprAesthetic")
+        theme = current_theme_name()
+        title = f"HyprAesthetic — {theme}" if theme else "HyprAesthetic"
+        super().__init__(application=application, title=title)
         self.set_default_size(1100, 720)
         self._stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
         sidebar = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE, css_classes=["navigation-sidebar"])

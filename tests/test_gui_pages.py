@@ -15,12 +15,22 @@ gi.require_version("Pango", "1.0")
 from gi.repository import Adw, Gtk, Pango
 
 from hypraesthetic.doctor import DoctorCheck, DoctorReport
+from hypraesthetic.paths import current_theme_file
 from hypraesthetic.prefs import Prefs
 from hypraesthetic.preset import prepare_preset_switch
+from hypraesthetic.store import StoreEntry
 from hypraesthetic_gui.pages import PAGES
 from hypraesthetic.discover import geom_to_fraction
-from hypraesthetic.paths import current_theme_file
-from hypraesthetic_gui.widgets import WidgetEditor, apps_page, doctor_page, fonts_page, presets_page, widgets_page
+from hypraesthetic_gui.widgets import (
+    WidgetEditor,
+    apps_page,
+    doctor_page,
+    fonts_page,
+    look_page,
+    presets_page,
+    store_page,
+    widgets_page,
+)
 
 
 def _descendants(widget: Gtk.Widget):
@@ -222,6 +232,268 @@ class FontsPageTests(unittest.TestCase):
                     os.environ.pop("HOME", None)
                 else:
                     os.environ["HOME"] = old_home
+
+
+STORE_EMPTY = (
+    "Builtin presets are on the Presets page. Paste a git URL or type to search the index."
+)
+GTK_MISMATCH = "GTK and icons are picked independently of the preset palette."
+PALETTE_TOAST = (
+    "Install wallust to generate a palette; until then export copies the current preset colors."
+)
+
+
+def _page_marks(page: Gtk.Widget) -> list[str]:
+    heading = next(
+        widget
+        for widget in _descendants(page)
+        if isinstance(widget, Gtk.Label) and widget.has_css_class("title-1")
+    )
+    box = heading.get_parent()
+    marks: list[str] = []
+    child = box.get_first_child()
+    while child is not None:
+        if isinstance(child, (Gtk.Label, Gtk.Button)) and child.get_label():
+            marks.append(child.get_label())
+        child = child.get_next_sibling()
+    return marks
+
+
+def _spin_by_title(root: Gtk.Widget, title: str) -> Gtk.SpinButton:
+    for row in _rows(root):
+        if row.get_title() != title:
+            continue
+        for widget in _descendants(row):
+            if isinstance(widget, Gtk.SpinButton):
+                return widget
+    raise AssertionError(f"no spin for {title}")
+
+
+class LookPageTests(unittest.TestCase):
+    def test_sections_put_save_look_above_gtk(self) -> None:
+        with patch("hypraesthetic_gui.widgets.list_wallpapers", return_value=[]):
+            page = look_page()
+        marks = _page_marks(page)
+        for label in ("Look", "Wallpaper", "Save look", "GTK and icons", "Hyprland"):
+            self.assertIn(label, marks)
+        self.assertLess(marks.index("Wallpaper"), marks.index("Save look"))
+        self.assertLess(marks.index("Save look"), marks.index("GTK and icons"))
+        self.assertLess(marks.index("GTK and icons"), marks.index("Hyprland"))
+        second = marks.index("Save look", marks.index("Save look") + 1)
+        self.assertLess(marks.index("GTK and icons"), second)
+        self.assertLess(second, marks.index("Hyprland"))
+        self.assertIn("Browse wallpaper…", marks)
+
+    def test_gtk_mismatch_hint_and_hypr_spins(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = tmp
+            try:
+                current = current_theme_file()
+                current.parent.mkdir(parents=True, exist_ok=True)
+                current.write_text("sky\n", encoding="utf-8")
+                prefs = Prefs.load()
+                prefs.set("gtk_theme", "Adwaita-Dark")
+                prefs.save()
+                with patch("hypraesthetic_gui.widgets.list_wallpapers", return_value=[]):
+                    page = look_page()
+                labels = [
+                    widget.get_label()
+                    for widget in _descendants(page)
+                    if isinstance(widget, Gtk.Label)
+                ]
+                self.assertIn(GTK_MISMATCH, labels)
+                hint = next(
+                    widget
+                    for widget in _descendants(page)
+                    if isinstance(widget, Gtk.Label) and widget.get_label() == GTK_MISMATCH
+                )
+                self.assertTrue(hint.has_css_class("dim-label"))
+                by_title = {row.get_title() for row in _rows(page)}
+                self.assertIn("Cursor theme", by_title)
+                for title, value in (
+                    ("Gaps in", 5),
+                    ("Gaps out", 7),
+                    ("Border", 1),
+                    ("Rounding", 10),
+                ):
+                    self.assertEqual(int(_spin_by_title(page, title).get_value()), value)
+                prefs.set("gtk_theme", "gtk-sky")
+                prefs.save()
+                with patch("hypraesthetic_gui.widgets.list_wallpapers", return_value=[]):
+                    matched = look_page()
+                matched_labels = [
+                    widget.get_label()
+                    for widget in _descendants(matched)
+                    if isinstance(widget, Gtk.Label)
+                ]
+                self.assertNotIn(GTK_MISMATCH, matched_labels)
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+
+    def test_save_look_persists_cursor_and_hypr_knobs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = tmp
+            try:
+                prefs = Prefs.load()
+                prefs.set("gtk_theme", "Adwaita-Dark")
+                prefs.set("icon_theme", "Papirus-Dark")
+                prefs.save()
+                with (
+                    patch("hypraesthetic_gui.widgets.list_wallpapers", return_value=[]),
+                    patch("hypraesthetic_gui.widgets.list_gtk_themes", return_value=["Adwaita-Dark"]),
+                    patch(
+                        "hypraesthetic_gui.widgets.list_icon_themes",
+                        return_value=["Papirus-Dark"],
+                    ),
+                    patch(
+                        "hypraesthetic_gui.widgets.list_cursor_themes",
+                        return_value=["Bibata-Modern-Classic"],
+                    ),
+                    patch("hypraesthetic_gui.widgets._apply", return_value=True) as apply,
+                ):
+                    page = look_page()
+                    _spin_by_title(page, "Gaps in").set_value(11)
+                    _spin_by_title(page, "Gaps out").set_value(13)
+                    _spin_by_title(page, "Border").set_value(2)
+                    _spin_by_title(page, "Rounding").set_value(8)
+                    cursor = _row_dropdown(
+                        next(row for row in _rows(page) if row.get_title() == "Cursor theme")
+                    )
+                    cursor_values = _dropdown_values(cursor)
+                    self.assertEqual(cursor_values[0], "")
+                    self.assertIn("Bibata-Modern-Classic", cursor_values)
+                    cursor.set_selected(cursor_values.index("Bibata-Modern-Classic"))
+                    save = next(
+                        button for button in _labeled_buttons(page) if button.get_label() == "Save look"
+                    )
+                    save.emit("clicked")
+                loaded = Prefs.load()
+                self.assertEqual(loaded.get("cursor_theme"), "Bibata-Modern-Classic")
+                self.assertEqual(loaded.get("hypr.gaps_in"), 11)
+                self.assertEqual(loaded.get("hypr.gaps_out"), 13)
+                self.assertEqual(loaded.get("hypr.border_size"), 2)
+                self.assertEqual(loaded.get("hypr.rounding"), 8)
+                self.assertEqual(loaded.get("gtk_theme"), "Adwaita-Dark")
+                components = apply.call_args.kwargs["components"]
+                self.assertIn("gtk", components)
+                self.assertIn("hyprland", components)
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+
+    def test_palette_button_hidden_without_wallust_or_matugen(self) -> None:
+        with (
+            patch("hypraesthetic_gui.widgets.list_wallpapers", return_value=[]),
+            patch("hypraesthetic_gui.widgets.shutil.which", return_value=None),
+        ):
+            page = look_page()
+        labels = [button.get_label() for button in _labeled_buttons(page)]
+        self.assertNotIn("Generate palette from wallpaper", labels)
+
+    def test_palette_button_runs_export_theme(self) -> None:
+        calls: list[list[str]] = []
+
+        def which(name: str) -> str | None:
+            return "/usr/bin/wallust" if name == "wallust" else None
+
+        with (
+            patch("hypraesthetic_gui.widgets.list_wallpapers", return_value=[]),
+            patch("hypraesthetic_gui.widgets.shutil.which", side_effect=which),
+            patch("hypraesthetic_gui.widgets._toast") as toast,
+            patch(
+                "hypraesthetic_gui.widgets._palette_runner",
+                side_effect=lambda cmd: calls.append(list(cmd)),
+            ),
+        ):
+            page = look_page()
+            button = next(
+                item
+                for item in _labeled_buttons(page)
+                if item.get_label() == "Generate palette from wallpaper"
+            )
+            button.emit("clicked")
+        self.assertEqual(calls[0][:2], ["hat", "export-theme"])
+        self.assertEqual(toast.call_args.args[1], PALETTE_TOAST)
+
+
+class StorePageTests(unittest.TestCase):
+    def test_first_paint_is_search_row_and_empty_copy(self) -> None:
+        page = store_page()
+        labels = [
+            widget.get_label()
+            for widget in _descendants(page)
+            if isinstance(widget, Gtk.Label)
+        ]
+        self.assertIn(STORE_EMPTY, labels)
+        self.assertTrue(any(isinstance(widget, Gtk.Entry) for widget in _descendants(page)))
+        tiles = [
+            widget
+            for widget in _descendants(page)
+            if isinstance(widget, Gtk.Button) and not widget.get_label()
+        ]
+        self.assertEqual(tiles, [])
+        self.assertNotIn("Apply", [button.get_label() for button in _labeled_buttons(page)])
+
+    def test_search_hits_use_apply_install_and_builtin_preview(self) -> None:
+        builtin = StoreEntry(
+            name="sky",
+            display_name="Sky",
+            description="Bright",
+            author="HyprAesthetic",
+            source="builtin",
+        )
+        remote = StoreEntry(
+            name="rice",
+            display_name="Rice",
+            description="remote",
+            author="",
+            source="https://github.com/example/rice.git",
+        )
+        pkg = object()
+
+        def search(query: str) -> list[StoreEntry]:
+            if not query.strip():
+                return []
+            return [builtin, remote]
+
+        with (
+            patch("hypraesthetic_gui.widgets.ThemeStore") as store_cls,
+            patch("hypraesthetic_gui.widgets.ThemeCatalog") as catalog_cls,
+            patch("hypraesthetic_gui.widgets.theme_preview_image", return_value=None) as preview,
+        ):
+            store_cls.return_value.search.side_effect = search
+            catalog_cls.return_value.get.return_value = pkg
+            page = store_page()
+            entry = next(widget for widget in _descendants(page) if isinstance(widget, Gtk.Entry))
+            entry.set_text("sky")
+            entry.emit("activate")
+            labels = [button.get_label() for button in _labeled_buttons(page)]
+            self.assertIn("Apply", labels)
+            self.assertIn("Install", labels)
+            catalog_cls.return_value.get.assert_called_with("sky")
+            preview.assert_called_with(pkg)
+            apply_button = next(
+                button for button in _labeled_buttons(page) if button.get_label() == "Apply"
+            )
+            with patch("hypraesthetic_gui.widgets.ApplyEngine") as engine:
+                apply_button.emit("clicked")
+            engine.return_value.apply.assert_called_with("sky")
+            entry.set_text("")
+            entry.emit("activate")
+        labels = [
+            widget.get_label()
+            for widget in _descendants(page)
+            if isinstance(widget, Gtk.Label)
+        ]
+        self.assertIn(STORE_EMPTY, labels)
+        self.assertNotIn("Apply", [button.get_label() for button in _labeled_buttons(page)])
 
 
 class AppsPageTests(unittest.TestCase):

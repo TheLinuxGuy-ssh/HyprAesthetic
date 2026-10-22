@@ -146,6 +146,11 @@ def list_icon_themes(roots: list[Path] | None = None) -> list[str]:
     return sorted(names)
 
 
+def list_cursor_themes(roots: list[Path] | None = None) -> list[str]:
+    """Cursor themes live beside icon themes. Names like Bibata do not say "cursor"."""
+    return list_icon_themes(roots)
+
+
 def current_theme_name(default: str = "toji") -> str:
     path = current_theme_file()
     if path.is_file():

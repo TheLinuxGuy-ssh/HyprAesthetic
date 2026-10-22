@@ -110,6 +110,9 @@ class DiscoverTests(unittest.TestCase):
         (icons / "index.theme").write_text("[Icon Theme]\n", encoding="utf-8")
         self.assertEqual(list_gtk_themes([root / "themes"]), ["Fake-Dark"])
         self.assertEqual(list_icon_themes([root / "icons"]), ["Fake-Icons"])
+        from hypraesthetic.discover import list_cursor_themes
+
+        self.assertEqual(list_cursor_themes([root / "icons"]), ["Fake-Icons"])
         tmp.cleanup()
 
     def test_lists_wallpapers(self) -> None:

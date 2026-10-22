@@ -36,6 +36,13 @@ AUTOMATIC_SELECTION: dict[str, Any] = {
     },
     "gtk_theme": "Flat-Remix-GTK-Blue-Dark",
     "icon_theme": "Papirus-Dark",
+    "cursor_theme": "",
+    "hypr": {
+        "gaps_in": 5,
+        "gaps_out": 7,
+        "border_size": 1,
+        "rounding": 10,
+    },
     "store_url": "",
 }
 

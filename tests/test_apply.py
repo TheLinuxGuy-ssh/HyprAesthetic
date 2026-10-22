@@ -704,6 +704,92 @@ class ApplyEngineTests(unittest.TestCase):
         self.assertRegex(scss, r"(?m)^\.panel\s*\{[^}]*background-color:\s*transparent")
         self.assertRegex(scss, r"(?m)^\.panel\s*\{[^}]*border:\s*none")
 
+    def test_appearences_template_uses_hypr_look_vars(self) -> None:
+        text = (
+            Path(__file__).resolve().parents[1]
+            / "themes"
+            / "_template"
+            / "hypr"
+            / "appearences.lua.template"
+        ).read_text(encoding="utf-8")
+        self.assertIn("gaps_in = {{hypr.gaps_in}}", text)
+        self.assertIn("gaps_out = {{hypr.gaps_out}}", text)
+        self.assertIn("border_size = {{hypr.border_size}}", text)
+        self.assertIn("rounding = {{hypr.rounding}}", text)
+
+    def test_hypr_look_prefs_render_into_appearences(self) -> None:
+        template = self.repo / "themes" / "_template" / "hypr" / "appearences.lua.template"
+        template.write_text(
+            "\n".join(
+                [
+                    "gaps_in = {{hypr.gaps_in}}",
+                    "gaps_out = {{hypr.gaps_out}}",
+                    "border_size = {{hypr.border_size}}",
+                    "rounding = {{hypr.rounding}}",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        prefs = Prefs.load()
+        prefs.set("hypr.gaps_in", 0)
+        prefs.set("hypr.gaps_out", 18)
+        prefs.set("hypr.border_size", 3)
+        prefs.set("hypr.rounding", 14)
+        prefs.save()
+        result = self.engine.apply("sample")
+        text = (self.home / ".config" / "hypr" / "appearences.lua").read_text(encoding="utf-8")
+        self.assertNotIn("{{", text)
+        self.assertNotIn("hypr.gaps_in", " ".join(result.errors))
+        self.assertIn("gaps_in = 0", text)
+        self.assertIn("gaps_out = 18", text)
+        self.assertIn("border_size = 3", text)
+        self.assertIn("rounding = 14", text)
+
+    def test_gui_overlay_floats_control_center(self) -> None:
+        self.engine.apply("sample")
+        gui = (self.home / ".config" / "hypr" / "hypraesthetic-gui.lua").read_text(encoding="utf-8")
+        self.assertIn('name = "hypraesthetic-gui"', gui)
+        self.assertIn('match = { class = "dev.hypraesthetic.ControlCenter" }', gui)
+        self.assertIn("float = true", gui)
+        self.assertIn("center = true", gui)
+        entry = (self.home / ".config" / "hypr" / "hyprland.lua").read_text(encoding="utf-8")
+        apps_at = entry.find("hypraesthetic-apps")
+        gui_at = entry.find("hypraesthetic-gui")
+        self.assertGreaterEqual(apps_at, 0)
+        self.assertGreater(gui_at, apps_at)
+        custom = self.home / ".config" / "hypr" / "custom.lua"
+        self.assertEqual(custom.read_text(encoding="utf-8"), "-- user overlay\n")
+
+    def test_default_hyprland_requires_gui_overlay_beside_apps(self) -> None:
+        text = (
+            Path(__file__).resolve().parents[1] / "layouts" / "default" / "hypr" / "hyprland.lua"
+        ).read_text(encoding="utf-8")
+        apps_at = text.find('pcall(require, "hypraesthetic-apps")')
+        gui_at = text.find('pcall(require, "hypraesthetic-gui")')
+        self.assertGreaterEqual(apps_at, 0)
+        self.assertGreater(gui_at, apps_at)
+        self.assertLess(gui_at - apps_at, 80)
+
+    def test_cursor_theme_writes_env_and_gtk_name(self) -> None:
+        prefs = Prefs.load()
+        prefs.set("cursor_theme", "Bibata-Modern-Classic")
+        prefs.save()
+        self.engine.apply("sample")
+        apps = (self.home / ".config" / "hypr" / "hypraesthetic-apps.lua").read_text(encoding="utf-8")
+        self.assertIn('hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")', apps)
+        self.assertIn('hl.env("XCURSOR_SIZE", "26")', apps)
+        ini = (self.home / ".config" / "gtk-3.0" / "settings.ini").read_text(encoding="utf-8")
+        self.assertIn("gtk-cursor-theme-name=Bibata-Modern-Classic", ini)
+        prefs = Prefs.load()
+        prefs.set("cursor_theme", "")
+        prefs.save()
+        self.engine.apply("sample")
+        apps = (self.home / ".config" / "hypr" / "hypraesthetic-apps.lua").read_text(encoding="utf-8")
+        self.assertNotIn("XCURSOR_THEME", apps)
+        ini = (self.home / ".config" / "gtk-3.0" / "settings.ini").read_text(encoding="utf-8")
+        self.assertNotIn("gtk-cursor-theme-name", ini)
+
 
 if __name__ == "__main__":
     unittest.main()

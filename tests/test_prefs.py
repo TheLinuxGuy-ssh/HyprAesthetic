@@ -88,6 +88,28 @@ class PrefsTests(unittest.TestCase):
         self.assertEqual(loaded.get("file_manager"), "thunar")
         self.assertEqual(loaded.get("widgets"), ["clock"])
 
+    def test_hypr_look_and_cursor_defaults(self) -> None:
+        prefs = default_prefs()
+        hypr = prefs.get("hypr") or {}
+        self.assertEqual(hypr.get("gaps_in"), 5)
+        self.assertEqual(hypr.get("gaps_out"), 7)
+        self.assertEqual(hypr.get("border_size"), 1)
+        self.assertEqual(hypr.get("rounding"), 10)
+        self.assertEqual(prefs.get("cursor_theme"), "")
+        loaded = Prefs.load()
+        self.assertEqual(loaded.get("hypr.gaps_in"), 5)
+        self.assertEqual(loaded.get("hypr.gaps_out"), 7)
+        self.assertEqual(loaded.get("hypr.border_size"), 1)
+        self.assertEqual(loaded.get("hypr.rounding"), 10)
+        self.assertEqual(loaded.get("cursor_theme"), "")
+        loaded.set("hypr.gaps_in", 0)
+        loaded.set("cursor_theme", "Bibata-Modern-Classic")
+        loaded.save()
+        again = Prefs.load()
+        self.assertEqual(again.get("hypr.gaps_in"), 0)
+        self.assertEqual(again.get("hypr.rounding"), 10)
+        self.assertEqual(again.get("cursor_theme"), "Bibata-Modern-Classic")
+
 
 if __name__ == "__main__":
     unittest.main()

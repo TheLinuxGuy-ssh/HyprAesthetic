@@ -177,6 +177,11 @@ source = "https://github.com/example/from-refresh.git"
         self.assertEqual(err, "")
         undo.assert_called_once()
 
+    def test_export_theme_requires_a_name(self) -> None:
+        code, _out, err = self._run3(["export-theme"])
+        self.assertEqual(code, 2)
+        self.assertIn("export-theme <name>", err)
+
     def test_prefs_get_unknown_is_unset(self) -> None:
         code, out, err = self._run3(["prefs", "get", "no_such_pref"])
         self.assertEqual(code, 0)

@@ -302,6 +302,12 @@ class ThemePackage:
             },
             "misc": {"wallpaper": self.wallpaper, "hw_theme": self.hw_theme},
             "layout": {k: v for k, v in self.layout.items() if not isinstance(v, list)},
+            "hypr": {
+                "gaps_in": 5,
+                "gaps_out": 7,
+                "border_size": 1,
+                "rounding": 10,
+            },
             "defaults": self.defaults,
             "components": self.components,
         }

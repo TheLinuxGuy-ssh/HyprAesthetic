@@ -123,6 +123,10 @@ class ThemePackageTests(unittest.TestCase):
         self.assertEqual(flat["palette_base0D"], "#74b9ff")
         self.assertEqual(flat["colors_hyprland_border_active"], "#74b9ff")
         self.assertEqual(flat["colors_waybar_background"], "#0d0d0d")
+        self.assertEqual(flat["hypr_gaps_in"], "5")
+        self.assertEqual(flat["hypr_gaps_out"], "7")
+        self.assertEqual(flat["hypr_border_size"], "1")
+        self.assertEqual(flat["hypr_rounding"], "10")
 
     def test_legacy_colors_table_is_accepted_as_palette(self) -> None:
         body = """
