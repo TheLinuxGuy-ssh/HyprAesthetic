@@ -5,6 +5,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export HYPRAESTHETIC_ROOT="$REPO_ROOT"
 export PYTHONPATH="$REPO_ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
 
+# shellcheck source=scripts/lib/common.sh
 source "$REPO_ROOT/scripts/lib/common.sh"
 
 print_banner() {

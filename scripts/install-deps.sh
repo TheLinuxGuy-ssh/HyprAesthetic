@@ -101,7 +101,8 @@ install_deps() {
 }
 
 check_deps() {
-    local pkgs=() missing=0
+    local pkgs=()
+    local missing_count=0
     mapfile -t pkgs < <(packages_for_current)
     for pkg in "${pkgs[@]}"; do
         [[ -n "$pkg" ]] || continue
@@ -109,10 +110,10 @@ check_deps() {
             log_success "$pkg"
         else
             log_error "$pkg (missing)"
-            missing=$((missing + 1))
+            missing_count=$((missing_count + 1))
         fi
     done
-    [[ $missing -eq 0 ]] || die "$missing package(s) missing"
+    [[ $missing_count -eq 0 ]] || die "$missing_count package(s) missing"
 }
 
 main() {

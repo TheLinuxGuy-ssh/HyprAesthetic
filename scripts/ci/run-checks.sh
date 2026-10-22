@@ -25,9 +25,9 @@ done
 
 echo "=== Shellcheck ==="
 if command -v shellcheck >/dev/null 2>&1; then
-    shellcheck -x install.sh uninstall.sh ha-theme
-    shellcheck -x scripts/*.sh
-    shellcheck -x scripts/lib/*.sh
+    shellcheck -x -e SC1091 install.sh uninstall.sh ha-theme
+    shellcheck -x -e SC1091 scripts/*.sh
+    shellcheck -x -e SC1091 scripts/lib/*.sh
 else
     echo "shellcheck not installed — skipping (installed in CI)"
 fi

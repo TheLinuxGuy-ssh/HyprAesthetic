@@ -46,7 +46,9 @@ kill_all_eww() {
 }
 
 hide_eww_widgets() {
-    eww ping >/dev/null 2>&1 && eww close-all >/dev/null 2>&1 || true
+    if eww ping >/dev/null 2>&1; then
+        eww close-all >/dev/null 2>&1 || true
+    fi
 }
 
 eww_layout_has_windows() {
@@ -104,7 +106,9 @@ open_eww_widgets() {
     done
 
     for pid in "${pids[@]}"; do
-        wait "$pid" && opened=$((opened + 1)) || true
+        if wait "$pid"; then
+            opened=$((opened + 1))
+        fi
     done
 
     if [[ "$opened" -lt "${#widgets[@]}" ]]; then

@@ -70,7 +70,7 @@ render_template_dir() {
     mkdir -p "$output_dir"
     
     while IFS= read -r -d '' template; do
-        local rel_path="${template#$template_dir/}"
+        local rel_path="${template#"$template_dir"/}"
         local output_file="$output_dir/$rel_path"
         output_file="${output_file%.template}"
         

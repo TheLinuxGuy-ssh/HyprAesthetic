@@ -60,3 +60,11 @@ class CommunityFilesTests(unittest.TestCase):
             "## License",
         ):
             self.assertIn(heading, text, heading)
+
+    def test_readme_leads_with_banner_and_bar_shots(self) -> None:
+        text = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("261e14f7-dc42-4a0d-bcd6-718b5793f7b9", text)
+        self.assertIn("layouts/bars/default/screenshot-2026-04-19_19-38-35.png", text)
+        self.assertIn("layouts/bars/cyberpunk/V2.9e.png", text)
+        self.assertIn("layouts/bars/v7/preview.png", text)
+        self.assertLess(text.find("261e14f7-dc42-4a0d-bcd6-718b5793f7b9"), text.find("## Installation"))
