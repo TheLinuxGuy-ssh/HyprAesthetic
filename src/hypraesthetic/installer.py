@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-from dataclasses import dataclass
+import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
@@ -23,6 +24,8 @@ class InstallResult:
     mode: str
     theme: str
     packages: list[str]
+    packages_installed: list[str] = field(default_factory=list)
+    packages_skipped: list[str] = field(default_factory=list)
 
 
 HYPRLAND_DESKTOP = """[Desktop Entry]
@@ -57,6 +60,7 @@ class Installer:
         package_installed: InstalledFn | None = None,
         write_session: bool = True,
         catalog: PackageCatalog | None = None,
+        confirm: Callable[[list[str]], bool] | None = None,
     ):
         self.repo_root = repo_root or detect_repo_root()
         self.distro_id = distro_id or _read_distro_id()
@@ -67,6 +71,7 @@ class Installer:
         self.package_installed = package_installed or _package_installed
         self.write_session = write_session
         self.catalog = catalog or PackageCatalog.load()
+        self.confirm = confirm
 
     def run(
         self,
@@ -86,8 +91,13 @@ class Installer:
 
         packages = self.catalog.packages_for_selection(self.distro_id, selected)
         missing = [pkg for pkg in packages if not self.package_installed(pkg)]
+        installed: list[str] = []
+        skipped: list[str] = []
         if missing:
-            self._install_packages(missing)
+            if self._install_packages(missing):
+                installed = list(missing)
+            else:
+                skipped = list(missing)
 
         self._install_cli()
         if self.write_session:
@@ -98,15 +108,34 @@ class Installer:
         if self.apply_fn:
             self.apply_fn(theme)
 
-        return InstallResult(mode=mode, theme=theme, packages=packages)
+        return InstallResult(
+            mode=mode,
+            theme=theme,
+            packages=packages,
+            packages_installed=installed,
+            packages_skipped=skipped,
+        )
 
-    def _install_packages(self, packages: list[str]) -> None:
+    def _install_packages(self, packages: list[str]) -> bool:
         family = self.catalog.family_for(self.distro_id)
-        if not self.assume_yes:
-            return
+        if not self.assume_yes and not self._confirm_packages(packages):
+            return False
         cmd = _install_command(family.manager, packages)
-        if cmd:
-            self.runner(cmd, check=False)
+        if not cmd:
+            return False
+        self.runner(cmd, check=False)
+        return True
+
+    def _confirm_packages(self, packages: list[str]) -> bool:
+        if self.confirm is not None:
+            return bool(self.confirm(packages))
+        if not sys.stdin.isatty():
+            return False
+        print("Packages to install:")
+        for pkg in packages:
+            print(f"  - {pkg}")
+        answer = input("Install packages? [Y/n]: ").strip().lower()
+        return answer in {"", "y", "yes"}
 
     def _install_cli(self) -> None:
         bin_dir = Path.home() / ".local" / "bin"

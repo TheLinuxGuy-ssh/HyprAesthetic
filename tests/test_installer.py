@@ -74,6 +74,30 @@ class InstallerTests(unittest.TestCase):
         self.assertTrue(desktop.is_file())
         self.assertIn("Exec=Hyprland", desktop.read_text(encoding="utf-8"))
 
+    def test_custom_decline_records_skipped_packages_and_does_not_install(self) -> None:
+        self.installer.assume_yes = False
+        self.installer.confirm = lambda _packages: False
+        result = self.installer.run(
+            mode="custom",
+            theme="toji",
+            selection={"bar": "waybar", "file_manager": "nautilus", "terminal": "kitty"},
+        )
+        self.assertFalse(any(cmd and cmd[0] == "sudo" for cmd in self.commands))
+        skipped = getattr(result, "packages_skipped", [])
+        installed = getattr(result, "packages_installed", result.packages)
+        self.assertTrue(skipped)
+        self.assertEqual(installed, [])
+
+    def test_custom_confirm_invokes_package_install(self) -> None:
+        self.installer.assume_yes = False
+        self.installer.confirm = lambda _packages: True
+        self.installer.run(
+            mode="custom",
+            theme="toji",
+            selection={"bar": "waybar", "file_manager": "nautilus", "terminal": "kitty"},
+        )
+        self.assertTrue(any(cmd and cmd[0] == "sudo" for cmd in self.commands))
+
 
 if __name__ == "__main__":
     unittest.main()

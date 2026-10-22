@@ -798,7 +798,7 @@ def look_page() -> Gtk.Widget:
         loaded = Prefs.load()
         loaded.set("wallpaper", str(path))
         loaded.save()
-        if _apply(overlay, components=[], message=f"Wallpaper: {path.name}"):
+        if _apply(overlay, components=["wallpaper"], message=f"Wallpaper: {path.name}"):
             _set_selected(wall_buttons, str(path))
 
     def is_current(image: Path) -> bool:

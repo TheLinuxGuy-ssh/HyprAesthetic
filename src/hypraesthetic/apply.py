@@ -170,9 +170,11 @@ class ApplyEngine:
                 continue
             result.applied.append(cid)
 
-        if components is None:
+        if components is None or "wallpaper" in wanted:
             try:
                 self._apply_wallpaper(pkg)
+                if components is not None and "wallpaper" in wanted:
+                    result.applied.append("wallpaper")
             except OSError as exc:
                 self._errors.append(f"wallpaper: {exc}")
         current = current_theme_file()

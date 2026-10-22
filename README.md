@@ -39,7 +39,7 @@ cd ~/.local/share/HyprAesthetic
 ./install.sh
 ```
 
-The installer asks Automatic or Custom, installs packages for the detected distro, backs up `~/.config`, applies a theme, and writes `~/.config/HyprAesthetic/prefs.toml`. It also links `ha-theme`, `hat`, and `hyprwall` into `~/.local/bin`.
+The installer asks Automatic or Custom, installs packages for the detected distro, backs up the managed config directories (`hypr`, `waybar`, `hyprwave`, `eww`, `rofi`, `kitty`, `gtk-3.0`, `gtk-4.0`, `dunst`, `nvim`), applies a theme, and writes `~/.config/HyprAesthetic/prefs.toml`. It also links `ha-theme`, `hat`, and `hyprwall` into `~/.local/bin`. Custom mode without `--yes` asks before installing packages. Declining, or running it without a terminal, leaves those packages uninstalled and reports an incomplete install.
 
 On a first compositor install, log out and select Hyprland in the display manager.
 
@@ -71,7 +71,7 @@ hat gui
 hat version
 ```
 
-`switch-<component>` applies one component (for example `switch-waybar` or `switch-wallpaper`). `menu` is the Rofi theme picker. `wallpaper-menu` is the Rofi wallpaper picker (`hyprwall` on `PATH` is that script). `session-start` runs once per Hyprland session and starts the wallpaper, Waybar, eww widgets, cliphist, and Hyprwave when those are enabled.
+`switch-<component>` applies one component (for example `switch-waybar` or `switch-wallpaper`). `menu` is the Rofi theme picker. `wallpaper-menu` is the Rofi wallpaper picker (`hyprwall` on `PATH` is that script). `session-start` runs once per Hyprland session. It always applies the wallpaper. It starts cliphist when `wl-paste` and `cliphist` are installed. Waybar, eww, and Hyprwave follow prefs, and start only when those prefs enable them and the binaries exist.
 
 ## Control center
 

@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.request import urlopen
 
 from hypraesthetic.install_theme import ThemeInstaller, _git_name, _looks_like_git
-from hypraesthetic.paths import data_dir, repo_root
+from hypraesthetic.paths import data_dir, repo_root, user_config_dir
 from hypraesthetic.theme import ThemePackage
 
 
@@ -44,7 +44,7 @@ class ThemeStore:
         raise KeyError(name)
 
     def refresh(self, url: str, dest: Path | None = None) -> Path:
-        target = dest or self.index_path
+        target = dest or user_store_index()
         with urlopen(url, timeout=20) as response:  # noqa: S310 - user-configured catalog URL
             payload = response.read()
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -89,7 +89,15 @@ class ThemeStore:
         return hits[0]
 
 
+def user_store_index() -> Path:
+    """Catalog written by `ha-theme store refresh` and read by CLI and GTK."""
+    return user_config_dir() / "store-index.toml"
+
+
 def _default_index() -> Path:
+    user = user_store_index()
+    if user.is_file():
+        return user
     bundled = data_dir() / "store-index.toml"
     if bundled.is_file():
         return bundled

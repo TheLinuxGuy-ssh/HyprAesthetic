@@ -13,9 +13,9 @@ from hypraesthetic.catalog import ThemeCatalog
 from hypraesthetic.doctor import Doctor
 from hypraesthetic.install_theme import ThemeInstaller
 from hypraesthetic.installer import Installer
-from hypraesthetic.paths import current_theme_file, repo_root, user_config_dir
+from hypraesthetic.paths import current_theme_file, repo_root
 from hypraesthetic.prefs import Prefs
-from hypraesthetic.store import ThemeStore
+from hypraesthetic.store import ThemeStore, user_store_index
 from hypraesthetic.theme import ThemeError
 
 
@@ -142,8 +142,7 @@ def cmd_switch(rest: list[str]) -> int:
 def cmd_switch_one(component: str, rest: list[str]) -> int:
     if component == "wallpaper":
         theme = rest[0] if rest else _current_or_die()
-        ApplyEngine().apply(theme, components=[])
-        ApplyEngine()._apply_wallpaper(ThemeCatalog().get(theme))
+        ApplyEngine().apply(theme, components=["wallpaper"])
         return 0
     theme = rest[0] if rest and not rest[0].startswith("-") else _current_or_die()
     restart = "--restart" in rest
@@ -199,6 +198,16 @@ def cmd_install(rest: list[str]) -> int:
         backup_fn=lambda: _bash("backup-configs.sh", ["backup"]),
     )
     result = installer.run(mode=mode, theme=theme, selection=selection)
+    if result.packages_skipped:
+        print("Packages were skipped:")
+        for pkg in result.packages_skipped:
+            print(f"  - {pkg}")
+        print(
+            f"Install incomplete ({result.mode}, theme={result.theme}). "
+            "Required packages were not installed."
+        )
+        print("Re-run with --yes to install packages, or install them yourself.")
+        return 1
     print(f"Installation complete ({result.mode}, theme={result.theme})")
     print("Log out and select Hyprland from your display manager if this is a first install.")
     return 0
@@ -240,7 +249,7 @@ def cmd_store(rest: list[str]) -> int:
         if not url:
             print("No store URL configured (prefs.store_url)", file=sys.stderr)
             return 2
-        dest = user_config_dir() / "store-index.toml"
+        dest = user_store_index()
         ThemeStore().refresh(url, dest)
         print(f"Refreshed store index -> {dest}")
         return 0

@@ -93,6 +93,50 @@ class ApplyEngineTests(unittest.TestCase):
         self.assertTrue(result.dry_run)
         self.assertFalse((self.home / ".config" / "eww").exists())
 
+    def _live_wallpaper_engine(self) -> tuple[ApplyEngine, list[list[str]], Path]:
+        calls: list[list[str]] = []
+
+        def runner(cmd, **kwargs):
+            calls.append([str(part) for part in cmd])
+
+            class Result:
+                returncode = 0
+                stdout = ""
+                stderr = ""
+
+            return Result()
+
+        wall = self.home / "Pictures" / "tile.png"
+        wall.parent.mkdir(parents=True)
+        wall.write_bytes(b"\x89PNG\r\n")
+        prefs = Prefs.load()
+        prefs.set("wallpaper", str(wall))
+        prefs.save()
+        engine = ApplyEngine(
+            repo_root=self.repo,
+            live=True,
+            runner=runner,
+            which=lambda name: "/usr/bin/swww" if name == "swww" else None,
+        )
+        return engine, calls, wall
+
+    def test_empty_component_list_does_not_set_wallpaper(self) -> None:
+        engine, calls, _wall = self._live_wallpaper_engine()
+        engine.apply("sample", components=[])
+        self.assertFalse(any(cmd[1:2] == ["img"] for cmd in calls))
+
+    def test_wallpaper_component_sets_wallpaper_without_other_components(self) -> None:
+        engine, calls, wall = self._live_wallpaper_engine()
+        result = engine.apply("sample", components=["wallpaper"])
+        self.assertEqual(result.errors, [])
+        self.assertIn("wallpaper", result.applied)
+        self.assertNotIn("eww", result.applied)
+        self.assertNotIn("hyprland", result.applied)
+        self.assertIn(
+            ["/usr/bin/swww", "img", str(wall), "--transition-type", "none"],
+            calls,
+        )
+
     def test_writes_apps_overlay_from_prefs(self) -> None:
         prefs = Prefs.load()
         prefs.set("file_manager", "thunar")
