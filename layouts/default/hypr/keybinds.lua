@@ -38,7 +38,7 @@ hl.bind(mainMod .. " + " .. "V", hl.dsp.exec_cmd("cliphist list | rofi -dmenu -t
 
 hl.bind("ALT + Space", hl.dsp.exec_cmd("rofi -show drun -theme ~/.config/rofi/launchers/type-1/style-5.rasi"))
 
-hl.bind(mainMod .. " + " .. "B", hl.dsp.exec_cmd("rofi-bluetooth -theme ~/.config/rofi/launchers/type-1/bluetooth.rasi"))
+-- Super+B (browser) is bound in hypraesthetic-apps.lua from user prefs.
 
 hl.bind(mainMod .. " + " .. "A", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/ha-theme menu --restart"))
 

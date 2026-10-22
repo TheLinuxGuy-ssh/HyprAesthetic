@@ -152,6 +152,20 @@ class ApplyEngineTests(unittest.TestCase):
         self.assertIn('hl.bind(mainMod .. " + " .. "B", hl.dsp.exec_cmd("zen-browser"))', apps)
         self.assertNotIn("F11", apps)
 
+    def test_default_keybinds_leave_super_b_to_apps_overlay(self) -> None:
+        keybinds = (
+            Path(__file__).resolve().parents[1]
+            / "layouts"
+            / "default"
+            / "hypr"
+            / "keybinds.lua"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("rofi-bluetooth", keybinds)
+        self.assertIn(
+            "Super+B (browser) is bound in hypraesthetic-apps.lua from user prefs.",
+            keybinds,
+        )
+
     def test_layout_owned_waybar_ignores_theme_copy(self) -> None:
         enabled = self.repo / "themes" / "barred"
         enabled.mkdir(parents=True)
