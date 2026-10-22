@@ -45,3 +45,15 @@ class CommunityFilesTests(unittest.TestCase):
         text = (ROOT / "LICENSE").read_text(encoding="utf-8")
         self.assertIn("MIT License", text)
         self.assertIn("Permission is hereby granted", text)
+
+    def test_readme_has_required_headings(self) -> None:
+        text = (ROOT / "README.md").read_text(encoding="utf-8")
+        for heading in (
+            "## Features",
+            "## Installation",
+            "## Usage",
+            "## Components",
+            "## Creating Themes",
+            "## License",
+        ):
+            self.assertIn(heading, text, heading)

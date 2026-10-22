@@ -1,378 +1,149 @@
-<img width="1500" height="525" alt="hypraesthetic" src="https://github.com/user-attachments/assets/261e14f7-dc42-4a0d-bcd6-718b5793f7b9" />
-
 # HyprAesthetic
 
-**A modular, extensible theming system for anime-themed Hyprland setups.**
+HyprAesthetic is an installer, a theme engine, and a GTK control center for Hyprland. It is not a distro. This release supports Hyprland only.
 
-Transform your Hyprland desktop into a cohesive anime aesthetic with one command. Built for ricers who want beautiful, maintainable, and switchable themes.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-blue.svg)](https://github.com/thelinuxguy-ssh/HyprAesthetic/actions)
 
----
+### Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Control center](#control-center)
+- [Components](#components)
+- [Creating Themes](#creating-themes)
+- [Configuration](#configuration)
+- [Distros](#distros)
+- [Development](#development)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
 
 ## Features
 
-- **Multiple Themes** - Cyberpunk, Tokyo Night, Dracula, Gruvbox, and more (extensible)
-- **Instant Switching** - `ha-theme switch <theme>` applies all components atomically
-- **9 Components** - Hyprland, Waybar, Hyprwave, Eww, Rofi, Kitty, GTK, Dunst, Neovim
-- **Template Engine** - Base configs + color palettes = zero duplication
-- **Auto Backup** - Timestamped backups before every switch
-- **Dependency Management** - Auto-detects distro, installs missing packages
-- **Shell Integration** - `hat` alias, PATH setup, fish/zsh/bash support
-
----
-
-## Quick Start
-
-```bash
-# Clone and install
-git clone https://github.com/yourusername/HyprAesthetic
-cd HyprAesthetic
-./install.sh
-
-# Switch themes anytime
-ha-theme switch cyberpunk
-# or short alias
-hat switch tokyonight
-```
-
----
-
-## Screenshots
-
-### Cyberpunk Theme
-![Cyberpunk](screenshots/cyberpunk.png)
-
-*Neon-drenched Night City aesthetic with cyan/blue accents*
-
-### Tokyo Night Theme
-![Tokyo Night](screenshots/tokyonight.png)
-
-*Elegant dark theme inspired by VS Code's Tokyo Night*
-
-### Dracula Theme
-![Dracula](screenshots/dracula.png)
-
-*Classic purple/pink vampire aesthetic*
-
----
-
-## Components
-
-| Component | Method | Description |
-|-----------|--------|-------------|
-| **Hyprland** | Template | Window manager: borders, gaps, animations, colors |
-| **Waybar** | Template | Status bar: modules, CSS variables (@define-color) |
-| **Hyprwave** | Template | Dynamic media visualizer (Dynamic Island style) |
-| **Eww** | Template | Custom widgets: bar, dashboard, system monitors |
-| **Rofi/Wofi** | Symlink | Application launcher theming |
-| **Kitty** | Symlink | Terminal emulator colors |
-| **GTK 3/4** | Symlink | Application theming (settings.ini) |
-| **Dunst** | Symlink | Notification daemon styling |
-| **Neovim** | Symlink | Editor colorscheme (Lua) |
-
----
+- Installer with Automatic and Custom modes. Automatic uses the built-in defaults (Hyprland, Waybar, widgets, Kitty, Nautilus, and the project fonts). Custom asks for the bar, widgets, file manager, and terminal.
+- Theme packages: a `theme.toml` palette, with optional files under `overrides/` when a theme needs a different layout than `layouts/default/`.
+- GTK4/libadwaita control center (`hat gui`).
+- CLI. The installer puts `ha-theme` and `hat` in `~/.local/bin`. `hat` execs `ha-theme`.
+- Wallpaper and theme previews in GIF, PNG, JPEG, and WebP.
+- Per-theme widget layout from `[layout].widgets` in the theme package. The Widgets page can change placement after install.
+- Doctor (`hat doctor`) reports required and optional programs. Optional gaps are listed and do not fail the report.
 
 ## Installation
 
-### Requirements
-
-- Hyprland ≥ 0.40
-- Waybar, Hyprwave, Eww, Rofi, Kitty
-- Python 3.11+ (for TOML parsing)
-- `envsubst` (gettext package)
-
-### Supported Distros
-
-| Distro | Package Manager | Status |
-|--------|----------------|--------|
-| Arch / Manjaro / EndeavourOS | pacman + AUR | ✅ Full |
-| Fedora / RHEL / CentOS | dnf | ✅ Full |
-| Ubuntu / Debian / Mint / Pop | apt | ✅ Full |
-| openSUSE | zypper | ✅ Full |
-| NixOS | nix | ✅ Full |
-
-### Install Steps
-
 ```bash
-# 1. Clone
-git clone https://github.com/yourusername/HyprAesthetic ~/.local/share/HyprAesthetic
+git clone https://github.com/thelinuxguy-ssh/HyprAesthetic ~/.local/share/HyprAesthetic
 cd ~/.local/share/HyprAesthetic
-
-# 2. Run installer (installs deps, backs up configs, applies theme)
 ./install.sh
-
-# 3. Restart shell
-source ~/.zshrc  # or .bashrc / .config/fish/config.fish
-
-# 4. Enjoy! Switch themes anytime:
-hat switch cyberpunk
 ```
 
----
+The installer asks Automatic or Custom, installs packages for the detected distro, backs up `~/.config`, applies a theme, and writes `~/.config/HyprAesthetic/prefs.toml`. It also links `ha-theme`, `hat`, and `hyprwall` into `~/.local/bin`.
+
+On a first compositor install, log out and select Hyprland in the display manager.
 
 ## Usage
 
-### Theme Management
+Commands match `ha-theme` usage. `hat` accepts the same arguments.
 
 ```bash
-# List available themes
 hat list
-
-# Show current theme
 hat current
-
-# Switch theme (with preview)
-hat switch cyberpunk --dry-run
-hat switch cyberpunk
-
-# Switch single component
-hat switch-waybar tokyonight
-hat switch-hyprland dracula
-```
-
-### Backup & Restore
-
-```bash
-# Create backup
-hat backup
-
-# List backups
-hat restore  # shows available timestamps
-
-# Restore specific backup
-hat restore 2026-09-15_14-30-00
-```
-
-### System Health
-
-```bash
-# Check all dependencies
+hat switch <theme> [--dry-run] [--restart]
+hat switch-<component> <theme> [--restart]
+hat validate [theme]
 hat doctor
-
-# Manual dependency install/check
-./scripts/install-deps.sh install
-./scripts/install-deps.sh check
+hat backup
+hat restore [timestamp]
+hat menu [--restart]
+hat wallpaper-menu
+hat session-start
+hat install [--mode automatic|custom] [--theme NAME] [--yes]
+hat install-theme <path-or-git-url>
+hat store list
+hat store search <query>
+hat store install <name-or-url>
+hat store refresh [url]
+hat prefs get [key]
+hat prefs set <key> <value>
+hat gui
+hat version
 ```
 
-### Uninstall
+`switch-<component>` applies one component (for example `switch-waybar` or `switch-wallpaper`). `menu` is the Rofi theme picker. `wallpaper-menu` is the Rofi wallpaper picker (`hyprwall` on `PATH` is that script). `session-start` runs once per Hyprland session and starts the wallpaper, Waybar, eww widgets, cliphist, and Hyprwave when those are enabled.
 
-```bash
-# Removes symlinks, restores backups
-./uninstall.sh
-```
+## Control center
 
----
+`hat gui` needs GTK4, libadwaita, and Python GObject. Pages, in sidebar order:
 
-## Project Structure
+| Page | What it does |
+| --- | --- |
+| Presets | Theme tiles. Clicking a tile applies that theme. |
+| Bar | Waybar layout, independent of the theme palette. |
+| Widgets | Desktop overlays and placement. |
+| Fonts | Interface, bar, and terminal fonts. |
+| Apps | Default file manager, terminal, browser, and launcher. |
+| Look | Wallpaper tiles, GTK theme, icon theme, Hyprwave. |
+| Store | Search and install themes. |
+| Doctor | Required and optional package checks. Install missing packages runs `hat install --mode automatic --yes`. |
 
-```
-HyprAesthetic/
-├── install.sh              # Main installer
-├── uninstall.sh            # Clean uninstaller
-├── ha-theme                # CLI entry point (symlink)
-├── scripts/
-│   ├── theme-switcher.sh   # Core switching logic
-│   ├── switch-*.sh         # Per-component scripts
-│   ├── backup-configs.sh   # Backup/restore utility
-│   ├── install-deps.sh     # Dependency installer
-│   └── lib/
-│       ├── common.sh       # Shared functions
-│       ├── template-engine.sh  # Template rendering
-│       └── distro-detect.sh    # Distro/package detection
-├── themes/
-│   ├── _template/          # Base templates
-│   │   ├── hypr/
-│   │   ├── waybar/
-│   │   ├── hyprwave/
-│   │   └── eww/
-│   ├── cyberpunk/          # Example theme
-│   ├── tokyonight/
-│   ├── dracula/
-│   └── gruvbox/
-└── config/                 # Rendered output (gitignored)
-```
+Theme tiles and Look wallpaper tiles show a still image, or an animated GIF when the file is a GIF. Tiles load through GdkPixbuf. A GIF that is static, larger than 8 MB, or larger than 8 million pixels stays on its first frame.
 
----
+## Components
+
+With `[components]` enabled in `theme.toml`, apply writes Hyprland, Waybar, eww, Hyprwave, Rofi, Kitty, GTK, Dunst, and Neovim. Turning a key off (`waybar = false`, for example) skips that component for the theme. Default apps are a prefs overlay (`~/.config/hypr/hypraesthetic-apps.lua`), not a copy stored inside each theme.
 
 ## Creating Themes
 
-Creating a new theme is as simple as:
+Read [ADDING_THEMES.md](ADDING_THEMES.md) and [docs/theme-package.md](docs/theme-package.md).
 
-```bash
-# 1. Copy an existing theme
-cp -r themes/cyberpunk themes/mytheme
+Official presets shipped in `themes/`:
 
-# 2. Edit the color palette
-vim themes/mytheme/theme.toml
+toji, toji_2, a70, cyberpunk, choso, jjk, sky, tanjiro, tojivsukuna.
 
-# 3. Tweak component colors (optional)
-vim themes/mytheme/waybar/colors.css
-vim themes/mytheme/hypr/colors.conf
+A small package:
 
-# 4. Test
-hat switch mytheme --dry-run
-hat switch mytheme
+```text
+mytheme/
+  theme.toml
+  preview.gif     # or preview.png
+  wallpaper.gif   # or wallpaper.jpg
 ```
 
-See [ADDING_THEMES.md](ADDING_THEMES.md) for complete documentation on:
-- Theme.toml structure
-- Template vs symlink components
-- Adding new components
-- Template variable reference
-- Best practices
-
----
-
-## Architecture
-
-### Hybrid Switching Strategy
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                  ha-theme                      │
-└─────────────────────────────────────────────────────────┘
-                            │
-        ┌───────────────────┼───────────────────┐
-        ▼                   ▼                   ▼
-┌───────────────┐   ┌───────────────┐   ┌───────────────┐
-│  Template-    │   │  Template-    │   │  Symlink-     │
-│  Based        │   │  Based        │   │  Based        │
-│               │   │               │   │               │
-│ • Hyprland    │   │ • Hyprwave    │   │ • Rofi        │
-│ • Waybar      │   │ • Eww         │   │ • Kitty       │
-│               │   │               │   │ • GTK         │
-└───────────────┘   └───────────────┘   │ • Dunst       │
-                                        │ • Neovim      │
-                                        └───────────────┘
-```
-
-**Template-based:** Render from base templates + theme color palette
-**Symlink-based:** Link theme's complete config files directly
-
-### Template Engine
-
-- Simple `{{VARIABLE}}` substitution via Python
-- Theme TOML → flattened key=value → template rendering
-- Base templates in `themes/_template/`
-- Themes provide only color overrides (minimal maintenance)
-
----
+Shared Waybar, eww, Rofi, and Hyprland files live in `layouts/default/`. Add `overrides/` only when this theme must replace those files.
 
 ## Configuration
 
-### Theme.toml Schema
+Preferences are stored in `~/.config/HyprAesthetic/prefs.toml` (`hat prefs get` / `hat prefs set`).
 
-```toml
-name = "theme-folder-name"
-display_name = "Pretty Name"
-description = "Description"
-author = "you"
-version = "1.0.0"
+User keybinds and monitor tweaks go in `~/.config/hypr/custom.lua`. The first apply copies a starter file if none exists. Later theme switches do not overwrite it.
 
-[colors]           # Base16 palette (16 colors)
-base00 = "#..."    # background
-base01 = "#..."    # surface
-# ... base02-base0F
+Super+A runs the theme picker (`ha-theme menu --restart`). Super+W runs the wallpaper picker (`hyprwall`).
 
-[colors.hyprland]  # Hyprland-specific derived colors
-border_active = "{{colors.base0D}}"
-border_inactive = "{{colors.base03}}"
-shadow = "{{colors.base00}}aa"
+## Distros
 
-[colors.waybar]    # Waybar CSS variables
-background = "{{colors.base00}}"
-# ... surface, primary, error, warning, success
+Package names cover the Arch family (Arch, Manjaro, EndeavourOS, Garuda), Fedora (including Fedora Asahi Remix), Ubuntu/Debian, openSUSE, and NixOS. The map is [data/packages.toml](data/packages.toml). Hyprwave and eww are optional. On distros with an empty package list for those components, Doctor reports them as optional.
 
-[components]       # Enable/disable per theme
-hyprland = true
-waybar = true
-# ...
-```
+## Development
 
----
+Requires Python 3.11 or newer (`tomllib`).
 
-## Troubleshooting
-
-### Waybar CSS Errors
-
-**Problem:** `Invalid name of pseudo-class` or `Expected semicolon`
-
-**Solution:** Waybar uses GTK's `@define-color` syntax, not CSS custom properties. Use:
-```css
-@define-color background #1a1a1a;
-background: @background;  /* not var(--background) */
-```
-
-### Hyprwave Not Found
-
-**Problem:** `hyprwave (missing)` on Fedora/Ubuntu
-
-**Solution:** Hyprwave isn't in default repos. Install manually:
 ```bash
-# Fedora
-sudo dnf copr enable solopasha/hyprland
-sudo dnf install hyprwave
-
-# Ubuntu/Debian
-# Build from source or use Flatpak
+PYTHONPATH=src python3 -m unittest discover -s tests -v
+bash scripts/ci/run-checks.sh
 ```
 
-### Dunst Not Reloading
-
-**Problem:** Theme applied but notifications still old colors
-
-**Solution:** Dunst doesn't support live reload. The switcher restarts it:
-```bash
-pkill dunst && dunst &
-```
-
-### Fonts Missing
-
-Install Nerd Fonts for icons:
-```bash
-# Arch
-pacman -S ttf-jetbrains-mono-nerd noto-fonts-emoji
-
-# Fedora
-dnf install jetbrains-mono-fonts google-noto-emoji-fonts
-```
-
----
+Python sources live in `src/hypraesthetic/` (theme package, apply, prefs, catalog, installer, store) and `src/hypraesthetic_gui/` (the control center). `ha-theme` is the CLI entry point.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a theme in `themes/yourtheme/`
-3. Add screenshots to `screenshots/`
-4. Test with `./install.sh` on clean VM
-5. Submit PR with theme name in title
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
-See [ADDING_THEMES.md](ADDING_THEMES.md) for detailed guide.
+## Security
 
----
+See [SECURITY.md](SECURITY.md). Report vulnerabilities through a private GitHub advisory or the maintainer email in that file. Do not open a public issue for a security report.
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) for details.
-
----
-
-## Acknowledgments
-
-- [Hyprland](https://hyprland.org) - The best Wayland compositor
-- [Waybar](https://github.com/Alexays/Waybar) - Highly customizable bar
-- [Hyprwave](https://github.com/hyprwm/hyprwave) - Beautiful media visualizer
-- [Eww](https://github.com/elkowar/eww) - Standalone widget system
-- [Base16](https://github.com/chriskempson/base16) - Color scheme standard
-- All theme creators in the ricing community
-
----
-
-## Support
-
-- **Issues:** [GitHub Issues](https://github.com/yourusername/HyprAesthetic/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/yourusername/HyprAesthetic/discussions)
-- **Discord:** [Hyprland Community](https://discord.gg/hyprland)
-
----
-
-**Made with ❤️ for the anime ricing community**
+MIT. See [LICENSE](LICENSE).
