@@ -77,7 +77,7 @@ install_deps() {
         return 0
     fi
     log_info "Missing packages: ${missing[*]}"
-    if [[ "$DISTRO" =~ ^(arch|manjaro|endeavouros|garuda)$ ]]; then
+    if [[ "$DISTRO" =~ ^(arch|manjaro|endeavouros|garuda|cachyos)$ ]]; then
         detect_aur_helper
         local aur_pkgs=() repo_pkgs=()
         for pkg in "${missing[@]}"; do

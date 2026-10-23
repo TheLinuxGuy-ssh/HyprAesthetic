@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -9,7 +10,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from hypraesthetic.packages import PackageCatalog
+from hypraesthetic.aur import (
+    choose_helper,
+    ensure_helper as bootstrap_helper,
+    find_helper,
+    helper_runs,
+    split_repo_and_aur,
+)
+from hypraesthetic.packages import PackageCatalog, os_release_ids
+from hypraesthetic.privilege import allow_root_install, privileged_command
 from hypraesthetic.paths import repo_root as detect_repo_root
 from hypraesthetic.prefs import AUTOMATIC_SELECTION, Prefs
 
@@ -61,9 +70,20 @@ class Installer:
         write_session: bool = True,
         catalog: PackageCatalog | None = None,
         confirm: Callable[[list[str]], bool] | None = None,
+        euid: int | None = None,
+        aur_assume: bool = False,
+        root_assume: bool = False,
+        root_confirm: Callable[[], bool] | None = None,
+        which: Callable[[str], str | None] | None = None,
+        ensure_helper: Callable[..., Any] | None = None,
+        aur_ask: Callable[[], str] | None = None,
     ):
         self.repo_root = repo_root or detect_repo_root()
-        self.distro_id = distro_id or _read_distro_id()
+        if distro_id:
+            self.distro_ids = [distro_id]
+        else:
+            self.distro_ids = os_release_ids(_os_release_text()) or ["unknown"]
+        self.distro_id = self.distro_ids[0]
         self.runner = runner or subprocess.run
         self.assume_yes = assume_yes
         self.apply_fn = apply_fn
@@ -72,6 +92,27 @@ class Installer:
         self.write_session = write_session
         self.catalog = catalog or PackageCatalog.load()
         self.confirm = confirm
+        self.euid = os.geteuid() if euid is None else euid
+        self.aur_assume = aur_assume
+        self.root_assume = root_assume
+        self.root_confirm = root_confirm
+        self.which = which or shutil.which
+        self.ensure_helper = ensure_helper or bootstrap_helper
+        self.aur_ask = aur_ask
+        self.packages_installed: list[str] = []
+        self.packages_skipped: list[str] = []
+        self._root_allowed: bool | None = None
+
+    def allow_root(self) -> bool:
+        if self._root_allowed is not None:
+            return self._root_allowed
+        self._root_allowed = allow_root_install(
+            euid=self.euid,
+            assume_yes=self.root_assume,
+            confirm=self.root_confirm,
+            stdin_isatty=sys.stdin.isatty(),
+        )
+        return self._root_allowed
 
     def run(
         self,
@@ -79,6 +120,8 @@ class Installer:
         theme: str = "toji",
         selection: dict[str, Any] | None = None,
     ) -> InstallResult:
+        if not self.allow_root():
+            raise PermissionError("root install declined")
         selected = dict(AUTOMATIC_SELECTION)
         if mode == "custom" and selection:
             selected.update(selection)
@@ -89,15 +132,15 @@ class Installer:
             prefs.set(key, value)
         prefs.save()
 
-        packages = self.catalog.packages_for_selection(self.distro_id, selected)
+        family = self.catalog.family_for_ids(self.distro_ids)
+        packages = self.catalog.packages_for_selection(family.name, selected)
         missing = [pkg for pkg in packages if not self.package_installed(pkg)]
         installed: list[str] = []
         skipped: list[str] = []
         if missing:
-            if self._install_packages(missing):
-                installed = list(missing)
-            else:
-                skipped = list(missing)
+            self._install_packages(missing)
+            installed = list(self.packages_installed)
+            skipped = list(self.packages_skipped)
 
         self._install_cli()
         if self.write_session:
@@ -117,14 +160,48 @@ class Installer:
         )
 
     def _install_packages(self, packages: list[str]) -> bool:
-        family = self.catalog.family_for(self.distro_id)
+        family = self.catalog.family_for_ids(self.distro_ids)
         if not self.assume_yes and not self._confirm_packages(packages):
+            self.packages_installed = []
+            self.packages_skipped = list(packages)
             return False
-        cmd = _install_command(family.manager, packages)
-        if not cmd:
-            return False
-        self.runner(cmd, check=False)
-        return True
+        repo, aur = split_repo_and_aur(packages, extra_aur=self.catalog.aur_names(family.name))
+        nix_ok: set[str] = set()
+        if repo:
+            cmd = _install_command(family.manager, repo)
+            if cmd:
+                result = self.runner(privileged_command(cmd, euid=self.euid), check=False)
+                # NixOS has no rpm/pacman/dpkg. A zero exit from the user's
+                # nix profile install is the probe for those names.
+                if family.manager == "nix" and getattr(result, "returncode", 1) == 0:
+                    nix_ok.update(repo)
+        if aur:
+            helper = find_helper(which=self.which)
+            if helper and not helper_runs(helper, self.runner):
+                helper = None
+            if not helper:
+                helper = self.ensure_helper(
+                    choose_helper(assume_yes=self.aur_assume, which=self.which, ask=self.aur_ask),
+                    runner=self.runner,
+                    euid=self.euid,
+                    which=self.which,
+                    privileged=privileged_command,
+                )
+            if helper:
+                # One package per invocation so a missing AUR name does not
+                # abort the rest of the transaction.
+                for pkg in aur:
+                    self.runner([helper, "-S", "--needed", "--noconfirm", pkg], check=False)
+        installed: list[str] = []
+        skipped: list[str] = []
+        for name in packages:
+            if name in nix_ok or self.package_installed(name):
+                installed.append(name)
+            else:
+                skipped.append(name)
+        self.packages_installed = installed
+        self.packages_skipped = skipped
+        return not skipped
 
     def _confirm_packages(self, packages: list[str]) -> bool:
         if self.confirm is not None:
@@ -174,28 +251,38 @@ def _write_session_files() -> None:
         session.write_text(HYPRLAND_DESKTOP, encoding="utf-8")
 
 
-def _read_distro_id() -> str:
+def _os_release_text() -> str:
     path = Path("/etc/os-release")
     if not path.is_file():
-        return "unknown"
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.startswith("ID="):
-            return line.split("=", 1)[1].strip().strip('"')
-    return "unknown"
+        return ""
+    return path.read_text(encoding="utf-8")
+
+
+def _read_distro_id() -> str:
+    ids = os_release_ids(_os_release_text())
+    return ids[0] if ids else "unknown"
 
 
 def _install_command(manager: str, packages: list[str]) -> list[str] | None:
     if manager == "pacman":
-        return ["sudo", "pacman", "-S", "--needed", "--noconfirm", *packages]
+        return ["pacman", "-S", "--needed", "--noconfirm", *packages]
     if manager == "dnf":
-        return ["sudo", "dnf", "install", "-y", *packages]
+        return ["dnf", "install", "-y", *packages]
     if manager == "apt":
-        return ["sudo", "apt", "install", "-y", *packages]
+        return ["apt", "install", "-y", *packages]
     if manager == "zypper":
-        return ["sudo", "zypper", "install", "-y", *packages]
+        return ["zypper", "install", "-y", *packages]
     if manager == "nix":
         return ["nix", "profile", "install", *packages]
     return None
+
+
+def _nix_profile_hit(listing: str, pkg: str) -> bool:
+    for raw in listing.splitlines():
+        tokens = raw.replace("#", " ").replace("/", " ").replace(":", " ").split()
+        if pkg in tokens or any(token.endswith("." + pkg) for token in tokens):
+            return True
+    return False
 
 
 def _package_installed(pkg: str) -> bool:
@@ -206,5 +293,9 @@ def _package_installed(pkg: str) -> bool:
     ]
     for cmd in probes:
         if shutil.which(cmd[0]) and subprocess.run(cmd, capture_output=True).returncode == 0:
+            return True
+    if shutil.which("nix"):
+        listed = subprocess.run(["nix", "profile", "list"], capture_output=True, text=True)
+        if listed.returncode == 0 and _nix_profile_hit(listed.stdout or "", pkg):
             return True
     return False

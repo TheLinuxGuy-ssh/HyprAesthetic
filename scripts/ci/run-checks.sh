@@ -33,7 +33,12 @@ else
 fi
 
 echo "=== Unit tests ==="
-python3 -m unittest discover -s tests -v
+if command -v xvfb-run >/dev/null 2>&1; then
+    GDK_BACKEND=x11 GSK_RENDERER=cairo \
+        xvfb-run -a python3 -m unittest discover -s tests -v
+else
+    python3 -m unittest discover -s tests -v
+fi
 
 echo "=== Theme validation ==="
 python3 -m hypraesthetic validate

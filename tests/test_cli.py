@@ -56,6 +56,9 @@ class CliTests(unittest.TestCase):
             def __init__(self, **_kwargs) -> None:
                 pass
 
+            def allow_root(self) -> bool:
+                return True
+
             def run(self, **_kwargs):
                 return SimpleNamespace(
                     mode="custom",
@@ -83,6 +86,65 @@ class CliTests(unittest.TestCase):
         self.assertNotEqual(code, 0)
         self.assertNotIn("Installation complete", out)
         self.assertIn("skipped", out.lower())
+
+    def test_install_root_declined_returns_1_without_run(self) -> None:
+        ran = {"n": 0}
+
+        class FakeInstaller:
+            def __init__(self, **_kwargs) -> None:
+                pass
+
+            def allow_root(self) -> bool:
+                return False
+
+            def run(self, **_kwargs):
+                ran["n"] += 1
+                raise AssertionError("run should not be called")
+
+        with patch("hypraesthetic.cli.Installer", FakeInstaller):
+            code, out = self._run(["install", "--mode", "automatic", "--theme", "toji"])
+        self.assertEqual(code, 1)
+        self.assertEqual(ran["n"], 0)
+        self.assertIn("Root install declined. Re-run as your user.", out)
+        self.assertNotIn("Installation complete", out)
+
+    def test_install_root_and_aur_assume_follow_yes_not_automatic_mode(self) -> None:
+        captured: list[dict] = []
+
+        class FakeInstaller:
+            def __init__(self, **kwargs) -> None:
+                captured.append(kwargs)
+
+            def allow_root(self) -> bool:
+                return True
+
+            def run(self, **_kwargs):
+                return SimpleNamespace(
+                    mode="automatic",
+                    theme="toji",
+                    packages=[],
+                    packages_installed=[],
+                    packages_skipped=[],
+                )
+
+        with patch("hypraesthetic.cli.Installer", FakeInstaller), patch("sys.stdin.isatty", return_value=True):
+            code, _out = self._run(["install", "--mode", "automatic", "--theme", "toji"])
+        self.assertEqual(code, 0)
+        self.assertTrue(captured[-1]["assume_yes"])
+        self.assertFalse(captured[-1]["root_assume"])
+        self.assertFalse(captured[-1]["aur_assume"])
+
+        with patch("hypraesthetic.cli.Installer", FakeInstaller), patch("sys.stdin.isatty", return_value=False):
+            code, _out = self._run(["install", "--mode", "automatic", "--theme", "toji"])
+        self.assertEqual(code, 0)
+        self.assertFalse(captured[-1]["root_assume"])
+        self.assertTrue(captured[-1]["aur_assume"])
+
+        with patch("hypraesthetic.cli.Installer", FakeInstaller), patch("sys.stdin.isatty", return_value=True):
+            code, _out = self._run(["install", "--mode", "automatic", "--theme", "toji", "--yes"])
+        self.assertEqual(code, 0)
+        self.assertTrue(captured[-1]["root_assume"])
+        self.assertTrue(captured[-1]["aur_assume"])
 
     def test_store_refresh_is_what_a_new_store_lists(self) -> None:
         payload = b"""

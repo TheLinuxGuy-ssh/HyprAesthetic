@@ -10,6 +10,21 @@ from typing import Any
 from hypraesthetic.paths import data_dir, repo_root
 
 
+def os_release_ids(text: str) -> list[str]:
+    ident = ""
+    like: list[str] = []
+    for line in text.splitlines():
+        if line.startswith("ID_LIKE="):
+            like = line.split("=", 1)[1].strip().strip('"').split()
+        elif line.startswith("ID="):
+            ident = line.split("=", 1)[1].strip().strip('"')
+    ids = [ident] if ident else []
+    for token in like:
+        if token and token not in ids:
+            ids.append(token)
+    return ids
+
+
 @dataclass
 class DistroFamily:
     name: str
@@ -24,6 +39,7 @@ class ComponentSpec:
     required: bool = False
     commands: list[str] = field(default_factory=list)
     packages: dict[str, list[str]] = field(default_factory=dict)
+    aur_packages: dict[str, list[str]] = field(default_factory=dict)
     choice_group: str | None = None
     choice_value: str | None = None
 
@@ -67,6 +83,10 @@ class PackageCatalog:
                     family: list(pkgs)
                     for family, pkgs in (body.get("packages") or {}).items()
                 },
+                aur_packages={
+                    family: list(pkgs)
+                    for family, pkgs in (body.get("aur_packages") or {}).items()
+                },
                 choice_group=body.get("choice_group"),
                 choice_value=body.get("choice_value"),
             )
@@ -79,6 +99,15 @@ class PackageCatalog:
             if distro_id.startswith(family.name):
                 return family
         raise KeyError(distro_id)
+
+    def family_for_ids(self, ids: list[str]) -> DistroFamily:
+        last_error: Exception | None = None
+        for distro_id in ids:
+            try:
+                return self.family_for(distro_id)
+            except KeyError as exc:
+                last_error = exc
+        raise KeyError("/".join(ids) or "unknown") from last_error
 
     def component(self, component_id: str) -> ComponentSpec:
         return self.components[component_id]
@@ -107,6 +136,12 @@ class PackageCatalog:
             if item.id in extras:
                 wanted.append(item)
         return wanted
+
+    def aur_names(self, family_name: str) -> set[str]:
+        names: set[str] = set()
+        for item in self.components.values():
+            names.update(item.aur_packages.get(family_name) or [])
+        return names
 
     def packages_for_selection(self, distro_id: str, selection: dict[str, Any]) -> list[str]:
         family = self.family_for(distro_id)

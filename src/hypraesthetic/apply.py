@@ -209,9 +209,11 @@ class ApplyEngine:
         current = current_theme_file()
         current.parent.mkdir(parents=True, exist_ok=True)
         current.write_text(name + "\n", encoding="utf-8")
-        if self.live:
+        if self.live and self._hyprland_running():
             # Hypr reload drops layer-shell clients. Only reload the compositor
             # when Hyprland files changed; otherwise just restart the bar/widgets.
+            # Skip the live half when no compositor is running: configs are
+            # already on disk and reload/eww would only fail the switch.
             reloaded = False
             if "hyprland" in result.applied:
                 self._reload_hypr()
@@ -828,6 +830,20 @@ class ApplyEngine:
             repl = rf"\g<1>{x}\g<2>{y}\g<3>{width}\g<4>{height}\g<5>"
             text, _count = re.subn(pattern, repl, text, count=1)
         yuck.write_text(text, encoding="utf-8")
+
+    def _hyprland_running(self) -> bool:
+        if not self.which("hyprctl"):
+            return False
+        result = self.runner(
+            ["hyprctl", "monitors", "-j"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if getattr(result, "returncode", 1) != 0:
+            return False
+        text = (getattr(result, "stderr", "") or "") + (getattr(result, "stdout", "") or "")
+        return "HYPRLAND_INSTANCE_SIGNATURE" not in text
 
     def _reload_hypr(self) -> None:
         if not self.which("hyprctl"):

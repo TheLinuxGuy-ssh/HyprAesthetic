@@ -3,7 +3,7 @@
 # names per family. Empty package lists mean "not packaged; treat as optional".
 
 [families.arch]
-ids = ["arch", "manjaro", "endeavouros", "garuda"]
+ids = ["arch", "manjaro", "endeavouros", "garuda", "cachyos"]
 manager = "pacman"
 
 [families.fedora]
@@ -269,7 +269,8 @@ id = "hyprwave"
 required = false
 friendly = "Hyprwave media island"
 commands = ["hyprwave"]
-packages.arch = ["hyprwave-git"]
+packages.arch = ["hyprwave"]
+aur_packages.arch = ["hyprwave"]
 packages.fedora = ["hyprwave"]
 packages.debian = []
 packages.suse = []

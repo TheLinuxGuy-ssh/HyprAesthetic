@@ -24,7 +24,7 @@ detect_distro() {
     fi
     
     case "$DISTRO" in
-        arch|manjaro|endeavouros|garuda)
+        arch|manjaro|endeavouros|garuda|cachyos)
             PACKAGE_MANAGER="pacman"
             INSTALL_CMD="sudo pacman -S --needed --noconfirm"
             UPDATE_CMD="sudo pacman -Sy"
@@ -50,9 +50,15 @@ detect_distro() {
             UPDATE_CMD="nix-channel --update"
             ;;
         *)
-            PACKAGE_MANAGER="unknown"
-            INSTALL_CMD=""
-            UPDATE_CMD=""
+            if [[ " ${ID_LIKE:-} " == *" arch "* ]]; then
+                PACKAGE_MANAGER="pacman"
+                INSTALL_CMD="sudo pacman -S --needed --noconfirm"
+                UPDATE_CMD="sudo pacman -Sy"
+            else
+                PACKAGE_MANAGER="unknown"
+                INSTALL_CMD=""
+                UPDATE_CMD=""
+            fi
             ;;
     esac
     

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from hypraesthetic.discover import (
     WIDGET_DEFAULT_GEOMETRY,
@@ -204,6 +206,12 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(found, pref)
         tmp.cleanup()
 
+    def test_missing_wallpaper_daemons_do_not_raise(self) -> None:
+        def boom(*_args, **_kwargs):
+            raise FileNotFoundError("swww")
+
+        self.assertIsNone(resolve_wallpaper(live=True, runner=boom))
+
     def test_primary_screen_uses_logical_pixels(self) -> None:
         class MonitorRunner:
             def __call__(self, args, **_kwargs):
@@ -214,6 +222,12 @@ class DiscoverTests(unittest.TestCase):
                 return Result()
 
         self.assertEqual(primary_screen_size(runner=MonitorRunner()), (1600, 1000))
+
+    def test_missing_hyprctl_falls_back_to_1080p(self) -> None:
+        def boom(*_args, **_kwargs):
+            raise FileNotFoundError("hyprctl")
+
+        self.assertEqual(primary_screen_size(runner=boom), (1920, 1080))
 
     def test_bar_toml_supplies_name_and_preview(self) -> None:
         tmp = tempfile.TemporaryDirectory()
@@ -335,6 +349,40 @@ class DiscoverTests(unittest.TestCase):
         blank = visible_bar_ids(entries, "   ")
         self.assertNotIn("v1", blank)
         self.assertIn("cyberpunk", blank)
+
+    def test_desktop_preview_ignores_wallpaper_and_preview_png(self) -> None:
+        from hypraesthetic.discover import desktop_preview_image
+
+        tmp = tempfile.TemporaryDirectory()
+        root = Path(tmp.name)
+        (root / "wallpaper.png").write_bytes(b"png")
+        (root / "preview.png").write_bytes(b"png")
+        pkg = SimpleNamespace(root=root, wallpaper="wallpaper.png", preview="preview.png")
+        self.assertIsNone(desktop_preview_image(pkg))
+        self.assertIsNone(desktop_preview_image(None))
+        desktop = root / "desktop.png"
+        desktop.write_bytes(b"png")
+        self.assertEqual(desktop_preview_image(pkg), desktop)
+        tmp.cleanup()
+
+    def test_desktop_preview_ignores_home_wallpapers(self) -> None:
+        from hypraesthetic.discover import desktop_preview_image
+
+        tmp = tempfile.TemporaryDirectory()
+        base = Path(tmp.name)
+        home = base / "home"
+        stray = home / ".wallpapers" / "desktop.png"
+        stray.parent.mkdir(parents=True)
+        stray.write_bytes(b"home")
+        root = base / "themes" / "toji"
+        root.mkdir(parents=True)
+        pkg = SimpleNamespace(root=root, wallpaper="", preview="")
+        with patch.dict(os.environ, {"HOME": str(home)}):
+            self.assertIsNone(desktop_preview_image(pkg))
+            desktop = root / "desktop.png"
+            desktop.write_bytes(b"theme")
+            self.assertEqual(desktop_preview_image(pkg), desktop)
+        tmp.cleanup()
 
 
 if __name__ == "__main__":
