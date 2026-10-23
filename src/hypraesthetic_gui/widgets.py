@@ -427,7 +427,7 @@ def _bar_schematic(
     groups: tuple[list[str], list[str], list[str]],
     primary: str,
     surface: str,
-) -> Gtk.Box:
+) -> Gtk.ScrolledWindow:
     bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
     bar.set_size_request(-1, 36)
     bar.set_hexpand(True)
@@ -444,7 +444,11 @@ def _bar_schematic(
             _paint(pill, primary, "border-radius: 6px; padding: 1px 5px; font-size: 8px;")
             group.append(pill)
         bar.append(group)
-    return bar
+    pane = Gtk.ScrolledWindow(hexpand=True, vexpand=False)
+    pane.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
+    pane.set_propagate_natural_width(False)
+    pane.set_child(bar)
+    return pane
 
 
 def _bar_tile(title: str, subtitle: str, schematic: Gtk.Widget, selected: bool) -> Gtk.Button:

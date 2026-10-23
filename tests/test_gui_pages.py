@@ -892,6 +892,10 @@ class BarPageTests(unittest.TestCase):
             self.assertIsNotNone(box)
             drawn = box.get_first_child()
             self.assertIsNotNone(drawn)
+            if isinstance(drawn, Gtk.ScrolledWindow):
+                drawn = drawn.get_child()
+                if isinstance(drawn, Gtk.Viewport):
+                    drawn = drawn.get_first_child()
             width, height = drawn.get_size_request()
             self.assertEqual(height, 36)
             self.assertTrue(any(name.startswith("ha-swatch-") for name in drawn.get_css_classes()))
@@ -1016,6 +1020,24 @@ class BarPageTests(unittest.TestCase):
                     os.environ.pop("HYPRAESTHETIC_ROOT", None)
                 else:
                     os.environ["HYPRAESTHETIC_ROOT"] = old_root
+
+    def test_bar_schematic_does_not_widen_the_page_past_the_window(self) -> None:
+        page = bar_page()
+        page_min, _page_natural, _min_baseline, _nat_baseline = page.measure(
+            Gtk.Orientation.HORIZONTAL, -1
+        )
+        self.assertLessEqual(page_min, 1100)
+        flows = [widget for widget in _descendants(page) if isinstance(widget, Gtk.FlowBox)]
+        builtin_min, _builtin_natural, _, _ = flows[1].measure(Gtk.Orientation.HORIZONTAL, -1)
+        self.assertLessEqual(builtin_min, 1100)
+        for button in _visible_flow_buttons(flows[0]) + _visible_flow_buttons(flows[1]):
+            holder = button.get_child().get_first_child()
+            self.assertIsInstance(holder, Gtk.ScrolledWindow)
+            self.assertFalse(holder.get_propagate_natural_width())
+            horizontal, vertical = holder.get_policy()
+            self.assertEqual(horizontal, Gtk.PolicyType.AUTOMATIC)
+            self.assertEqual(vertical, Gtk.PolicyType.NEVER)
+            self.assertLessEqual(holder.measure(Gtk.Orientation.HORIZONTAL, -1)[0], 1100)
 
     def test_bar_tile_click_applies_immediately(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
