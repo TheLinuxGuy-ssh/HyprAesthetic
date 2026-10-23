@@ -4,16 +4,7 @@ configuration {
     show-icons:  true;
 }
 
-* {
-    background:       {{colors.waybar.background}};
-    background-alt:   {{colors.waybar.surface}};
-    foreground:       {{colors.waybar.foreground}};
-    foreground-muted: {{colors.waybar.foreground_muted}};
-    selected:         {{colors.waybar.border}};
-    active:           {{colors.waybar.surface_hover}};
-    urgent:           {{colors.waybar.error}};
-    on-surface:       {{colors.waybar.foreground}};
-}
+@import "colors/hypraesthetic.rasi"
 
 window {
     transparency:     "real";
@@ -23,7 +14,7 @@ window {
     height:           330px;
     border:           0px solid;
     border-radius:    0px;
-    border-color:     @selected;
+    border-color:     @theme-border;
     background-color: @background;
 }
 
@@ -32,7 +23,7 @@ mainbox {
     padding:          10px;
     border:           1px solid;
     border-radius:    20px;
-    border-color:     @selected;
+    border-color:     @theme-border;
     background-color: @background;
     children:         [ "inputbar", "listview" ];
 }
@@ -48,7 +39,7 @@ prompt {
     padding:          15px;
     border-radius:    15px;
     background-color: @active;
-    text-color:       @foreground;
+    text-color:       @on-primary;
 }
 
 textbox-prompt-colon {

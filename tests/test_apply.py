@@ -47,6 +47,15 @@ class ApplyEngineTests(unittest.TestCase):
             'active_border = "{{colors.hyprland.border_active}}"\n', encoding="utf-8"
         )
         (templates / "hypr" / "autostart.lua").write_text("-- autostart\n", encoding="utf-8")
+        (templates / "rofi").mkdir(parents=True)
+        (templates / "rofi" / "colors.rasi.template").write_text(
+            "* { selected: {{colors.waybar.primary}}; active: {{colors.waybar.primary}}; }\n",
+            encoding="utf-8",
+        )
+        (templates / "rofi" / "wallpaper.rasi.template").write_text(
+            '@import "colors/hypraesthetic.rasi"\n',
+            encoding="utf-8",
+        )
         self.engine = ApplyEngine(repo_root=self.repo, live=False)
 
     def tearDown(self) -> None:

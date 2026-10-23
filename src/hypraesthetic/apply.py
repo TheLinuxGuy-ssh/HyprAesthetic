@@ -26,6 +26,7 @@ from hypraesthetic.paths import current_theme_file, layouts_dir, templates_dir
 from hypraesthetic.prefs import Prefs
 from hypraesthetic.render import VAR_RE, render_file, render_string
 from hypraesthetic.theme import ThemePackage
+from hypraesthetic.rofi_style import deploy_rofi_theme
 from hypraesthetic.waybar_config import sanitize_waybar_config
 from hypraesthetic.waybar_css import set_bar_font, theme_waybar_css
 
@@ -666,8 +667,7 @@ class ApplyEngine:
         dest = self._config("rofi")
         dest.mkdir(parents=True, exist_ok=True)
         self._merge_component(pkg, "rofi", dest)
-        self._render_template("rofi/colors.rasi", dest / "colors" / "hypraesthetic.rasi", variables)
-        self._render_template("rofi/wallpaper.rasi", dest / "wallpaper.rasi", variables)
+        deploy_rofi_theme(dest, self.templates(), variables)
 
     def _apply_kitty(
         self, pkg: ThemePackage, prefs: Prefs, variables: dict[str, str], restart: bool = False
