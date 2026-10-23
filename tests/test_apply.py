@@ -47,6 +47,15 @@ class ApplyEngineTests(unittest.TestCase):
             'active_border = "{{colors.hyprland.border_active}}"\n', encoding="utf-8"
         )
         (templates / "hypr" / "autostart.lua").write_text("-- autostart\n", encoding="utf-8")
+        (templates / "rofi").mkdir(parents=True)
+        (templates / "rofi" / "colors.rasi.template").write_text(
+            "* { selected: {{colors.waybar.primary}}; active: {{colors.waybar.primary}}; }\n",
+            encoding="utf-8",
+        )
+        (templates / "rofi" / "wallpaper.rasi.template").write_text(
+            '@import "colors/hypraesthetic.rasi"\n',
+            encoding="utf-8",
+        )
         self.engine = ApplyEngine(repo_root=self.repo, live=False)
 
     def tearDown(self) -> None:
@@ -449,6 +458,30 @@ class ApplyEngineTests(unittest.TestCase):
         yuck = (self.home / ".config" / "eww" / "eww.yuck").read_text(encoding="utf-8")
         self.assertIn(':x "40%"', yuck)
 
+    def test_saved_layout_drops_a_right_anchor(self) -> None:
+        theme = self.repo / "themes" / "sample"
+        (theme / "eww").mkdir()
+        (theme / "eww" / "eww.yuck").write_text(
+            '(defwindow clock :geometry (geometry :x "6%" :y "8%" :width 400 :height 140) (clock))\n'
+            '(defwindow matrix :geometry (geometry :x "0px" :y "0%" :width 30 :height "100%" :anchor "top right") (matrix))\n',
+            encoding="utf-8",
+        )
+        prefs = Prefs.load()
+        prefs.set_geometry_for(
+            "sample",
+            {
+                "clock": {"x": "10%", "y": "12%", "width": "400", "height": "140"},
+                "matrix": {"x": "98.1%", "y": "0%", "width": "30", "height": "100%"},
+            },
+        )
+        prefs.save()
+        self.engine.apply("sample", components=["eww"])
+        yuck = (self.home / ".config" / "eww" / "eww.yuck").read_text(encoding="utf-8")
+        self.assertIn(':x "10%" :y "12%"', yuck)
+        self.assertIn(':x "98.1%" :y "0%" :width 30 :height "100%"', yuck)
+        self.assertNotIn(":anchor", yuck)
+        self.assertEqual(yuck.count("(defwindow"), 2)
+
     def test_widget_geometry_stays_on_its_theme(self) -> None:
         enabled = self.repo / "themes" / "other"
         enabled.mkdir(parents=True)
@@ -661,8 +694,31 @@ class ApplyEngineTests(unittest.TestCase):
         self.assertEqual(loaded.widgets_for("sample"), ["clock"])
         self.assertEqual(loaded.get("widgets"), ["quote"])
         flat = [" ".join(cmd) for cmd in calls]
+        self.assertTrue(any("eww close-all" in line for line in flat))
         self.assertTrue(any(line.startswith("eww open toji") for line in flat))
         self.assertFalse(any(line.startswith("eww open clock") for line in flat))
+
+    def test_full_apply_resets_widgets_from_theme_toml_not_stale_override(self) -> None:
+        tanjiro = self.repo / "themes" / "tanjiro"
+        if not (tanjiro / "theme.toml").is_file():
+            self.skipTest("tanjiro theme not in repo")
+        (self.repo / "layouts" / "default" / "eww" / "eww.yuck").write_text(
+            "(defwindow clock [])\n(defwindow matrix [])\n(defwindow toji [])\n",
+            encoding="utf-8",
+        )
+        prefs = Prefs.load()
+        prefs.set_widgets_for(
+            "tanjiro",
+            ["clock", "system", "matrix", "wakatime", "quote", "music", "weather"],
+        )
+        prefs.save()
+        engine = ApplyEngine(repo_root=self.repo, live=False)
+        engine.apply("tanjiro")
+        loaded = Prefs.load()
+        self.assertEqual(
+            loaded.widgets_for("tanjiro"),
+            ["clock", "quote", "music", "weather", "system"],
+        )
 
     def test_eww_only_apply_adopts_legacy_flat_widgets_onto_current_theme(self) -> None:
         (self.repo / "layouts" / "default" / "eww" / "eww.yuck").write_text(
@@ -720,12 +776,45 @@ class ApplyEngineTests(unittest.TestCase):
         self.assertTrue(any(line.startswith("eww open toji") for line in flat))
         self.assertFalse(any(line.startswith("eww open clock") for line in flat))
 
-    def test_full_apply_does_not_wipe_wallpaper_pref(self) -> None:
+    def test_full_apply_clears_wallpaper_override_for_preset_wallpaper(self) -> None:
         prefs = Prefs.load()
         prefs.set("wallpaper", "/tmp/custom.png")
         prefs.save()
         self.engine.apply("sample")
-        self.assertEqual(Prefs.load().get("wallpaper"), "/tmp/custom.png")
+        self.assertEqual(Prefs.load().get("wallpaper"), "")
+
+    def test_full_apply_uses_theme_wallpaper_after_clearing_override(self) -> None:
+        theme_wall = self.repo / "themes" / "sample" / "wallpaper" / "sample.png"
+        theme_wall.parent.mkdir(parents=True, exist_ok=True)
+        theme_wall.write_bytes(b"theme")
+        custom = self.home / "custom.png"
+        custom.write_bytes(b"custom")
+        prefs = Prefs.load()
+        prefs.set("wallpaper", str(custom))
+        prefs.save()
+        calls: list[list[str]] = []
+
+        def runner(cmd, **kwargs):
+            calls.append([str(part) for part in cmd])
+
+            class Result:
+                returncode = 0
+                stdout = ""
+                stderr = ""
+
+            return Result()
+
+        engine = ApplyEngine(
+            repo_root=self.repo,
+            live=True,
+            runner=runner,
+            which=lambda name: "/usr/bin/swww" if name == "swww" else None,
+        )
+        engine.apply("sample")
+        img_cmds = [cmd for cmd in calls if len(cmd) >= 3 and cmd[1] == "img"]
+        self.assertTrue(img_cmds)
+        self.assertIn(str(theme_wall), img_cmds[0])
+        self.assertNotIn(str(custom), img_cmds[0])
 
     def test_eww_card_has_no_box_fill(self) -> None:
         scss = (

@@ -5,86 +5,60 @@ SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 source "$SCRIPT_DIR/lib/rofi-menu.sh"
 
-WALLPAPER_DIR="${HOME}/.wallpapers"
 PICKER_RASI="${HOME}/.config/rofi/wallpaper.rasi"
+ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+export HYPRAESTHETIC_ROOT="$ROOT"
+export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
 
 usage() {
     cat <<EOF
 Usage: $(basename "$0")
 
-Open a Rofi menu to pick a wallpaper from ~/.wallpapers.
+Open a Rofi menu to pick a wallpaper from ~/.wallpapers and ~/Pictures/Wallpapers.
 EOF
 }
 
 [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]] && { usage; exit 0; }
 
 require_cmd rofi
-[[ -d "$WALLPAPER_DIR" ]] || die "Wallpaper directory not found: $WALLPAPER_DIR"
 [[ -f "$PICKER_RASI" ]] || die "Rofi picker theme not found: $PICKER_RASI (run ha-theme switch <theme>)"
 
-get_current_wallpaper_name() {
-    local current=""
-
-    if command -v swww >/dev/null 2>&1 && swww query >/dev/null 2>&1; then
-        current=$(swww query 2>/dev/null | awk '{print $NF}' | xargs basename 2>/dev/null || true)
-    elif command -v awww >/dev/null 2>&1; then
-        current=$(awww query 2>/dev/null | awk '{print $NF}' | xargs basename 2>/dev/null || true)
-    fi
-
-    printf '%s' "$current"
-}
-
-set_wallpaper() {
-    local path="$1"
-    local tool
-
-    if command -v swww >/dev/null 2>&1; then
-        tool="swww"
-    elif command -v awww >/dev/null 2>&1; then
-        tool="awww"
-    else
-        die "Neither swww nor awww installed"
-    fi
-
-    if ! pgrep -x "${tool}-daemon" >/dev/null; then
-        "${tool}-daemon" >/dev/null 2>&1 &
-        disown 2>/dev/null || true
-        sleep 0.5
-    fi
-
-    "$tool" img "$path" --transition-type fade --transition-duration 1 >/dev/null 2>&1 \
-        || die "Failed to set wallpaper: $path"
-}
-
 main() {
-    local current_name selected_name selected_path wallpaper_path wallpaper_name label
+    local selected_label selected_path label path
+    local -A path_by_label=()
 
-    current_name=$(get_current_wallpaper_name)
     rofi_menu_reset
 
-    while IFS= read -r wallpaper_path; do
-        [[ -n "$wallpaper_path" ]] || continue
-        [[ -f "$wallpaper_path" ]] || continue
+    while IFS=$'\t' read -r label path; do
+        [[ -n "$path" ]] || continue
+        path_by_label["${label% (current)}"]="$path"
+        rofi_menu_add "$label" "$path"
+    done < <(python3 -c "
+from hypraesthetic.rofi_menus import wallpaper_menu_rows
+for label, path in wallpaper_menu_rows():
+    print(f'{label}\t{path}')
+")
 
-        wallpaper_name=$(basename "$wallpaper_path")
-        label="$wallpaper_name"
-        [[ "$wallpaper_name" == "$current_name" ]] && label="$wallpaper_name (current)"
+    [[ -n "$ROFI_MENU" ]] || die "No wallpapers found. Add images to ~/.wallpapers or ~/Pictures/Wallpapers."
 
-        rofi_menu_add "$label" "$wallpaper_path"
-    done < <(find "$WALLPAPER_DIR" -maxdepth 1 -type f \
-        \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' -o -iname '*.webp' \) \
-        | sort)
+    selected_label=$(rofi_menu_pick "Select Wallpaper:" "$PICKER_RASI")
+    [[ -n "$selected_label" ]] || exit 0
 
-    [[ -n "$ROFI_MENU" ]] || die "No wallpapers found in $WALLPAPER_DIR"
+    selected_label="${selected_label% (current)}"
+    selected_path="${path_by_label[$selected_label]:-}"
 
-    selected_name=$(rofi_menu_pick "Select Wallpaper:" "$PICKER_RASI")
-    [[ -n "$selected_name" ]] || exit 0
+    [[ -n "$selected_path" && -f "$selected_path" ]] || die "Wallpaper not found: $selected_label"
 
-    selected_name="${selected_name% (current)}"
-    selected_path="$WALLPAPER_DIR/$selected_name"
-    [[ -f "$selected_path" ]] || die "Wallpaper not found: $selected_path"
+    if ! python3 -c "
+from pathlib import Path
+from hypraesthetic.wallpaper import set_user_wallpaper
+import sys
+ok = set_user_wallpaper(Path(sys.argv[1]))
+sys.exit(0 if ok else 1)
+" "$selected_path"; then
+        die "Failed to save wallpaper: $selected_path"
+    fi
 
-    set_wallpaper "$selected_path"
     log_success "Wallpaper set: $selected_path"
 }
 

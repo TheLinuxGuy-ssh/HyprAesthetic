@@ -8,7 +8,7 @@
     background-alt: {{colors.waybar.surface}};
     foreground:     {{colors.waybar.foreground}};
     foreground-muted: {{colors.waybar.foreground_muted}};
-    selected:       {{colors.waybar.surface_hover}};
+    selected:       {{colors.waybar.primary}};
     active:         {{colors.waybar.primary}};
     urgent:         {{colors.waybar.error}};
     theme-border:   {{colors.waybar.border}};

@@ -43,6 +43,13 @@ AUTOMATIC_SELECTION: dict[str, Any] = {
         "border_size": 1,
         "rounding": 10,
     },
+    "hyprwave": {
+        "edge": "bottom",
+        "margin": 10,
+        "preference": "spotify,vlc,brave",
+        "layer": "top",
+        "exclusive_zone": 0,
+    },
     "store_url": "",
 }
 

@@ -107,7 +107,7 @@
 
 (defwidget toji []
         (box :class "toji-container" :vexpland "false" :hexpand "false"
-		(label :text toji_text :class "toji-text" :justify "end" :halign "center")
+		(label :text toji_text :class "toji-text" :justify "end" :angle 26 :halign "center")
         )
 )
 
@@ -132,7 +132,7 @@
 
 ;; Music
 (defwidget music [] 
-	(box :class "genwin music-card" :orientation "v" :spacing 6 :space-evenly "false" :vexpand "false" :hexpand "false"
+	(box :class "genwin music-card" :orientation "v" :spacing 6 :space-evenly "false" :vexpand "false" :hexpand "false" :style "background-color: rgba(40, 40, 40, 0.8); padding: 0.5em 2em"
 		(box :orientation "h" :spacing 10 :space-evenly "false" :valign "center"
 			(box :class "album_art" :vexpand "false" :hexpand "false" :style "background-image: url('${COVER}');")
 			(box :orientation "v" :spacing 2 :space-evenly "false" :hexpand "true"
@@ -263,7 +263,7 @@
 					(system))
 ;; matrix
 (defwindow matrix :stacking "bg" :focusable "false" :screen 0
-            :geometry (geometry :x "98.5%" :y "0%" :width 30 :height "100%")
+            :geometry (geometry :x "0px" :y "0%" :width 30 :height "100%" :anchor "top right")
                                         (matrix))
 ;; wakatime
 (defwindow wakatime :stacking "bg" :focusable "false" :screen 0
@@ -271,7 +271,7 @@
                                         (wakatime))
 ;; toji
 (defwindow toji :stacking "bg" :focusable "false" :screen 0
-            :geometry (geometry :x "6%" :y "86%" :width 480 :height 50)
+            :geometry (geometry :x "36%" :y "30%" :width 480 :height 50)
                                         (toji))
 
 ;; clock
@@ -286,7 +286,7 @@
 
 ;; music
 (defwindow music :stacking "bg" :focusable "false" :screen 0 
-	    :geometry (geometry :x "6%" :y "82%" :width 360 :height 40)
+	    :geometry (geometry :x "3%" :y "84%" :width 360 :height 40)
 					(music))
 
 ;; github

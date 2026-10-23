@@ -64,9 +64,9 @@ main() {
         done
     done
 
-    # Critical path: cyberpunk -> toji
-    run_switch "any" "cyberpunk"
-    run_switch "cyberpunk" "toji"
+    # Critical path: spartan -> toji
+    run_switch "any" "spartan"
+    run_switch "spartan" "toji"
 
     echo
     log_info "Results: $TOTAL switches, $FAILURES failed"

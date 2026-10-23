@@ -59,7 +59,7 @@ WIDGET_DEFAULT_GEOMETRY: dict[str, dict[str, str]] = {
 }
 
 _GEOM_RE = re.compile(
-    r"\(defwindow\s+(\S+)\b[\s\S]*?:geometry \(geometry :x (\S+) :y (\S+) :width (\S+) :height (\S+)\)"
+    r"\(defwindow\s+(\S+)\b[\s\S]*?:geometry \(geometry :x (\S+) :y (\S+) :width (\S+) :height (\S+)(?: :anchor \"([^\"]+)\")?\)"
 )
 
 
@@ -105,6 +105,25 @@ def list_font_families(runner: Runner | None = None) -> list[str]:
     return sorted(families)
 
 
+def unique_theme_names(names: list[str]) -> list[str]:
+    """Drop duplicate theme ids (case-insensitive), keeping the first spelling."""
+    had_blank = any(not str(name).strip() for name in names)
+    seen: set[str] = set()
+    out: list[str] = []
+    for name in names:
+        text = str(name).strip()
+        if not text:
+            continue
+        key = text.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(text)
+    if had_blank:
+        out.insert(0, "")
+    return out
+
+
 def _theme_roots(kind: str) -> list[Path]:
     home = Path.home()
     if kind == "gtk":
@@ -122,33 +141,63 @@ def _theme_roots(kind: str) -> list[Path]:
     ]
 
 
-def list_gtk_themes(roots: list[Path] | None = None) -> list[str]:
-    names: set[str] = set()
-    for root in roots or _theme_roots("gtk"):
+def _is_gtk_theme_dir(path: Path) -> bool:
+    return (path / "gtk-3.0").is_dir() or (path / "gtk-4.0").is_dir()
+
+
+def _is_icon_theme_dir(path: Path) -> bool:
+    return path.is_dir() and (path / "index.theme").is_file()
+
+
+def _is_cursor_theme_dir(path: Path) -> bool:
+    if not _is_icon_theme_dir(path):
+        return False
+    if (path / "cursors").is_dir():
+        return True
+    try:
+        text = (path / "index.theme").read_text(encoding="utf-8", errors="ignore").lower()
+    except OSError:
+        return False
+    compact = text.replace(" ", "")
+    return "type=cursor" in compact or "type=x-cursor" in compact
+
+
+def _scan_theme_names(
+    roots: list[Path],
+    *,
+    predicate: Callable[[Path], bool],
+) -> list[str]:
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for root in roots:
         if not root.is_dir():
             continue
-        for child in root.iterdir():
-            if not child.is_dir():
+        try:
+            children = sorted(root.iterdir(), key=lambda item: item.name.casefold())
+        except OSError:
+            continue
+        for child in children:
+            if not predicate(child):
                 continue
-            if (child / "gtk-3.0").is_dir() or (child / "gtk-4.0").is_dir():
-                names.add(child.name)
-    return sorted(names)
+            key = child.name.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            ordered.append(child.name)
+    return ordered
+
+
+def list_gtk_themes(roots: list[Path] | None = None) -> list[str]:
+    return _scan_theme_names(roots or _theme_roots("gtk"), predicate=_is_gtk_theme_dir)
 
 
 def list_icon_themes(roots: list[Path] | None = None) -> list[str]:
-    names: set[str] = set()
-    for root in roots or _theme_roots("icons"):
-        if not root.is_dir():
-            continue
-        for child in root.iterdir():
-            if child.is_dir() and (child / "index.theme").is_file():
-                names.add(child.name)
-    return sorted(names)
+    return _scan_theme_names(roots or _theme_roots("icons"), predicate=_is_icon_theme_dir)
 
 
 def list_cursor_themes(roots: list[Path] | None = None) -> list[str]:
-    """Cursor themes live beside icon themes. Names like Bibata do not say "cursor"."""
-    return list_icon_themes(roots)
+    """Cursor themes only (not full icon sets like Papirus)."""
+    return _scan_theme_names(roots or _theme_roots("icons"), predicate=_is_cursor_theme_dir)
 
 
 def current_theme_name(default: str = "toji") -> str:
@@ -383,15 +432,67 @@ def format_percent(frac: float) -> str:
 def parse_eww_geometry(text: str) -> dict[str, dict[str, str]]:
     found: dict[str, dict[str, str]] = {}
     for match in _GEOM_RE.finditer(text or ""):
-        window, x, y, width, height = match.groups()
+        window, x, y, width, height, anchor = match.groups()
         widget_id = WIDGET_WINDOW_TO_ID.get(window, window)
-        found[widget_id] = {
+        spec = {
             "x": x.strip('"'),
             "y": y.strip('"'),
             "width": width.strip('"'),
             "height": height.strip('"'),
         }
+        if anchor:
+            spec["anchor"] = anchor
+        found[widget_id] = spec
     return found
+
+
+def top_left_geometry(spec: dict[str, str], screen: tuple[int, int]) -> dict[str, str]:
+    """Turn an anchor offset into the top-left position the layout editor edits.
+
+    Eww measures ``x`` and ``y`` from the anchor. The editor always uses the
+    top-left corner, so a ``top right`` window at ``x 0px`` is the right edge,
+    not the left one.
+    """
+    out = {key: value for key, value in spec.items() if key != "anchor"}
+    anchor = str(spec.get("anchor") or "")
+    edges = set(anchor.split())
+    if "right" in edges:
+        x = geom_to_fraction(out.get("x") or "0", "x", screen)
+        width = geom_to_fraction(out.get("width") or "0", "x", screen)
+        out["x"] = format_percent(max(0.0, 1.0 - x - max(width, 0.0)))
+    if "bottom" in edges:
+        y = geom_to_fraction(out.get("y") or "0", "y", screen)
+        height = geom_to_fraction(out.get("height") or "0", "y", screen)
+        out["y"] = format_percent(max(0.0, 1.0 - y - max(height, 0.0)))
+    return out
+
+
+def merge_layout_geometry(
+    base: dict[str, dict[str, str]],
+    yuck: dict[str, dict[str, str]],
+    saved: dict[str, dict[str, str]],
+) -> dict[str, dict[str, str]]:
+    """Overlay a saved layout onto the theme yuck.
+
+    The editor used to copy an anchored window's raw ``x`` and drop the
+    anchor. That copy still means "the anchored window", not a move to the
+    top-left, so the anchored spec is kept until it is converted.
+    """
+    merged = {key: dict(value) for key, value in base.items()}
+    merged.update({key: dict(value) for key, value in yuck.items()})
+    for key, value in saved.items():
+        if not isinstance(value, dict):
+            continue
+        cleaned = {str(item): str(raw).strip().strip('"') for item, raw in value.items()}
+        original = yuck.get(str(key)) or {}
+        if original.get("anchor") and "anchor" not in cleaned:
+            unchanged = all(
+                cleaned.get(field) == original.get(field) for field in ("x", "y", "width", "height")
+            )
+            if unchanged:
+                continue
+        merged[str(key)] = cleaned
+    return merged
 
 
 def list_wallpapers(extra: list[Path] | None = None, roots: list[Path] | None = None) -> list[Path]:

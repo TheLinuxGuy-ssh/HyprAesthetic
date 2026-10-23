@@ -16,6 +16,7 @@ from hypraesthetic.install_theme import ThemeInstaller
 from hypraesthetic.installer import Installer
 from hypraesthetic.paths import current_theme_file, repo_root
 from hypraesthetic.prefs import Prefs
+from hypraesthetic.preset import prepare_preset_switch
 from hypraesthetic.store import ThemeStore, user_store_index
 from hypraesthetic.theme import ThemeError
 
@@ -133,6 +134,9 @@ def cmd_switch(rest: list[str]) -> int:
     theme = rest[0]
     dry = "--dry-run" in rest
     restart = "--restart" in rest
+    if not dry:
+        prefs = prepare_preset_switch(Prefs.load())
+        prefs.save()
     try:
         result = ApplyEngine(live=not dry).apply(theme, dry_run=dry, restart=restart)
     except KeyError:

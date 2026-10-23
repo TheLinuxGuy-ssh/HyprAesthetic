@@ -18,8 +18,10 @@ from hypraesthetic.discover import (
     list_gtk_themes,
     list_icon_themes,
     list_wallpapers,
+    merge_layout_geometry,
     parse_eww_geometry,
     parse_wallpaper_query,
+    top_left_geometry,
     primary_screen_size,
     resolve_wallpaper,
     spec_to_fractions,
@@ -127,7 +129,37 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(list_icon_themes([root / "icons"]), ["Fake-Icons"])
         from hypraesthetic.discover import list_cursor_themes
 
-        self.assertEqual(list_cursor_themes([root / "icons"]), ["Fake-Icons"])
+        self.assertEqual(list_cursor_themes([root / "icons"]), [])
+        tmp.cleanup()
+
+    def test_gtk_themes_dedupe_across_roots_and_case(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        root = Path(tmp.name)
+        for folder in ("themes-a", "themes-b"):
+            theme = root / folder / "Twin-Dark"
+            theme.mkdir(parents=True)
+            (theme / "gtk-4.0").mkdir()
+        twin2 = root / "themes-b" / "twin-dark"
+        twin2.mkdir()
+        (twin2 / "gtk-3.0").mkdir()
+        found = list_gtk_themes([root / "themes-a", root / "themes-b"])
+        self.assertEqual(found, ["Twin-Dark"])
+        tmp.cleanup()
+
+    def test_cursor_themes_require_cursors_dir(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        root = Path(tmp.name) / "icons"
+        icon = root / "Papirus"
+        icon.mkdir(parents=True)
+        (icon / "index.theme").write_text("[Icon Theme]\n", encoding="utf-8")
+        cursor = root / "Bibata"
+        cursor.mkdir(parents=True)
+        (cursor / "index.theme").write_text("[Icon Theme]\n", encoding="utf-8")
+        (cursor / "cursors").mkdir()
+        from hypraesthetic.discover import list_cursor_themes
+
+        self.assertEqual(list_icon_themes([root]), ["Bibata", "Papirus"])
+        self.assertEqual(list_cursor_themes([root]), ["Bibata"])
         tmp.cleanup()
 
     def test_lists_wallpapers(self) -> None:
@@ -159,6 +191,36 @@ class DiscoverTests(unittest.TestCase):
 
     def test_matrix_default_y_stays_on_the_canvas(self) -> None:
         self.assertEqual(WIDGET_DEFAULT_GEOMETRY["matrix"]["y"], "0%")
+
+    def test_right_anchor_is_the_right_edge_in_the_editor(self) -> None:
+        text = (
+            '(defwindow matrix :geometry (geometry :x "0px" :y "0%" '
+            ':width 30 :height "100%" :anchor "top right") (matrix))\n'
+        )
+        parsed = parse_eww_geometry(text)
+        self.assertEqual(parsed["matrix"]["anchor"], "top right")
+        shown = top_left_geometry(parsed["matrix"], (1600, 1000))
+        self.assertEqual(shown["x"], "98.1%")
+        self.assertEqual(shown["y"], "0%")
+        self.assertNotIn("anchor", shown)
+
+    def test_saved_copy_of_an_anchored_window_keeps_the_anchor(self) -> None:
+        yuck = {
+            "matrix": {
+                "x": "0px",
+                "y": "0%",
+                "width": "30",
+                "height": "100%",
+                "anchor": "top right",
+            }
+        }
+        copied = {"matrix": {"x": "0px", "y": "0%", "width": "30", "height": "100%"}}
+        merged = merge_layout_geometry({}, yuck, copied)
+        self.assertEqual(merged["matrix"]["anchor"], "top right")
+        moved = {"matrix": {"x": "40%", "y": "0%", "width": "30", "height": "100%"}}
+        merged = merge_layout_geometry({}, yuck, moved)
+        self.assertEqual(merged["matrix"]["x"], "40%")
+        self.assertNotIn("anchor", merged["matrix"])
 
     def test_geom_px_uses_axis_screen_size(self) -> None:
         screen = (1920, 1080)

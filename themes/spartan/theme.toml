@@ -1,0 +1,120 @@
+schema = 2
+name = "spartan"
+display_name = "Spartan"
+description = "Black type on the crimson field of spartan.png"
+author = "HyprAesthetic"
+version = "1.0.0"
+license = "MIT"
+min_hypraesthetic = "0.2.0"
+
+[misc]
+wallpaper = "spartan.png"
+quotes = [
+  "Finish the fight.",
+  "Spartans never die. They just go missing.",
+  "Today we settle the score.",
+]
+
+# App chrome (kitty, nvim, dunst). Desktop widgets override text to black.
+[palette]
+base00 = "#140404"
+base01 = "#2a0808"
+base02 = "#3d0c0c"
+base03 = "#5c1414"
+base04 = "#c47a7a"
+base05 = "#f6ecec"
+base06 = "#fff6f6"
+base07 = "#ffffff"
+base08 = "#ff6b6b"
+base09 = "#ff9f43"
+base0A = "#ffe08a"
+base0B = "#8dffb0"
+base0C = "#ffd0d0"
+base0D = "#ffb4b4"
+base0E = "#ff8f8f"
+base0F = "#e23b3b"
+
+[colors.hyprland]
+border_active = "#000000"
+border_inactive = "#3d0c0c"
+shadow = "#00000066"
+
+[colors.waybar]
+background = "#b00404"
+foreground = "#000000"
+surface = "#9a0303"
+surface_hover = "#c40808"
+border = "#000000"
+foreground_muted = "#000000"
+primary = "#000000"
+primary_fg = "#b00404"
+error = "#000000"
+error_fg = "#b00404"
+warning = "#000000"
+warning_fg = "#b00404"
+success = "#000000"
+success_fg = "#b00404"
+
+[colors.eww]
+background = "transparent"
+foreground = "#000000"
+surface = "transparent"
+surface_hover = "#000000"
+border = "#000000"
+foreground_muted = "#000000"
+primary = "#000000"
+primary_fg = "#b00404"
+error = "#000000"
+error_fg = "#b00404"
+warning = "#000000"
+warning_fg = "#b00404"
+success = "#000000"
+success_fg = "#b00404"
+matrix_color = "#000000"
+
+[layout]
+bar = "waybar"
+bar_style = "v3"
+launcher = "rofi"
+widgets = ["clock", "quote", "music", "system", "matrix"]
+
+[hypr]
+gaps_in = 6
+gaps_out = 12
+border_size = 2
+rounding = 0
+
+[identity]
+font_ui = "Outfit, Nunito, Adwaita Sans"
+font_clock = "Outfit, Nunito, Adwaita Sans"
+font_mono = "JetBrainsMono Nerd Font, Iosevka, monospace"
+font_quote = "Nunito, Outfit, Adwaita Sans"
+clock_size = 72
+music_radius = 0
+cover_size = 64
+matrix_chars = "Λv│·"
+matrix_rows = 36
+matrix_cols = 1
+matrix_density = 3
+matrix_mode = "crest"
+matrix_size = 22
+matrix_opacity = "1"
+
+[hyprwave]
+edge = "bottom"
+margin = 10
+
+[defaults]
+file_manager = "nautilus"
+terminal = "kitty"
+
+[components]
+hyprland = true
+waybar = true
+hyprwave = true
+eww = true
+rofi = true
+kitty = true
+gtk = true
+dunst = true
+nvim = true

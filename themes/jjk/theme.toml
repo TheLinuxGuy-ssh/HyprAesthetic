@@ -74,7 +74,7 @@ success_fg = "{{palette.base00}}"
 bar = "waybar"
 bar_style = "v1"
 launcher = "rofi"
-widgets = ["clock", "quote", "music", "system", "matrix"]
+widgets = ["clock", "quote", "music", "matrix"]
 
 [hypr]
 gaps_in = 5
@@ -94,6 +94,10 @@ matrix_chars = "*+x"
 matrix_rows = 48
 matrix_cols = 1
 matrix_density = 2
+
+[hyprwave]
+edge = "left"
+margin = 10
 
 [defaults]
 file_manager = "nautilus"

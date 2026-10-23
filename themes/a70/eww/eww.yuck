@@ -132,7 +132,7 @@
 
 ;; Music
 (defwidget music [] 
-	(box :class "genwin music-card" :orientation "v" :spacing 6 :space-evenly "false" :vexpand "false" :hexpand "false"
+	(box :class "genwin music-card" :orientation "v" :style "background: rgba(0,0,0,1); border-radius: 0; padding: 0.5em 1em" :spacing 6 :space-evenly "false" :vexpand "false" :hexpand "false"
 		(box :orientation "h" :spacing 10 :space-evenly "false" :valign "center"
 			(box :class "album_art" :vexpand "false" :hexpand "false" :style "background-image: url('${COVER}');")
 			(box :orientation "v" :spacing 2 :space-evenly "false" :hexpand "true"
@@ -263,7 +263,7 @@
 					(system))
 ;; matrix
 (defwindow matrix :stacking "bg" :focusable "false" :screen 0
-            :geometry (geometry :x "98.5%" :y "0%" :width 30 :height "100%")
+            :geometry (geometry :x "0px" :y "0%" :width 30 :height "100%" :anchor "top right")
                                         (matrix))
 ;; wakatime
 (defwindow wakatime :stacking "bg" :focusable "false" :screen 0
@@ -286,7 +286,7 @@
 
 ;; music
 (defwindow music :stacking "bg" :focusable "false" :screen 0 
-	    :geometry (geometry :x "20%" :y "78%" :width 560 :height 72)
+	    :geometry (geometry :x "80%" :y "80%" :width "360" :height 72)
 					(music))
 
 ;; github

@@ -1,9 +1,45 @@
 #!/bin/bash
-# Theme-skinned glyph rain. CHARSET / density come from theme.toml [identity].
+# Theme-skinned glyph rain. CHARSET / density / mode come from theme.toml [identity].
 ROWS={{identity.matrix_rows}}
 COLS={{identity.matrix_cols}}
 CHARS="{{identity.matrix_chars}}"
 DENSITY={{identity.matrix_density}}
+MODE="{{identity.matrix_mode}}"
+
+# crest: a shield mark walks down a shaft. First four charset cells are
+# crest, visor, shaft, rivet. Other themes stay on the random rain.
+if [[ "$MODE" == "crest" ]]; then
+    crest="${CHARS:0:1}"
+    visor="${CHARS:1:1}"
+    shaft="${CHARS:2:1}"
+    rivet="${CHARS:3:1}"
+    tick=$(date +%s)
+    phase=$(( tick % ROWS ))
+    half=$(( ROWS / 2 ))
+    for ((i=0; i<ROWS; i++)); do
+        rel1=$(( (i - phase + ROWS) % ROWS ))
+        rel2=$(( (i - phase + half) % ROWS ))
+        mark=" "
+        if (( (i + tick / 2) % 6 == 0 )); then
+            mark="$rivet"
+        fi
+        for rel in "$rel1" "$rel2"; do
+            if (( rel >= 2 && rel <= 8 )); then
+                mark="$shaft"
+            fi
+        done
+        for rel in "$rel1" "$rel2"; do
+            if (( rel == 1 )); then
+                mark="$visor"
+            fi
+            if (( rel == 0 )); then
+                mark="$crest"
+            fi
+        done
+        echo "$mark"
+    done
+    exit 0
+fi
 
 for ((i=0; i<ROWS; i++)); do
     line=""

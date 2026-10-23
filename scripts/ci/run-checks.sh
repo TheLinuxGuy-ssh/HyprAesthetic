@@ -68,8 +68,8 @@ test -d themes/_template/hypr
 test -d layouts/default/waybar
 test -f data/packages.toml
 test -f data/store-index.toml
-test -d themes/cyberpunk
-test -f themes/cyberpunk/theme.toml
+test -d themes/spartan
+test -f themes/spartan/theme.toml
 test -x install.sh
 test -x uninstall.sh
 test -x ha-theme

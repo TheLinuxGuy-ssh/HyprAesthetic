@@ -38,6 +38,19 @@ class ThemeCatalog:
                 found[pkg.name] = pkg
         return [found[name] for name in sorted(found)]
 
+    def list_visible(self) -> list[ThemePackage]:
+        """Presets/UI list: hide palette exports when the base preset is still installed."""
+        packages = self.list()
+        names = {pkg.name for pkg in packages}
+        visible: list[ThemePackage] = []
+        for pkg in packages:
+            if pkg.name.endswith("-export"):
+                base = pkg.name[: -len("-export")]
+                if base in names:
+                    continue
+            visible.append(pkg)
+        return visible
+
     def get(self, name: str) -> ThemePackage:
         for pkg in self.list():
             if pkg.name == name:

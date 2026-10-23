@@ -14,6 +14,7 @@ $warning: {{colors.eww.warning}};
 $warning-fg: {{colors.eww.warning_fg}};
 $success: {{colors.eww.success}};
 $success-fg: {{colors.eww.success_fg}};
+$matrix-color: {{colors.eww.matrix_color}};
 $font-ui: "{{identity.font_ui}}";
 $font-clock: "{{identity.font_clock}}";
 $font-mono: "{{identity.font_mono}}";
@@ -23,7 +24,9 @@ $music-radius: {{identity.music_radius}}px;
 $cover-size: {{identity.cover_size}}px;
 
 /** Global *******************************************/
-.matrix-container {}
+.matrix-container {
+  min-width: 24px;
+}
 
 .card {
   background-color: transparent;
@@ -32,10 +35,10 @@ $cover-size: {{identity.cover_size}}px;
 }
 
 .matrix-lbl {
-  color: $primary;
-  font-size: 14px;
+  color: $matrix-color;
+  font-size: {{identity.matrix_size}}px;
   font-weight: 500;
-  opacity: 0.7;
+  opacity: {{identity.matrix_opacity}};
   font-family: $font-mono;
 }
 
