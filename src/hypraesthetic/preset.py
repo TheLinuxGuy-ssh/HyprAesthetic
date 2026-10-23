@@ -6,5 +6,6 @@ from hypraesthetic.prefs import Prefs
 
 
 def prepare_preset_switch(prefs: Prefs) -> Prefs:
-    """Prefs mutations before a full preset apply. Must not clear wallpaper."""
+    """Drop a user wallpaper override so the target preset's wallpaper applies."""
+    prefs.set("wallpaper", "")
     return prefs

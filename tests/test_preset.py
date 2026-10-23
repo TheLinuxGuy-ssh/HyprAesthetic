@@ -9,11 +9,11 @@ from hypraesthetic.preset import prepare_preset_switch
 
 
 class PreparePresetSwitchTests(unittest.TestCase):
-    def test_prepare_preset_switch_keeps_wallpaper(self) -> None:
+    def test_prepare_preset_switch_clears_wallpaper_override(self) -> None:
         prefs = Prefs.load()
         prefs.set("wallpaper", "/tmp/custom.png")
         prepare_preset_switch(prefs)
-        self.assertEqual(prefs.get("wallpaper"), "/tmp/custom.png")
+        self.assertEqual(prefs.get("wallpaper"), "")
 
 
 if __name__ == "__main__":

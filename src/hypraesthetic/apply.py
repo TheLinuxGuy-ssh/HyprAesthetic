@@ -182,6 +182,10 @@ class ApplyEngine:
             theme_bar = str(pkg.layout.get("bar_style") or "").strip()
             if theme_bar:
                 prefs.set("bar_style", theme_bar)
+            # Forward preset switch: use the target theme wallpaper, not a prior Look/rofi pick.
+            # Undo reapplies with snapshot=False and must keep the restored override.
+            if snapshot and name != current_name:
+                prefs.set("wallpaper", "")
         prefs.save()
         variables = pkg.flatten()
         self._identity_variables(pkg, prefs, variables)

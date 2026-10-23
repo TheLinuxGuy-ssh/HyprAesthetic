@@ -729,12 +729,45 @@ class ApplyEngineTests(unittest.TestCase):
         self.assertTrue(any(line.startswith("eww open toji") for line in flat))
         self.assertFalse(any(line.startswith("eww open clock") for line in flat))
 
-    def test_full_apply_does_not_wipe_wallpaper_pref(self) -> None:
+    def test_full_apply_clears_wallpaper_override_for_preset_wallpaper(self) -> None:
         prefs = Prefs.load()
         prefs.set("wallpaper", "/tmp/custom.png")
         prefs.save()
         self.engine.apply("sample")
-        self.assertEqual(Prefs.load().get("wallpaper"), "/tmp/custom.png")
+        self.assertEqual(Prefs.load().get("wallpaper"), "")
+
+    def test_full_apply_uses_theme_wallpaper_after_clearing_override(self) -> None:
+        theme_wall = self.repo / "themes" / "sample" / "wallpaper" / "sample.png"
+        theme_wall.parent.mkdir(parents=True, exist_ok=True)
+        theme_wall.write_bytes(b"theme")
+        custom = self.home / "custom.png"
+        custom.write_bytes(b"custom")
+        prefs = Prefs.load()
+        prefs.set("wallpaper", str(custom))
+        prefs.save()
+        calls: list[list[str]] = []
+
+        def runner(cmd, **kwargs):
+            calls.append([str(part) for part in cmd])
+
+            class Result:
+                returncode = 0
+                stdout = ""
+                stderr = ""
+
+            return Result()
+
+        engine = ApplyEngine(
+            repo_root=self.repo,
+            live=True,
+            runner=runner,
+            which=lambda name: "/usr/bin/swww" if name == "swww" else None,
+        )
+        engine.apply("sample")
+        img_cmds = [cmd for cmd in calls if len(cmd) >= 3 and cmd[1] == "img"]
+        self.assertTrue(img_cmds)
+        self.assertIn(str(theme_wall), img_cmds[0])
+        self.assertNotIn(str(custom), img_cmds[0])
 
     def test_eww_card_has_no_box_fill(self) -> None:
         scss = (

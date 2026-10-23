@@ -181,7 +181,7 @@ class PresetsUndoTests(GtkTestCase):
             button.emit("clicked")
         self.assertIn("sample", toast.call_args.args[1])
 
-    def test_preset_click_keeps_wallpaper(self) -> None:
+    def test_preset_click_clears_wallpaper_override(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             old_home = os.environ.get("HOME")
             os.environ["HOME"] = tmp
@@ -205,7 +205,7 @@ class PresetsUndoTests(GtkTestCase):
                     self.assertTrue(tiles)
                     tiles[0].emit("clicked")
                 prepare.assert_called()
-                self.assertEqual(Prefs.load().get("wallpaper"), "/tmp/custom.png")
+                self.assertEqual(Prefs.load().get("wallpaper"), "")
             finally:
                 if old_home is None:
                     os.environ.pop("HOME", None)
