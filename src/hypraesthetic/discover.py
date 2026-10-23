@@ -182,7 +182,7 @@ def desktop_preview_image(pkg) -> Path | None:
     if pkg is None:
         return None
     root = Path(getattr(pkg, "root"))
-    for directory in _preview_search_dirs(root):
+    for directory in (root / "wallpaper", root / "wallpapers", root):
         for name in _DESKTOP_NAMES:
             path = directory / name
             if path.is_file():

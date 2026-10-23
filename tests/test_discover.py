@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from hypraesthetic.discover import (
     WIDGET_DEFAULT_GEOMETRY,
@@ -349,6 +351,25 @@ class DiscoverTests(unittest.TestCase):
         desktop = root / "desktop.png"
         desktop.write_bytes(b"png")
         self.assertEqual(desktop_preview_image(pkg), desktop)
+        tmp.cleanup()
+
+    def test_desktop_preview_ignores_home_wallpapers(self) -> None:
+        from hypraesthetic.discover import desktop_preview_image
+
+        tmp = tempfile.TemporaryDirectory()
+        base = Path(tmp.name)
+        home = base / "home"
+        stray = home / ".wallpapers" / "desktop.png"
+        stray.parent.mkdir(parents=True)
+        stray.write_bytes(b"home")
+        root = base / "themes" / "toji"
+        root.mkdir(parents=True)
+        pkg = SimpleNamespace(root=root, wallpaper="", preview="")
+        with patch.dict(os.environ, {"HOME": str(home)}):
+            self.assertIsNone(desktop_preview_image(pkg))
+            desktop = root / "desktop.png"
+            desktop.write_bytes(b"theme")
+            self.assertEqual(desktop_preview_image(pkg), desktop)
         tmp.cleanup()
 
 
