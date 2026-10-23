@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
@@ -33,11 +35,13 @@ class InstallerTests(unittest.TestCase):
 
             return Result()
 
+        self.runner = runner
         self.installer = Installer(
             repo_root=self.repo,
             distro_id="fedora-asahi-remix",
             runner=runner,
             assume_yes=True,
+            euid=1000,
             apply_fn=lambda theme, **kwargs: None,
             backup_fn=lambda: "stamp",
             package_installed=lambda pkg: False,
@@ -91,6 +95,7 @@ class InstallerTests(unittest.TestCase):
 
     def test_custom_confirm_invokes_package_install(self) -> None:
         self.installer.assume_yes = False
+        self.installer.euid = 1000
         self.installer.confirm = lambda _packages: True
         self.installer.run(
             mode="custom",
@@ -131,6 +136,7 @@ class InstallerTests(unittest.TestCase):
                 repo_root=self.repo,
                 runner=runner,
                 assume_yes=True,
+                euid=1000,
                 apply_fn=lambda theme, **kwargs: None,
                 backup_fn=lambda: "stamp",
                 package_installed=lambda pkg: False,
@@ -139,6 +145,62 @@ class InstallerTests(unittest.TestCase):
             result = installer.run(mode="automatic", theme="toji")
         self.assertTrue(any(cmd[:3] == ["sudo", "pacman", "-S"] for cmd in commands))
         self.assertIn("hyprland", result.packages)
+
+    def test_root_pacman_command_omits_sudo(self) -> None:
+        commands: list[list[str]] = []
+
+        def runner(cmd, **kwargs):
+            commands.append(list(cmd))
+
+            class Result:
+                returncode = 0
+                stdout = ""
+                stderr = ""
+
+            return Result()
+
+        installer = Installer(
+            repo_root=self.repo,
+            distro_id="cachyos",
+            runner=runner,
+            assume_yes=True,
+            euid=0,
+            apply_fn=lambda theme, **kwargs: None,
+            backup_fn=lambda: "stamp",
+            package_installed=lambda pkg: False,
+            write_session=False,
+        )
+        with redirect_stdout(StringIO()):
+            installer.run(mode="automatic", theme="toji")
+        pacman = [cmd for cmd in commands if cmd and "pacman" in cmd]
+        self.assertTrue(pacman)
+        self.assertEqual(pacman[0][:4], ["pacman", "-S", "--needed", "--noconfirm"])
+        self.assertNotEqual(pacman[0][0], "sudo")
+
+    def test_root_decline_raises_before_install(self) -> None:
+        commands: list[list[str]] = []
+
+        def runner(cmd, **kwargs):
+            commands.append(list(cmd))
+
+        installer = Installer(
+            repo_root=self.repo,
+            distro_id="cachyos",
+            runner=runner,
+            assume_yes=False,
+            euid=0,
+            apply_fn=lambda theme, **kwargs: None,
+            backup_fn=lambda: "stamp",
+            package_installed=lambda pkg: False,
+            write_session=True,
+        )
+        with patch("sys.stdin.isatty", return_value=False), redirect_stdout(StringIO()):
+            with self.assertRaises(PermissionError) as caught:
+                installer.run(mode="custom", theme="toji", selection={"bar": "waybar"})
+        self.assertIn("root install declined", str(caught.exception))
+        self.assertEqual(commands, [])
+        desktop = self.home / ".local" / "share" / "applications" / "hyprland.desktop"
+        self.assertFalse(desktop.exists())
 
 
 if __name__ == "__main__":

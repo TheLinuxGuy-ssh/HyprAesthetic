@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -10,6 +11,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from hypraesthetic.packages import PackageCatalog, os_release_ids
+from hypraesthetic.privilege import allow_root_install, privileged_command
 from hypraesthetic.paths import repo_root as detect_repo_root
 from hypraesthetic.prefs import AUTOMATIC_SELECTION, Prefs
 
@@ -61,6 +63,7 @@ class Installer:
         write_session: bool = True,
         catalog: PackageCatalog | None = None,
         confirm: Callable[[list[str]], bool] | None = None,
+        euid: int | None = None,
     ):
         self.repo_root = repo_root or detect_repo_root()
         if distro_id:
@@ -76,6 +79,18 @@ class Installer:
         self.write_session = write_session
         self.catalog = catalog or PackageCatalog.load()
         self.confirm = confirm
+        self.euid = os.geteuid() if euid is None else euid
+        self._root_allowed: bool | None = None
+
+    def allow_root(self) -> bool:
+        if self._root_allowed is not None:
+            return self._root_allowed
+        self._root_allowed = allow_root_install(
+            euid=self.euid,
+            assume_yes=self.assume_yes,
+            stdin_isatty=sys.stdin.isatty(),
+        )
+        return self._root_allowed
 
     def run(
         self,
@@ -83,6 +98,8 @@ class Installer:
         theme: str = "toji",
         selection: dict[str, Any] | None = None,
     ) -> InstallResult:
+        if not self.allow_root():
+            raise PermissionError("root install declined")
         selected = dict(AUTOMATIC_SELECTION)
         if mode == "custom" and selection:
             selected.update(selection)
@@ -128,7 +145,7 @@ class Installer:
         cmd = _install_command(family.manager, packages)
         if not cmd:
             return False
-        self.runner(cmd, check=False)
+        self.runner(privileged_command(cmd, euid=self.euid), check=False)
         return True
 
     def _confirm_packages(self, packages: list[str]) -> bool:
@@ -193,13 +210,13 @@ def _read_distro_id() -> str:
 
 def _install_command(manager: str, packages: list[str]) -> list[str] | None:
     if manager == "pacman":
-        return ["sudo", "pacman", "-S", "--needed", "--noconfirm", *packages]
+        return ["pacman", "-S", "--needed", "--noconfirm", *packages]
     if manager == "dnf":
-        return ["sudo", "dnf", "install", "-y", *packages]
+        return ["dnf", "install", "-y", *packages]
     if manager == "apt":
-        return ["sudo", "apt", "install", "-y", *packages]
+        return ["apt", "install", "-y", *packages]
     if manager == "zypper":
-        return ["sudo", "zypper", "install", "-y", *packages]
+        return ["zypper", "install", "-y", *packages]
     if manager == "nix":
         return ["nix", "profile", "install", *packages]
     return None

@@ -251,7 +251,16 @@ def cmd_install(rest: list[str]) -> int:
         apply_fn=lambda name: ApplyEngine().apply(name),
         backup_fn=lambda: _bash("backup-configs.sh", ["backup"]),
     )
-    result = installer.run(mode=mode, theme=theme, selection=selection)
+    if not installer.allow_root():
+        print("Root install declined. Re-run as your user.")
+        return 1
+    try:
+        result = installer.run(mode=mode, theme=theme, selection=selection)
+    except PermissionError as err:
+        if str(err) != "root install declined":
+            raise
+        print("Root install declined. Re-run as your user.")
+        return 1
     if result.packages_skipped:
         print("Packages were skipped:")
         for pkg in result.packages_skipped:

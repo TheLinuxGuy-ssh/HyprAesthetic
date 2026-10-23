@@ -37,7 +37,7 @@ We will acknowledge receipt within 48 hours and provide a timeline for fix.
 - Execute arbitrary code from theme files
 - Download or execute remote scripts
 - Modify system files outside `~/.config/`
-- Run as root (except package installation with `sudo`)
+- Run as root unless the user confirms the warning; package installs use sudo from a normal user
 
 ### Threat Model
 
