@@ -88,6 +88,9 @@ IDENTITY_DEFAULTS = {
     "matrix_rows": "48",
     "matrix_cols": "1",
     "matrix_density": "3",
+    "matrix_mode": "rain",
+    "matrix_size": "14",
+    "matrix_opacity": "0.7",
 }
 
 
@@ -251,6 +254,8 @@ class ThemePackage:
 
         waybar = _fill_surface(dict(resolved_colors.get("waybar") or {}), palette) if palette else {}
         eww = _fill_surface(dict(resolved_colors.get("eww") or {}), palette) if palette else {}
+        if palette and not eww.get("matrix_color"):
+            eww["matrix_color"] = eww.get("primary") or palette[SURFACE_FROM_PALETTE["primary"]]
         hyprland = dict(resolved_colors.get("hyprland") or {})
         if palette:
             for key, pal_key in HYPRLAND_FROM_PALETTE.items():

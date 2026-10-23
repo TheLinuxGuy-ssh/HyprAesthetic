@@ -14,9 +14,9 @@ from hypraesthetic.theme import ThemePackage
 
 
 def test_theme_toml() -> None:
-    pkg = ThemePackage.load(ROOT / "themes" / "cyberpunk")
-    assert pkg.name == "cyberpunk"
-    assert pkg.palette["base00"] == "#0d0d0d"
+    pkg = ThemePackage.load(ROOT / "themes" / "spartan")
+    assert pkg.name == "spartan"
+    assert pkg.palette["base00"] == "#140404"
     assert pkg.enabled("waybar")
     print(f"Theme: {pkg.name}")
     print(f"Palette: {len(pkg.palette)}")
@@ -24,37 +24,38 @@ def test_theme_toml() -> None:
 
 
 def test_waybar_template() -> None:
-    pkg = ThemePackage.load(ROOT / "themes" / "cyberpunk")
+    pkg = ThemePackage.load(ROOT / "themes" / "spartan")
     rendered = render_string(
         (ROOT / "themes" / "_template" / "waybar" / "colors.css.template").read_text(),
         pkg.flatten(),
     )
     assert "@define-color background" in rendered
     assert "@define-color love @primary" in rendered
-    assert "#0d0d0d" in rendered
+    assert "#b00404" in rendered
     print("Waybar template OK")
 
 
 def test_hyprland_template() -> None:
-    pkg = ThemePackage.load(ROOT / "themes" / "cyberpunk")
+    pkg = ThemePackage.load(ROOT / "themes" / "spartan")
     rendered = render_string(
         (ROOT / "themes" / "_template" / "hypr" / "colors.conf.template").read_text(),
         pkg.flatten(),
     )
-    assert "active_border = #00f0ff" in rendered
+    assert "active_border = #000000" in rendered
     print("Hyprland template OK")
 
 
 def test_hyprwave_template() -> None:
     from hypraesthetic.hyprwave_cfg import resolve_hyprwave
 
-    pkg = ThemePackage.load(ROOT / "themes" / "cyberpunk")
+    pkg = ThemePackage.load(ROOT / "themes" / "spartan")
     variables = {**pkg.flatten(), **resolve_hyprwave(pkg.hyprwave, {})}
     rendered = render_string(
         (ROOT / "themes" / "_template" / "hyprwave" / "config.conf.template").read_text(),
         variables,
     )
-    assert "edge = right" in rendered
+    assert "edge = bottom" in rendered
+    assert "layer = top" in rendered
     assert "[Visualizer]" in rendered
     print("Hyprwave template OK")
 

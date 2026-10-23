@@ -263,7 +263,7 @@
 					(system))
 ;; matrix
 (defwindow matrix :stacking "bg" :focusable "false" :screen 0
-            :geometry (geometry :x "0.5%" :y "0%" :width 48 :height "100%")
+            :geometry (geometry :x "60%" :y "0%" :width 48 :height "100%")
                                         (matrix))
 ;; wakatime
 (defwindow wakatime :stacking "bg" :focusable "false" :screen 0
@@ -286,7 +286,7 @@
 
 ;; music
 (defwindow music :stacking "bg" :focusable "false" :screen 0 
-	    :geometry (geometry :x "62%" :y "52%" :width 360 :height 88)
+	    :geometry (geometry :x "73%" :y "52%" :width 360 :height 88)
 					(music))
 
 ;; github

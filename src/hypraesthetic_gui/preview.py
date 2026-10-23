@@ -12,14 +12,27 @@ gi.require_version("Gdk", "4.0")
 gi.require_version("GdkPixbuf", "2.0")
 from gi.repository import Gdk, GdkPixbuf, GLib, Gtk
 
+# Match desktop screenshot aspect ratio (e.g. 2560×1600 → 16:10).
+PREVIEW_REF_WIDTH = 2560
+PREVIEW_REF_HEIGHT = 1600
+
+
+def preview_height_for_width(width: int) -> int:
+    return max(1, int(round(width * PREVIEW_REF_HEIGHT / PREVIEW_REF_WIDTH)))
+
+
+def preview_width_for_height(height: int) -> int:
+    return max(1, int(round(height * PREVIEW_REF_WIDTH / PREVIEW_REF_HEIGHT)))
+
+
 TILE_WIDTH = 196
-TILE_HEIGHT = 118
+TILE_HEIGHT = preview_height_for_width(TILE_WIDTH)
 PRESET_WIDTH = 420
-PRESET_HEIGHT = 236
+PRESET_HEIGHT = preview_height_for_width(PRESET_WIDTH)
 FILM_WIDTH = 160
-FILM_HEIGHT = 90
+FILM_HEIGHT = preview_height_for_width(FILM_WIDTH)
 HERO_WIDTH = 640
-HERO_HEIGHT = 360
+HERO_HEIGHT = preview_height_for_width(HERO_WIDTH)
 MAX_ANIM_BYTES = 8 * 1024 * 1024
 MAX_ANIM_PIXELS = 8_000_000
 

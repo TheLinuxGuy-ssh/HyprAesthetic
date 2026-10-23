@@ -81,7 +81,7 @@
 ;; system
 (defwidget system [] 
 	(box :class "genwin" :vexpand "false" :hexpand "false" 
-		(box :orientation "v" :spacing 5 :halign "center" :valign "center" :space-evenly "false" :vexpand "false" :hexpand "false" 
+		(box :orientation "h" :spacing 5 :halign "center" :valign "center" :space-evenly "false" :vexpand "false" :hexpand "false" 
 			(box :class "cpu_bar" :orientation "h" :spacing 10 :space-evenly "false" :vexpand "false" :hexpand "false" 
 				(label :class "iconcpu" :text "CPU")
 				(scale :min 0 :max 100 :value CPU_USAGE :active "false"))
@@ -259,7 +259,7 @@
 
 ;; system
 (defwindow system :stacking "bg" :focusable "false" :screen 0 
-	    :geometry (geometry :x "82%" :y "80%" :width 180 :height 125)
+	    :geometry (geometry :x "17%" :y "55%" :width 180 :height 125)
 					(system))
 ;; matrix
 (defwindow matrix :stacking "bg" :focusable "false" :screen 0
@@ -271,12 +271,12 @@
                                         (wakatime))
 ;; toji
 (defwindow toji :stacking "bg" :focusable "false" :screen 0
-            :geometry (geometry :x "4%" :y "86%" :width 480 :height 50)
+            :geometry (geometry :x "0" :y "90%" :width "100%" :height 50)
                                         (toji))
 
 ;; clock
 (defwindow clock :stacking "bg" :focusable "false" :screen 0 
-	    :geometry (geometry :x "4%" :y "8%" :width 450 :height 155)
+	    :geometry (geometry :x "58%" :y "18%" :width 450 :height 155)
 					(clock))
 
 ;; uptime

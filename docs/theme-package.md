@@ -5,7 +5,8 @@ A HyprAesthetic theme is a folder with a `theme.toml` manifest. Layouts (Waybar,
 ```
 mytheme/
   theme.toml          # required
-  preview.png         # or preview.gif
+  preview.png         # or preview.gif (store / thumb)
+  desktop.png         # Presets page: 2560×1600 or same 16:10 aspect (e.g. 1280×800)
   wallpaper.jpg       # jpg, png, gif, or webp; or set [misc].wallpaper to a file in ~/.wallpapers
   assets/             # optional character images, quotes
   overrides/          # optional files that replace the shared layout

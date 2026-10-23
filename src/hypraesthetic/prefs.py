@@ -47,6 +47,8 @@ AUTOMATIC_SELECTION: dict[str, Any] = {
         "edge": "bottom",
         "margin": 10,
         "preference": "spotify,vlc,brave",
+        "layer": "top",
+        "exclusive_zone": 0,
     },
     "store_url": "",
 }

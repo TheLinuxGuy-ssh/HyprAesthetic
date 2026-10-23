@@ -17,6 +17,7 @@ from hypraesthetic.apply import ApplyEngine
 from hypraesthetic.catalog import ThemeCatalog
 from hypraesthetic.bar_schematic import modules_for_bar
 from hypraesthetic.discover import (
+    unique_theme_names,
     APP_CANDIDATES,
     FIRST_PARTY_BAR_IDS,
     WIDGET_CATALOG,
@@ -33,9 +34,11 @@ from hypraesthetic.discover import (
     list_icon_themes,
     list_on_path,
     list_wallpapers,
+    merge_layout_geometry,
     normalize_font,
     parse_eww_geometry,
     primary_screen_size,
+    top_left_geometry,
     resolve_wallpaper,
     spec_to_fractions,
     theme_preview_image,
@@ -43,7 +46,7 @@ from hypraesthetic.discover import (
     widget_ids_from_prefs,
 )
 from hypraesthetic.export_theme import generate_from_wallpaper
-from hypraesthetic.hyprwave_cfg import HYPRWAVE_EDGES
+from hypraesthetic.hyprwave_cfg import HYPRWAVE_EDGES, HYPRWAVE_LAYERS
 from hypraesthetic.paths import layouts_dir
 from hypraesthetic.doctor import Doctor
 from hypraesthetic.install_theme import ThemeInstaller
@@ -294,15 +297,19 @@ def _accent_color() -> str:
 
 
 def _combo(options: list[str], current: str) -> tuple[Gtk.DropDown, list[str]]:
-    values = list(options)
-    if current and current not in values:
+    values = unique_theme_names(list(options))
+    current = str(current or "").strip()
+    if current and not any(item.casefold() == current.casefold() for item in values):
         values.insert(0, current)
     if not values:
         values = [current or ""]
     dropdown = Gtk.DropDown.new_from_strings(values)
     dropdown.set_enable_search(True)
-    if current in values:
-        dropdown.set_selected(values.index(current))
+    if current:
+        for index, item in enumerate(values):
+            if item.casefold() == current.casefold():
+                dropdown.set_selected(index)
+                break
     return dropdown, values
 
 
@@ -342,7 +349,7 @@ def presets_page() -> Gtk.Widget:
         if _apply(overlay, theme=name, message=f"Applied {name}"):
             _set_selected(buttons, name)
 
-    for pkg in ThemeCatalog().list():
+    for pkg in ThemeCatalog().list_visible():
         shot = desktop_preview_image(pkg)
         tile = _tile(
             pkg.display_name,
@@ -771,7 +778,8 @@ class WidgetEditor(Adw.Window):
         self.set_content(toolbar)
 
     def _load_geometry(self) -> dict[str, dict[str, str]]:
-        geom: dict[str, dict[str, str]] = {key: dict(value) for key, value in WIDGET_DEFAULT_GEOMETRY.items()}
+        base = {key: dict(value) for key, value in WIDGET_DEFAULT_GEOMETRY.items()}
+        yuck: dict[str, dict[str, str]] = {}
         pkg = _safe_theme()
         yuck_paths = []
         if pkg is not None:
@@ -779,12 +787,11 @@ class WidgetEditor(Adw.Window):
         yuck_paths.append(layouts_dir() / "default" / "eww" / "eww.yuck")
         for path in yuck_paths:
             if path.is_file():
-                geom.update(parse_eww_geometry(path.read_text(encoding="utf-8")))
+                yuck = parse_eww_geometry(path.read_text(encoding="utf-8"))
                 break
         saved = Prefs.load().geometry_for(current_theme_name())
-        for key, value in saved.items():
-            geom[str(key)] = {str(k): str(v).strip('"') for k, v in value.items()}
-        return geom
+        merged = merge_layout_geometry(base, yuck, saved)
+        return {key: top_left_geometry(spec, self._screen) for key, spec in merged.items()}
 
     def _canvas(self) -> tuple[int, int]:
         return max(1, self._stage.get_width()), max(1, self._stage.get_height())
@@ -954,9 +961,14 @@ def _clamp_y_text(y_text: str, height_text: str, screen: tuple[int, int]) -> str
 
 
 def _clamp_pos(x: float, y: float, width: float, height: float) -> tuple[float, float]:
+    # Keep a sliver on the canvas. A full-height window has no vertical slack:
+    # a negative y used to place the matrix entirely above the monitor.
     min_vis = 0.02
     x = min(max(x, -width + min_vis), 1.0 - min_vis)
-    y = min(max(y, -height + min_vis), 1.0 - min_vis)
+    if height >= 1.0:
+        y = 0.0
+    else:
+        y = min(max(y, -height + min_vis), 1.0 - min_vis)
     return x, y
 
 
@@ -1208,6 +1220,26 @@ def look_page() -> Gtk.Widget:
         subtitle="Top, left, bottom, or right screen edge",
     )
     edge_row.add_suffix(edge_drop)
+    layer_options = list(HYPRWAVE_LAYERS)
+    layer_drop, layer_values = _combo(
+        layer_options,
+        str(prefs.get("hyprwave.layer") or "top"),
+    )
+    layer_row = Adw.ActionRow(
+        title="Window layer",
+        subtitle="top stays under fullscreen; overlay draws above all windows",
+    )
+    layer_row.add_suffix(layer_drop)
+    zone_switch = Gtk.Switch(
+        valign=Gtk.Align.CENTER,
+        active=int(prefs.get("hyprwave.exclusive_zone") or 0) == -1,
+    )
+    zone_row = Adw.ActionRow(
+        title="Overlap reserved space",
+        subtitle="When on, HyprWave ignores Waybar gaps (exclusive_zone -1)",
+    )
+    zone_row.add_suffix(zone_switch)
+    zone_row.set_activatable_widget(zone_switch)
 
     gaps_in = _look_spin(prefs.get("hypr.gaps_in"), 0, 200, 5)
     gaps_out = _look_spin(prefs.get("hypr.gaps_out"), 0, 200, 7)
@@ -1227,6 +1259,8 @@ def look_page() -> Gtk.Widget:
             "cursor_theme": _selected_text(cursor_drop, cursor_values),
             "hyprwave": hypr_switch.get_active(),
             "hyprwave_edge": _selected_text(edge_drop, edge_values),
+            "hyprwave_layer": _selected_text(layer_drop, layer_values),
+            "hyprwave_overlap": zone_switch.get_active(),
             "gaps_in": int(gaps_in.get_value()),
             "gaps_out": int(gaps_out.get_value()),
             "border_size": int(border.get_value()),
@@ -1239,6 +1273,8 @@ def look_page() -> Gtk.Widget:
         dropdown.connect("notify::selected", refresh)
     hypr_switch.connect("notify::active", refresh)
     edge_drop.connect("notify::selected", refresh)
+    layer_drop.connect("notify::selected", refresh)
+    zone_switch.connect("notify::active", refresh)
     for spin in (gaps_in, gaps_out, border, rounding):
         spin.connect("notify::value", refresh)
 
@@ -1252,6 +1288,8 @@ def look_page() -> Gtk.Widget:
         loaded.set("hypr.border_size", int(border.get_value()))
         loaded.set("hypr.rounding", int(rounding.get_value()))
         loaded.set("hyprwave.edge", _selected_text(edge_drop, edge_values))
+        loaded.set("hyprwave.layer", _selected_text(layer_drop, layer_values))
+        loaded.set("hyprwave.exclusive_zone", -1 if zone_switch.get_active() else 0)
         extra = list(loaded.get("extras") or [])
         if hypr_switch.get_active():
             if "hyprwave" not in extra:
@@ -1280,6 +1318,8 @@ def look_page() -> Gtk.Widget:
     box.append(cursor_row)
     box.append(hypr_row)
     box.append(edge_row)
+    box.append(layer_row)
+    box.append(zone_row)
     box.append(Gtk.Label(label="Hyprland", xalign=0, css_classes=["heading"]))
     for title, spin in hypr_rows:
         row = Adw.ActionRow(title=title)

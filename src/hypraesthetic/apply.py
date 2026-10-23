@@ -27,7 +27,12 @@ from hypraesthetic.prefs import Prefs
 from hypraesthetic.render import VAR_RE, render_file, render_string
 from hypraesthetic.theme import ThemePackage
 from hypraesthetic.rofi_style import deploy_rofi_theme
-from hypraesthetic.hyprwave_cfg import resolve_hyprwave, sync_hyprwave_prefs
+from hypraesthetic.hyprwave_cfg import (
+    hyprwave_color_variables,
+    hyprwave_themes_dir,
+    resolve_hyprwave,
+    sync_hyprwave_prefs,
+)
 from hypraesthetic.waybar_config import sanitize_waybar_config
 from hypraesthetic.waybar_css import set_bar_font, theme_waybar_css
 
@@ -174,8 +179,11 @@ class ApplyEngine:
         # copied onto the theme that is current before this apply.
         prefs.adopt_legacy_widgets(current_name)
         if components is None:
-            ids = [str(item) for item in (prefs.widgets_for(name) or pkg.widgets)]
-            prefs.set_widgets_for(name, ids)
+            if snapshot:
+                ids = [str(item) for item in pkg.widgets]
+                prefs.set_widgets_for(name, ids)
+            else:
+                ids = [str(item) for item in (prefs.widgets_for(name) or pkg.widgets)]
             prefs.set("widgets", ids)
             self._apply_identity(pkg, prefs)
         prefs.adopt_legacy_geometry(name)
@@ -191,6 +199,7 @@ class ApplyEngine:
         variables = pkg.flatten()
         self._identity_variables(pkg, prefs, variables)
         variables.update(resolve_hyprwave(pkg.hyprwave, prefs.data))
+        variables.update(hyprwave_color_variables(pkg.palette))
         for cid in pkg.components:
             if cid not in wanted or not pkg.enabled(cid):
                 result.skipped.append(cid)
@@ -542,6 +551,13 @@ class ApplyEngine:
     def _ensure_eww_daemon(self, *, restart: bool = False) -> bool:
         env = self._eww_env()
         if restart:
+            if self._eww_ping():
+                self.runner(
+                    ["eww", "close-all"],
+                    check=False,
+                    capture_output=True,
+                    env=env,
+                )
             self.runner(["eww", "kill"], check=False, capture_output=True, env=env)
             self.runner(["pkill", "-x", "eww"], check=False, capture_output=True)
             for _ in range(40):
@@ -583,7 +599,9 @@ class ApplyEngine:
         if not self.which("eww"):
             self._errors.append("eww not found")
             return
-        ids = prefs.widgets_for(pkg.name) or list(pkg.widgets)
+        ids = prefs.widgets_for(pkg.name)
+        if not ids:
+            ids = list(pkg.widgets)
         widgets = [widget_window(item) for item in widget_ids_from_prefs(ids)]
         if prefs.get("dashboard"):
             for extra in ("background", "profile"):
@@ -595,6 +613,15 @@ class ApplyEngine:
         if not self._ensure_eww_daemon(restart=True):
             return
         defined = self._eww_windows()
+        wanted = set(widgets)
+        for window in sorted(defined - wanted):
+            self.runner(
+                ["eww", "close", window],
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
         screen = self._primary_screen()
         time.sleep(0.1)
         for name in widgets:
@@ -661,9 +688,27 @@ class ApplyEngine:
             if path.is_file():
                 path.unlink()
         variables.update(resolve_hyprwave(pkg.hyprwave, prefs.data))
+        variables.update(hyprwave_color_variables(pkg.palette))
+        builtin = str(pkg.hyprwave.get("builtin") or "").strip().removesuffix(".css")
+        theme_id = builtin or pkg.name
+        if not builtin:
+            css_dest = hyprwave_themes_dir() / f"{pkg.name}.css"
+            self._render_template("hyprwave/theme.css", css_dest, variables)
         self._render_template("hyprwave/config.conf", dest / "config.conf", variables)
-        if self.live and self.which("hyprwave"):
-            self._restart_process("hyprwave")
+        if self.live:
+            self._activate_hyprwave_theme(theme_id)
+            if self.which("hyprwave"):
+                self._restart_process("hyprwave")
+
+    def _activate_hyprwave_theme(self, theme_id: str) -> None:
+        if not theme_id or not self.which("hyprwave-toggle"):
+            return
+        self.runner(
+            ["hyprwave-toggle", "set-theme", theme_id],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
 
     def _apply_rofi(
         self, pkg: ThemePackage, prefs: Prefs, variables: dict[str, str], restart: bool = False
@@ -829,10 +874,21 @@ class ApplyEngine:
                 continue
             pattern = (
                 rf"(\(defwindow {re.escape(window)}\b[\s\S]*?:geometry \(geometry :x )"
-                rf"\S+( :y )\S+( :width )\S+( :height )\S+(\))"
+                rf"\S+( :y )\S+( :width )\S+( :height )\S+"
+                rf"( :anchor \"[^\"]+\")?"
+                rf"(\))"
             )
-            repl = rf"\g<1>{x}\g<2>{y}\g<3>{width}\g<4>{height}\g<5>"
-            text, _count = re.subn(pattern, repl, text, count=1)
+
+            def _geom_repl(match: re.Match[str]) -> str:
+                # Editor coordinates are offsets from the top-left. Drop a
+                # right or bottom anchor so a saved percent is not measured
+                # from the opposite edge.
+                return (
+                    f"{match.group(1)}{x}{match.group(2)}{y}{match.group(3)}{width}"
+                    f"{match.group(4)}{height}{match.group(6)}"
+                )
+
+            text, _count = re.subn(pattern, _geom_repl, text, count=1)
         yuck.write_text(text, encoding="utf-8")
 
     def _hyprland_running(self) -> bool:

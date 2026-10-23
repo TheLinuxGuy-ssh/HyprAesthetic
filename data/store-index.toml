@@ -26,9 +26,9 @@ source = "builtin"
 preview = "preview.png"
 
 [[themes]]
-name = "cyberpunk"
-display_name = "Cyberpunk 2077"
-description = "Neon-drenched Night City aesthetic"
+name = "spartan"
+display_name = "Spartan"
+description = "Crimson battlefield aesthetic with black type on spartan.png"
 author = "HyprAesthetic"
 source = "builtin"
 preview = "preview.png"

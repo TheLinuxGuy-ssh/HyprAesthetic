@@ -70,6 +70,7 @@ warning = "{{palette.base0A}}"
 warning_fg = "{{palette.base00}}"
 success = "{{palette.base0B}}"
 success_fg = "{{palette.base00}}"
+matrix_color = "{{palette.base05}}"
 
 [layout]
 bar = "waybar"

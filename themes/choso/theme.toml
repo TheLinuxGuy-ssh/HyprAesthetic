@@ -24,7 +24,7 @@ base04 = "#a0a0ba"
 base05 = "#e8e8f4"
 base06 = "#f4f4ff"
 base07 = "#ffffff"
-base08 = "#ff6b81"
+base08 = "#d35052"
 base09 = "#ffb86b"
 base0A = "#f2e29b"
 base0B = "#7ce38b"
@@ -61,7 +61,7 @@ surface = "{{palette.base01}}"
 surface_hover = "{{palette.base02}}"
 border = "{{palette.base03}}"
 foreground_muted = "{{palette.base04}}"
-primary = "#d080a8"
+primary = "{{palette.base0D}}"
 primary_fg = "{{palette.base00}}"
 error = "{{palette.base08}}"
 error_fg = "{{palette.base00}}"
@@ -69,12 +69,13 @@ warning = "{{palette.base0A}}"
 warning_fg = "{{palette.base00}}"
 success = "{{palette.base0B}}"
 success_fg = "{{palette.base00}}"
+matrix_color = "{{palette.base08}}"
 
 [layout]
 bar = "waybar"
 bar_style = "v3"
 launcher = "rofi"
-widgets = ["clock", "quote", "music", "system", "matrix"]
+widgets = ["clock", "quote", "system", "matrix"]
 
 [hypr]
 gaps_in = 5

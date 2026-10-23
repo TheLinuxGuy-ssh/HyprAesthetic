@@ -132,7 +132,7 @@ Apply writes Hyprland, Waybar, eww, Hyprwave, Rofi, Kitty, GTK, Dunst, and Neovi
 
 [ADDING_THEMES.md](ADDING_THEMES.md) · [docs/theme-package.md](docs/theme-package.md)
 
-Shipped in `themes/`: **toji**, **toji_2**, **a70**, **cyberpunk**, **choso**, **jjk**, **sky**, **tanjiro**, **tojivsukuna**.
+Shipped in `themes/`: **toji**, **toji_2**, **a70**, **spartan**, **choso**, **jjk**, **sky**, **tanjiro**, **tojivsukuna**.
 
 ```text
 mytheme/

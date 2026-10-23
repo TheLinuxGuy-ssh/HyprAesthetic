@@ -3,8 +3,8 @@
 [General]
 edge = {{hyprwave_edge}}
 margin = {{hyprwave_margin}}
-exclusive_zone = 0
-layer = foreground
+exclusive_zone = {{hyprwave_exclusive_zone}}
+layer = {{hyprwave_layer}}
 
 [MusicPlayer]
 preference = {{hyprwave_preference}}

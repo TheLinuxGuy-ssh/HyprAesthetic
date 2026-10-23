@@ -263,7 +263,7 @@
 					(system))
 ;; matrix
 (defwindow matrix :stacking "bg" :focusable "false" :screen 0
-            :geometry (geometry :x "98.5%" :y "0%" :width 24 :height "100%")
+            :geometry (geometry :x "0px" :y "0%" :width 24 :height "100%" :anchor "top right")
                                         (matrix))
 ;; wakatime
 (defwindow wakatime :stacking "bg" :focusable "false" :screen 0

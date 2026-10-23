@@ -49,6 +49,20 @@ class CatalogTests(unittest.TestCase):
         self.assertIsInstance(pkg, ThemePackage)
         self.assertEqual(pkg.display_name, "Community")
 
+    def test_list_visible_hides_export_when_base_exists(self) -> None:
+        export = self.root / "user-themes" / "sample-export"
+        export.mkdir(parents=True)
+        (export / "theme.toml").write_text(
+            V2_TOML.replace('name = "sample"', 'name = "sample-export"').replace(
+                'display_name = "Sample"', 'display_name = "Sample"'
+            ),
+            encoding="utf-8",
+        )
+        visible = [pkg.name for pkg in self.catalog.list_visible()]
+        self.assertIn("sample", visible)
+        self.assertNotIn("sample-export", visible)
+        self.assertIn("sample-export", [pkg.name for pkg in self.catalog.list()])
+
     def test_skips_template_dir(self) -> None:
         (self.root / "themes" / "_template").mkdir()
         (self.root / "themes" / "_template" / "theme.toml").write_text(

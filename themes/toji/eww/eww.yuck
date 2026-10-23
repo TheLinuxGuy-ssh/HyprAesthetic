@@ -259,11 +259,11 @@
 
 ;; system
 (defwindow system :stacking "bg" :focusable "false" :screen 0 
-	    :geometry (geometry :x "82%" :y "80%" :width 180 :height 125)
+	    :geometry (geometry :x "1%" :y "86%" :width 180 :height 125)
 					(system))
 ;; matrix
 (defwindow matrix :stacking "bg" :focusable "false" :screen 0
-            :geometry (geometry :x "98.5%" :y "0%" :width 48 :height "100%")
+            :geometry (geometry :x "0px" :y "0%" :width 48 :height "100%" :anchor "top right")
                                         (matrix))
 ;; wakatime
 (defwindow wakatime :stacking "bg" :focusable "false" :screen 0
@@ -271,12 +271,12 @@
                                         (wakatime))
 ;; toji
 (defwindow toji :stacking "bg" :focusable "false" :screen 0
-            :geometry (geometry :x "4%" :y "86%" :width 480 :height 50)
+            :geometry (geometry :x "45%" :y "66%" :width 480 :height 50)
                                         (toji))
 
 ;; clock
 (defwindow clock :stacking "bg" :focusable "false" :screen 0 
-	    :geometry (geometry :x "4%" :y "8%" :width 450 :height 155)
+	    :geometry (geometry :x "34%" :y "28%" :width 450 :height 155)
 					(clock))
 
 ;; uptime
@@ -286,7 +286,7 @@
 
 ;; music
 (defwindow music :stacking "bg" :focusable "false" :screen 0 
-	    :geometry (geometry :x "62%" :y "52%" :width 360 :height 88)
+	    :geometry (geometry :x "76%" :y "5%" :width 360 :height 88)
 					(music))
 
 ;; github

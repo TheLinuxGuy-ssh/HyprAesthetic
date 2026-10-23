@@ -47,6 +47,21 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(cropped.get_width(), 10)
         self.assertEqual(cropped.get_height(), 10)
 
+    def test_preview_sizes_use_2560x1600_aspect(self) -> None:
+        from hypraesthetic_gui.preview import (
+            PREVIEW_REF_HEIGHT,
+            PREVIEW_REF_WIDTH,
+            PRESET_HEIGHT,
+            PRESET_WIDTH,
+            preview_height_for_width,
+        )
+
+        self.assertEqual(PRESET_HEIGHT, preview_height_for_width(PRESET_WIDTH))
+        self.assertEqual(
+            PRESET_HEIGHT,
+            int(round(PRESET_WIDTH * PREVIEW_REF_HEIGHT / PREVIEW_REF_WIDTH)),
+        )
+
     def test_cover_pixbuf_decodes_at_least_target_size(self) -> None:
         from gi.repository import GdkPixbuf
 
@@ -60,9 +75,9 @@ class PreviewTests(unittest.TestCase):
             cover_pixbuf,
         )
 
-        self.assertEqual((PRESET_WIDTH, PRESET_HEIGHT), (420, 236))
-        self.assertEqual((FILM_WIDTH, FILM_HEIGHT), (160, 90))
-        self.assertEqual((HERO_WIDTH, HERO_HEIGHT), (640, 360))
+        self.assertEqual((PRESET_WIDTH, PRESET_HEIGHT), (420, 262))
+        self.assertEqual((FILM_WIDTH, FILM_HEIGHT), (160, 100))
+        self.assertEqual((HERO_WIDTH, HERO_HEIGHT), (640, 400))
         src = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, False, 8, 2000, 1000)
         self.assertIsNotNone(src)
         src.fill(0x11223300)
@@ -77,8 +92,8 @@ class PreviewTests(unittest.TestCase):
             cropped = cover_pixbuf(src, PRESET_WIDTH, PRESET_HEIGHT)
         self.assertIsNotNone(cropped)
         self.assertEqual(cropped.get_width(), 420)
-        self.assertEqual(cropped.get_height(), 236)
-        self.assertTrue(any(width >= 840 and height >= 472 for width, height in seen), seen)
+        self.assertEqual(cropped.get_height(), 262)
+        self.assertTrue(any(width >= 840 and height >= 524 for width, height in seen), seen)
 
     def test_load_animation_reads_static_gif(self) -> None:
         from hypraesthetic_gui.preview import load_animation, load_static_pixbuf

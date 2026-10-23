@@ -458,6 +458,30 @@ class ApplyEngineTests(unittest.TestCase):
         yuck = (self.home / ".config" / "eww" / "eww.yuck").read_text(encoding="utf-8")
         self.assertIn(':x "40%"', yuck)
 
+    def test_saved_layout_drops_a_right_anchor(self) -> None:
+        theme = self.repo / "themes" / "sample"
+        (theme / "eww").mkdir()
+        (theme / "eww" / "eww.yuck").write_text(
+            '(defwindow clock :geometry (geometry :x "6%" :y "8%" :width 400 :height 140) (clock))\n'
+            '(defwindow matrix :geometry (geometry :x "0px" :y "0%" :width 30 :height "100%" :anchor "top right") (matrix))\n',
+            encoding="utf-8",
+        )
+        prefs = Prefs.load()
+        prefs.set_geometry_for(
+            "sample",
+            {
+                "clock": {"x": "10%", "y": "12%", "width": "400", "height": "140"},
+                "matrix": {"x": "98.1%", "y": "0%", "width": "30", "height": "100%"},
+            },
+        )
+        prefs.save()
+        self.engine.apply("sample", components=["eww"])
+        yuck = (self.home / ".config" / "eww" / "eww.yuck").read_text(encoding="utf-8")
+        self.assertIn(':x "10%" :y "12%"', yuck)
+        self.assertIn(':x "98.1%" :y "0%" :width 30 :height "100%"', yuck)
+        self.assertNotIn(":anchor", yuck)
+        self.assertEqual(yuck.count("(defwindow"), 2)
+
     def test_widget_geometry_stays_on_its_theme(self) -> None:
         enabled = self.repo / "themes" / "other"
         enabled.mkdir(parents=True)
@@ -670,8 +694,31 @@ class ApplyEngineTests(unittest.TestCase):
         self.assertEqual(loaded.widgets_for("sample"), ["clock"])
         self.assertEqual(loaded.get("widgets"), ["quote"])
         flat = [" ".join(cmd) for cmd in calls]
+        self.assertTrue(any("eww close-all" in line for line in flat))
         self.assertTrue(any(line.startswith("eww open toji") for line in flat))
         self.assertFalse(any(line.startswith("eww open clock") for line in flat))
+
+    def test_full_apply_resets_widgets_from_theme_toml_not_stale_override(self) -> None:
+        tanjiro = self.repo / "themes" / "tanjiro"
+        if not (tanjiro / "theme.toml").is_file():
+            self.skipTest("tanjiro theme not in repo")
+        (self.repo / "layouts" / "default" / "eww" / "eww.yuck").write_text(
+            "(defwindow clock [])\n(defwindow matrix [])\n(defwindow toji [])\n",
+            encoding="utf-8",
+        )
+        prefs = Prefs.load()
+        prefs.set_widgets_for(
+            "tanjiro",
+            ["clock", "system", "matrix", "wakatime", "quote", "music", "weather"],
+        )
+        prefs.save()
+        engine = ApplyEngine(repo_root=self.repo, live=False)
+        engine.apply("tanjiro")
+        loaded = Prefs.load()
+        self.assertEqual(
+            loaded.widgets_for("tanjiro"),
+            ["clock", "quote", "music", "weather", "system"],
+        )
 
     def test_eww_only_apply_adopts_legacy_flat_widgets_onto_current_theme(self) -> None:
         (self.repo / "layouts" / "default" / "eww" / "eww.yuck").write_text(

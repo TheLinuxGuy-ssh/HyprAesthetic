@@ -238,7 +238,7 @@ class PresetsUndoTests(GtkTestCase):
             self.assertEqual(theme_preview_image(pkg), wall)
             self.assertIsNone(desktop_preview_image(pkg))
             with patch("hypraesthetic_gui.widgets.ThemeCatalog") as catalog:
-                catalog.return_value.list.return_value = [pkg]
+                catalog.return_value.list_visible.return_value = [pkg]
                 page = presets_page()
         pictures = [
             widget for widget in _descendants(page) if isinstance(widget, Gtk.Picture)
@@ -256,7 +256,7 @@ class PresetsUndoTests(GtkTestCase):
             widget.get_size_request()
             for widget in _descendants(page)
         ]
-        self.assertIn((420, 236), sized)
+        self.assertIn((420, 262), sized)
 
 
 class FontsPageTests(GtkTestCase):
@@ -421,6 +421,8 @@ class LookPageTests(GtkTestCase):
                 by_title = {row.get_title() for row in _rows(page)}
                 self.assertIn("Cursor theme", by_title)
                 self.assertIn("Visualizer edge", by_title)
+                self.assertIn("Window layer", by_title)
+                self.assertIn("Overlap reserved space", by_title)
                 for title, value in (
                     ("Gaps in", 5),
                     ("Gaps out", 7),
@@ -748,6 +750,16 @@ class WidgetEditorTests(GtkTestCase):
         self.assertGreaterEqual(y, 0)
         self.assertLessEqual(y + height, 1)
         self.assertEqual(saved["y"], "80%")
+
+    def test_anchored_matrix_loads_on_the_right_and_stays_at_y_zero(self) -> None:
+        editor = self._editor(["matrix", "clock"])
+        matrix_x = geom_to_fraction(editor._raw["matrix"]["x"], "x", editor._screen)
+        self.assertGreater(matrix_x, 0.9)
+        self.assertEqual(editor._raw["matrix"]["y"], "0%")
+        editor._drag = {"id": "matrix", "mode": "move", "start": list(editor._fracs["matrix"])}
+        editor._on_update(None, 0, -400)
+        self.assertEqual(editor._fracs["matrix"][1], 0.0)
+        self.assertEqual(editor._entries["matrix"]["y"].get_text(), "0%")
 
 
 class WidgetsPageTests(GtkTestCase):
