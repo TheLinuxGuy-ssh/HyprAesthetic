@@ -111,13 +111,14 @@ def ensure_helper(
         return sorted(str(path) for path in Path(directory).glob("*.pkg.tar.zst"))
 
     def remove_bin(bin_pkg: str) -> None:
-        # -Rns only. -c / -Rcns would cascade through packages that depend on the helper.
+        # -R only. -s would drop dependencies if the following -U fails.
+        # -c / -Rcns would cascade through packages that depend on the helper.
         runner(
-            privileged(["pacman", "-Rns", "--noconfirm", f"{bin_pkg}-debug"], euid=euid),
+            privileged(["pacman", "-R", "--noconfirm", f"{bin_pkg}-debug"], euid=euid),
             check=False,
         )
         runner(
-            privileged(["pacman", "-Rns", "--noconfirm", bin_pkg], euid=euid),
+            privileged(["pacman", "-R", "--noconfirm", bin_pkg], euid=euid),
             check=False,
         )
 
@@ -136,6 +137,22 @@ def ensure_helper(
         )
         url = f"https://aur.archlinux.org/{pkg}.git"
         tmpdir = tempfile.mkdtemp(prefix=f"hypraesthetic-{pkg}-")
+        keep_archive = False
+
+        def commit(paths: list[str]) -> bool:
+            nonlocal keep_archive
+            # -R only runs while the built archive is still on disk. Hold the
+            # tree across that removal so a failed -U does not delete it.
+            if not paths or not all(Path(path).is_file() for path in paths):
+                return False
+            keep_archive = True
+            if replace_bin:
+                remove_bin(replace_bin)
+            if install_files(paths):
+                keep_archive = False
+                return True
+            return False
+
         try:
             if euid == 0:
                 ids = _user_ids(user, users)
@@ -156,27 +173,18 @@ def ensure_helper(
                     )
                 ):
                     return False
-                built = package_files(tmpdir)
-                if not built:
-                    return False
-                # Package is on disk before the broken -bin helper is removed.
-                if replace_bin:
-                    remove_bin(replace_bin)
-                return install_files(built)
+                return commit(package_files(tmpdir))
             if not succeeded(runner(["git", "clone", url, tmpdir], check=False)):
                 return False
             if replace_bin:
                 packed = runner(["makepkg", "-s", "--noconfirm"], check=False, cwd=tmpdir)
                 if not succeeded(packed):
                     return False
-                built = package_files(tmpdir)
-                if not built:
-                    return False
-                remove_bin(replace_bin)
-                return install_files(built)
+                return commit(package_files(tmpdir))
             return succeeded(runner(["makepkg", "-si", "--noconfirm"], check=False, cwd=tmpdir))
         finally:
-            shutil.rmtree(tmpdir, ignore_errors=True)
+            if not keep_archive:
+                shutil.rmtree(tmpdir, ignore_errors=True)
 
     if ready():
         return name
