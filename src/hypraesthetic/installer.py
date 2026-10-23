@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from hypraesthetic.packages import PackageCatalog
+from hypraesthetic.packages import PackageCatalog, os_release_ids
 from hypraesthetic.paths import repo_root as detect_repo_root
 from hypraesthetic.prefs import AUTOMATIC_SELECTION, Prefs
 
@@ -63,7 +63,11 @@ class Installer:
         confirm: Callable[[list[str]], bool] | None = None,
     ):
         self.repo_root = repo_root or detect_repo_root()
-        self.distro_id = distro_id or _read_distro_id()
+        if distro_id:
+            self.distro_ids = [distro_id]
+        else:
+            self.distro_ids = os_release_ids(_os_release_text()) or ["unknown"]
+        self.distro_id = self.distro_ids[0]
         self.runner = runner or subprocess.run
         self.assume_yes = assume_yes
         self.apply_fn = apply_fn
@@ -89,7 +93,8 @@ class Installer:
             prefs.set(key, value)
         prefs.save()
 
-        packages = self.catalog.packages_for_selection(self.distro_id, selected)
+        family = self.catalog.family_for_ids(self.distro_ids)
+        packages = self.catalog.packages_for_selection(family.name, selected)
         missing = [pkg for pkg in packages if not self.package_installed(pkg)]
         installed: list[str] = []
         skipped: list[str] = []
@@ -117,7 +122,7 @@ class Installer:
         )
 
     def _install_packages(self, packages: list[str]) -> bool:
-        family = self.catalog.family_for(self.distro_id)
+        family = self.catalog.family_for_ids(self.distro_ids)
         if not self.assume_yes and not self._confirm_packages(packages):
             return False
         cmd = _install_command(family.manager, packages)
@@ -174,14 +179,16 @@ def _write_session_files() -> None:
         session.write_text(HYPRLAND_DESKTOP, encoding="utf-8")
 
 
-def _read_distro_id() -> str:
+def _os_release_text() -> str:
     path = Path("/etc/os-release")
     if not path.is_file():
-        return "unknown"
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.startswith("ID="):
-            return line.split("=", 1)[1].strip().strip('"')
-    return "unknown"
+        return ""
+    return path.read_text(encoding="utf-8")
+
+
+def _read_distro_id() -> str:
+    ids = os_release_ids(_os_release_text())
+    return ids[0] if ids else "unknown"
 
 
 def _install_command(manager: str, packages: list[str]) -> list[str] | None:

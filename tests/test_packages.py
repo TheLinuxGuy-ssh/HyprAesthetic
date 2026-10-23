@@ -7,6 +7,8 @@ from pathlib import Path
 
 from hypraesthetic.packages import PackageCatalog
 
+ROOT = Path(__file__).resolve().parents[1]
+
 
 class PackageCatalogTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -41,6 +43,30 @@ class PackageCatalogTests(unittest.TestCase):
     def test_unknown_distro_raises(self) -> None:
         with self.assertRaises(KeyError):
             self.catalog.family_for("haiku")
+
+    def test_cachyos_uses_arch_family(self) -> None:
+        family = self.catalog.family_for("cachyos")
+        self.assertEqual(family.name, "arch")
+        self.assertEqual(family.manager, "pacman")
+
+    def test_os_release_ids_include_id_like(self) -> None:
+        from hypraesthetic.packages import os_release_ids
+        ids = os_release_ids('ID=cachyos\nID_LIKE=arch\n')
+        self.assertEqual(ids[0], "cachyos")
+        self.assertIn("arch", ids)
+
+    def test_family_for_ids_falls_back_to_id_like(self) -> None:
+        family = self.catalog.family_for_ids(["unknown-arch-spin", "arch"])
+        self.assertEqual(family.name, "arch")
+
+    def test_distro_detect_arch_case_includes_cachyos(self) -> None:
+        text = (ROOT / "scripts/lib/distro-detect.sh").read_text(encoding="utf-8")
+        self.assertIn("arch|manjaro|endeavouros|garuda|cachyos)", text)
+        self.assertIn('[[ " ${ID_LIKE:-} " == *" arch "* ]]', text)
+
+    def test_install_deps_arch_regex_includes_cachyos(self) -> None:
+        text = (ROOT / "scripts/install-deps.sh").read_text(encoding="utf-8")
+        self.assertIn("^(arch|manjaro|endeavouros|garuda|cachyos)$", text)
 
 
 if __name__ == "__main__":

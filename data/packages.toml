@@ -3,7 +3,7 @@
 # names per family. Empty package lists mean "not packaged; treat as optional".
 
 [families.arch]
-ids = ["arch", "manjaro", "endeavouros", "garuda"]
+ids = ["arch", "manjaro", "endeavouros", "garuda", "cachyos"]
 manager = "pacman"
 
 [families.fedora]

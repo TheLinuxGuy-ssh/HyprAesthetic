@@ -10,6 +10,21 @@ from typing import Any
 from hypraesthetic.paths import data_dir, repo_root
 
 
+def os_release_ids(text: str) -> list[str]:
+    ident = ""
+    like: list[str] = []
+    for line in text.splitlines():
+        if line.startswith("ID_LIKE="):
+            like = line.split("=", 1)[1].strip().strip('"').split()
+        elif line.startswith("ID="):
+            ident = line.split("=", 1)[1].strip().strip('"')
+    ids = [ident] if ident else []
+    for token in like:
+        if token and token not in ids:
+            ids.append(token)
+    return ids
+
+
 @dataclass
 class DistroFamily:
     name: str
@@ -79,6 +94,15 @@ class PackageCatalog:
             if distro_id.startswith(family.name):
                 return family
         raise KeyError(distro_id)
+
+    def family_for_ids(self, ids: list[str]) -> DistroFamily:
+        last_error: Exception | None = None
+        for distro_id in ids:
+            try:
+                return self.family_for(distro_id)
+            except KeyError as exc:
+                last_error = exc
+        raise KeyError("/".join(ids) or "unknown") from last_error
 
     def component(self, component_id: str) -> ComponentSpec:
         return self.components[component_id]

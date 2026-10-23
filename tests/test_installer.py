@@ -6,6 +6,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from hypraesthetic.installer import AUTOMATIC_SELECTION, Installer
 from hypraesthetic.prefs import Prefs
@@ -97,6 +98,47 @@ class InstallerTests(unittest.TestCase):
             selection={"bar": "waybar", "file_manager": "nautilus", "terminal": "kitty"},
         )
         self.assertTrue(any(cmd and cmd[0] == "sudo" for cmd in self.commands))
+
+    def test_omitted_distro_id_id_like_arch_uses_pacman(self) -> None:
+        release = "ID=unknown-arch-spin\nID_LIKE=arch\n"
+        original_is_file = Path.is_file
+        original_read_text = Path.read_text
+
+        def is_file(path: Path, *args: object, **kwargs: object) -> bool:
+            if path == Path("/etc/os-release"):
+                return True
+            return original_is_file(path, *args, **kwargs)
+
+        def read_text(path: Path, *args: object, **kwargs: object) -> str:
+            if path == Path("/etc/os-release"):
+                return release
+            return original_read_text(path, *args, **kwargs)
+
+        commands: list[list[str]] = []
+
+        def runner(cmd, **kwargs):
+            commands.append(list(cmd))
+
+            class Result:
+                returncode = 0
+                stdout = ""
+                stderr = ""
+
+            return Result()
+
+        with patch.object(Path, "is_file", is_file), patch.object(Path, "read_text", read_text):
+            installer = Installer(
+                repo_root=self.repo,
+                runner=runner,
+                assume_yes=True,
+                apply_fn=lambda theme, **kwargs: None,
+                backup_fn=lambda: "stamp",
+                package_installed=lambda pkg: False,
+                write_session=False,
+            )
+            result = installer.run(mode="automatic", theme="toji")
+        self.assertTrue(any(cmd[:3] == ["sudo", "pacman", "-S"] for cmd in commands))
+        self.assertIn("hyprland", result.packages)
 
 
 if __name__ == "__main__":
