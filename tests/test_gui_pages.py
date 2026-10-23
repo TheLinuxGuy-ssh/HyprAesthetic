@@ -9,13 +9,6 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import gi
-
-gi.require_version("Gtk", "4.0")
-gi.require_version("Adw", "1")
-gi.require_version("Pango", "1.0")
-from gi.repository import Adw, Gtk, Pango
-
 from hypraesthetic.doctor import DoctorCheck, DoctorReport
 from hypraesthetic.paths import current_theme_file
 from hypraesthetic.prefs import Prefs
@@ -24,17 +17,46 @@ from hypraesthetic.store import StoreEntry
 from hypraesthetic_gui.pages import PAGES
 from hypraesthetic.discover import geom_to_fraction
 from hypraesthetic.paths import layouts_dir
-from hypraesthetic_gui.widgets import (
-    WidgetEditor,
-    apps_page,
-    bar_page,
-    doctor_page,
-    fonts_page,
-    look_page,
-    presets_page,
-    store_page,
-    widgets_page,
-)
+
+
+def _gtk_ok() -> bool:
+    try:
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        gi.require_version("Adw", "1")
+        gi.require_version("Pango", "1.0")
+        from gi.repository import Adw, Gtk, Pango  # noqa: F401
+    except (ValueError, ImportError):
+        return False
+    return True
+
+
+if _gtk_ok():
+    import gi
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Adw", "1")
+    gi.require_version("Pango", "1.0")
+    from gi.repository import Adw, Gtk, Pango
+    from hypraesthetic_gui.widgets import (
+        WidgetEditor,
+        apps_page,
+        bar_page,
+        doctor_page,
+        fonts_page,
+        look_page,
+        presets_page,
+        store_page,
+        widgets_page,
+    )
+
+
+class GtkTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not _gtk_ok():
+            raise unittest.SkipTest("GTK 4 / libadwaita not available")
 
 
 def _descendants(widget: Gtk.Widget):
@@ -76,7 +98,7 @@ class GuiPagesTests(unittest.TestCase):
             self.assertIn(needed, ids)
 
 
-class DoctorPageTests(unittest.TestCase):
+class DoctorPageTests(GtkTestCase):
     def test_repair_names_missing_ids_and_installs(self) -> None:
         report = DoctorReport(
             checks=[
@@ -132,7 +154,7 @@ class DoctorPageTests(unittest.TestCase):
         self.assertFalse(by_title["Neovim"].has_css_class("error"))
 
 
-class PresetsUndoTests(unittest.TestCase):
+class PresetsUndoTests(GtkTestCase):
     def test_presets_page_has_undo_button(self) -> None:
         page = presets_page()
         labels = [button.get_label() for button in _labeled_buttons(page)]
@@ -237,7 +259,7 @@ class PresetsUndoTests(unittest.TestCase):
         self.assertIn((420, 236), sized)
 
 
-class FontsPageTests(unittest.TestCase):
+class FontsPageTests(GtkTestCase):
     def test_family_only_terminal_font_shows_size_11(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             old_home = os.environ.get("HOME")
@@ -347,7 +369,7 @@ def _spin_by_title(root: Gtk.Widget, title: str) -> Gtk.SpinButton:
     raise AssertionError(f"no spin for {title}")
 
 
-class LookPageTests(unittest.TestCase):
+class LookPageTests(GtkTestCase):
     def test_look_hero_filmstrip_and_one_apply(self) -> None:
         walls = [Path(f"/tmp/ha-look-walls/paper-{index:02d}.png") for index in range(8)]
         with patch("hypraesthetic_gui.widgets.list_wallpapers", return_value=walls):
@@ -511,7 +533,7 @@ class LookPageTests(unittest.TestCase):
         self.assertEqual(toast.call_args.args[1], PALETTE_TOAST)
 
 
-class StorePageTests(unittest.TestCase):
+class StorePageTests(GtkTestCase):
     def test_first_paint_is_search_row_and_empty_copy(self) -> None:
         page = store_page()
         labels = [
@@ -584,7 +606,7 @@ class StorePageTests(unittest.TestCase):
         self.assertNotIn("Apply", [button.get_label() for button in _labeled_buttons(page)])
 
 
-class AppsPageTests(unittest.TestCase):
+class AppsPageTests(GtkTestCase):
     def test_apps_lists_binaries_on_path_and_names_super_b(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             old_home = os.environ.get("HOME")
@@ -662,7 +684,7 @@ def _switch_by_title(root: Gtk.Widget, title: str) -> Gtk.Switch:
     raise AssertionError(f"no switch for {title}")
 
 
-class WidgetEditorTests(unittest.TestCase):
+class WidgetEditorTests(GtkTestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.old_home = os.environ.get("HOME")
@@ -727,7 +749,7 @@ class WidgetEditorTests(unittest.TestCase):
         self.assertEqual(saved["y"], "80%")
 
 
-class WidgetsPageTests(unittest.TestCase):
+class WidgetsPageTests(GtkTestCase):
     def test_save_widgets_writes_the_current_theme_only(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             old_home = os.environ.get("HOME")
@@ -797,7 +819,7 @@ def _visible_flow_buttons(flow: Gtk.FlowBox) -> list[Gtk.Button]:
     return buttons
 
 
-class BarPageTests(unittest.TestCase):
+class BarPageTests(GtkTestCase):
     def test_bar_page_has_no_imported_heading(self) -> None:
         page = bar_page()
         marks = _page_marks(page)

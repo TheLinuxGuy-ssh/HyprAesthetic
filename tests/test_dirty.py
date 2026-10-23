@@ -4,14 +4,26 @@ from __future__ import annotations
 
 import unittest
 
-import gi
 
-gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk
+def _gtk_ok() -> bool:
+    try:
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import Gtk  # noqa: F401
+    except (ValueError, ImportError):
+        return False
+    return True
 
 
+@unittest.skipUnless(_gtk_ok(), "GTK 4 is not available")
 class DirtyApplyTests(unittest.TestCase):
     def test_button_is_insensitive_until_collect_differs(self) -> None:
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import Gtk
+
         from hypraesthetic_gui.dirty import bind_dirty_apply
 
         state = {"v": 1}
