@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import unittest
 from pathlib import Path
 
@@ -30,6 +31,54 @@ class RealThemeTests(unittest.TestCase):
         pkg = ThemePackage.load(REPO_ROOT / "themes" / "toji")
         self.assertEqual(pkg.schema, 2)
         self.assertEqual(pkg.colors["hyprland"]["border_active"], pkg.palette["base0D"])
+
+    def test_official_widget_sets_match_identity_cast(self) -> None:
+        expected = {
+            "toji": ["clock", "quote", "music", "system", "matrix"],
+            "toji_2": ["clock", "quote", "music", "system", "matrix"],
+            "tojivsukuna": ["clock", "quote", "music", "system"],
+            "jjk": ["clock", "quote", "music", "system", "matrix"],
+            "choso": ["clock", "quote", "music", "system", "matrix"],
+            "tanjiro": ["clock", "quote", "music", "weather", "system"],
+            "cyberpunk": ["clock", "music", "system", "matrix", "quote"],
+            "sky": ["clock", "music", "weather"],
+            "a70": ["clock", "system", "music", "uptime"],
+        }
+        for name, widgets in expected.items():
+            pkg = ThemePackage.load(REPO_ROOT / "themes" / name)
+            self.assertEqual(pkg.widgets, widgets, msg=name)
+
+    def test_toji_cyberpunk_choso_matrix_charsets_differ(self) -> None:
+        toji = ThemePackage.load(REPO_ROOT / "themes" / "toji")
+        punk = ThemePackage.load(REPO_ROOT / "themes" / "cyberpunk")
+        choso = ThemePackage.load(REPO_ROOT / "themes" / "choso")
+        self.assertNotEqual(toji.identity["matrix_chars"], punk.identity["matrix_chars"])
+        self.assertNotEqual(toji.identity["matrix_chars"], choso.identity["matrix_chars"])
+        self.assertNotEqual(punk.identity["matrix_chars"], choso.identity["matrix_chars"])
+        self.assertIn("/", toji.identity["matrix_chars"])
+        self.assertIn("0", punk.identity["matrix_chars"])
+
+    def test_cyberpunk_and_a70_do_not_share_toji_primary(self) -> None:
+        toji = ThemePackage.load(REPO_ROOT / "themes" / "toji")
+        punk = ThemePackage.load(REPO_ROOT / "themes" / "cyberpunk")
+        a70 = ThemePackage.load(REPO_ROOT / "themes" / "a70")
+        self.assertNotEqual(punk.palette["base0D"], toji.palette["base0D"])
+        self.assertNotEqual(a70.palette["base0D"], toji.palette["base0D"])
+
+    def test_music_card_fits_in_a_compact_window(self) -> None:
+        scss = (REPO_ROOT / "themes" / "_template" / "eww" / "eww.scss.template").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("$cover-size: {{identity.cover_size}}px;", scss)
+        self.assertIn("min-height: $cover-size;", scss)
+        yuck = (REPO_ROOT / "layouts" / "default" / "eww" / "eww.yuck").read_text(encoding="utf-8")
+        match = re.search(
+            r"\(defwindow music[\s\S]*?:geometry \(geometry :x \S+ :y \S+ :width \S+ :height (\S+)\)",
+            yuck,
+        )
+        self.assertIsNotNone(match)
+        height = int(str(match.group(1)).strip('"'))
+        self.assertLessEqual(height, 100)
 
 
 if __name__ == "__main__":

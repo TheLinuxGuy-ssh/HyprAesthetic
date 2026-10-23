@@ -75,7 +75,26 @@ success_fg = "{{palette.base00}}"
 bar = "waybar"
 bar_style = "v1.1"
 launcher = "rofi"
-widgets = ["clock", "system", "matrix", "wakatime", "toji"]
+widgets = ["clock", "quote", "music", "system", "matrix"]
+
+[hypr]
+gaps_in = 3
+gaps_out = 6
+border_size = 2
+rounding = 2
+
+[identity]
+font_ui = "Barlow Condensed, Oswald, Inter, Adwaita Sans"
+font_clock = "Barlow Condensed, Oswald, Inter, JetBrainsMono Nerd Font"
+font_mono = "JetBrainsMono Nerd Font, Iosevka, monospace"
+font_quote = "Inter, Adwaita Sans"
+clock_size = 80
+music_radius = 2
+cover_size = 64
+matrix_chars = "/\\|Y"
+matrix_rows = 48
+matrix_cols = 2
+matrix_density = 4
 
 [defaults]
 file_manager = "nautilus"

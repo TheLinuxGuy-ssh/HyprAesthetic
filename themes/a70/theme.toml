@@ -16,22 +16,22 @@ quotes = [
 ]
 
 [palette]
-base00 = "#0d0d0d"
-base01 = "#1a1a1a"
-base02 = "#2a2a2a"
-base03 = "#3a3a3a"
-base04 = "#cccccc"
-base05 = "#ffffff"
-base06 = "#ffffff"
-base07 = "#ffffff"
-base08 = "#ff6b6b"
-base09 = "#ff9f43"
-base0A = "#ffe66d"
-base0B = "#69db7c"
-base0C = "#5fe4ff"
-base0D = "#74b9ff"
-base0E = "#a29bfe"
-base0F = "#ff7675"
+base00 = "#0b0d10"
+base01 = "#14171c"
+base02 = "#1d2229"
+base03 = "#2a313a"
+base04 = "#8b93a0"
+base05 = "#c4ccd6"
+base06 = "#e4e8ee"
+base07 = "#f4f6f8"
+base08 = "#ee6666"
+base09 = "#f0a202"
+base0A = "#f0a202"
+base0B = "#5aa469"
+base0C = "#3d7ea6"
+base0D = "#f0a202"
+base0E = "#3d7ea6"
+base0F = "#c4ccd6"
 
 [colors.hyprland]
 border_active = "{{palette.base0D}}"
@@ -74,7 +74,26 @@ success_fg = "{{palette.base00}}"
 bar = "waybar"
 bar_style = "v2.9e"
 launcher = "rofi"
-widgets = ["clock", "wakatime"]
+widgets = ["clock", "system", "music", "uptime"]
+
+[hypr]
+gaps_in = 4
+gaps_out = 8
+border_size = 1
+rounding = 6
+
+[identity]
+font_ui = "Barlow Condensed, Roboto Condensed, JetBrainsMono Nerd Font"
+font_clock = "Barlow Condensed, Roboto Condensed, JetBrainsMono Nerd Font"
+font_mono = "JetBrainsMono Nerd Font, Roboto Condensed, monospace"
+font_quote = "Barlow Condensed, Adwaita Sans"
+clock_size = 72
+music_radius = 6
+cover_size = 48
+matrix_chars = "010101$#%&"
+matrix_rows = 48
+matrix_cols = 1
+matrix_density = 3
 
 [defaults]
 file_manager = "nautilus"

@@ -41,7 +41,7 @@ def test_hyprland_template() -> None:
         (ROOT / "themes" / "_template" / "hypr" / "colors.conf.template").read_text(),
         pkg.flatten(),
     )
-    assert "active_border = #74b9ff" in rendered
+    assert "active_border = #00f0ff" in rendered
     print("Hyprland template OK")
 
 

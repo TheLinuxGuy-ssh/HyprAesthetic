@@ -67,6 +67,52 @@ REF_RE = re.compile(
 
 HEX_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
 
+HYPR_DEFAULTS = {
+    "gaps_in": 5,
+    "gaps_out": 7,
+    "border_size": 1,
+    "rounding": 10,
+}
+
+IDENTITY_DEFAULTS = {
+    "font_ui": "Adwaita Sans, Inter, Sans",
+    "font_clock": "JetBrainsMono Nerd Font, Iosevka, monospace",
+    "font_mono": "JetBrainsMono Nerd Font, Iosevka, monospace",
+    "font_quote": "Iosevka, Adwaita Sans, Sans",
+    "clock_size": "80",
+    "music_radius": "8",
+    "cover_size": "64",
+    "matrix_chars": "010101$#%&",
+    "matrix_rows": "48",
+    "matrix_cols": "1",
+    "matrix_density": "3",
+}
+
+
+def _int_map(raw: Any, defaults: dict[str, int]) -> dict[str, int]:
+    out = dict(defaults)
+    if not isinstance(raw, dict):
+        return out
+    for key, default in defaults.items():
+        if key not in raw:
+            continue
+        try:
+            out[key] = int(raw[key])
+        except (TypeError, ValueError):
+            out[key] = default
+    return out
+
+
+def _identity_map(raw: Any) -> dict[str, str]:
+    out = dict(IDENTITY_DEFAULTS)
+    if not isinstance(raw, dict):
+        return out
+    for key, value in raw.items():
+        if value is None:
+            continue
+        out[str(key)] = str(value)
+    return out
+
 
 class ThemeError(ValueError):
     """Theme package is missing required fields or has invalid colors."""
@@ -180,6 +226,8 @@ class ThemePackage:
     preview: str = ""
     quotes: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
+    hypr: dict[str, int] = field(default_factory=lambda: dict(HYPR_DEFAULTS))
+    identity: dict[str, str] = field(default_factory=lambda: dict(IDENTITY_DEFAULTS))
 
     @classmethod
     def load(cls, path: Path) -> ThemePackage:
@@ -237,6 +285,8 @@ class ThemePackage:
             "browser": "firefox",
         }
         defaults.update({k: str(v) for k, v in (raw.get("defaults") or {}).items()})
+        hypr = _int_map(raw.get("hypr"), HYPR_DEFAULTS)
+        identity = _identity_map(raw.get("identity"))
 
         misc = raw.get("misc") or {}
         name = str(raw.get("name") or theme_dir.name)
@@ -275,6 +325,8 @@ class ThemePackage:
             preview=str(raw.get("preview") or "preview.png"),
             quotes=_quote_list(raw, misc),
             errors=errors,
+            hypr=hypr,
+            identity=identity,
         )
         if errors:
             raise ThemeError("; ".join(errors))
@@ -302,12 +354,8 @@ class ThemePackage:
             },
             "misc": {"wallpaper": self.wallpaper, "hw_theme": self.hw_theme},
             "layout": {k: v for k, v in self.layout.items() if not isinstance(v, list)},
-            "hypr": {
-                "gaps_in": 5,
-                "gaps_out": 7,
-                "border_size": 1,
-                "rounding": 10,
-            },
+            "hypr": self.hypr,
+            "identity": self.identity,
             "defaults": self.defaults,
             "components": self.components,
         }

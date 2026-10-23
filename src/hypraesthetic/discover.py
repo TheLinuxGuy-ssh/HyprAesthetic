@@ -53,7 +53,7 @@ WIDGET_DEFAULT_GEOMETRY: dict[str, dict[str, str]] = {
     "quote": {"x": "4%", "y": "86%", "width": "480", "height": "50"},
     "wakatime": {"x": "4%", "y": "26%", "width": "140", "height": "50"},
     "matrix": {"x": "98.5%", "y": "0%", "width": "30", "height": "100%"},
-    "music": {"x": "62%", "y": "52%", "width": "420", "height": "180"},
+    "music": {"x": "62%", "y": "52%", "width": "360", "height": "88"},
     "weather": {"x": "62%", "y": "36%", "width": "300", "height": "170"},
     "uptime": {"x": "82%", "y": "64%", "width": "240", "height": "110"},
 }
@@ -440,6 +440,24 @@ def font_family_only(value: str) -> str:
     if parts and parts[-1].replace(".", "", 1).isdigit():
         return " ".join(parts[:-1]).strip() or text
     return text
+
+
+def pick_installed_font(
+    candidates: str | list[str],
+    families: list[str] | None = None,
+    runner: Runner | None = None,
+) -> str:
+    raw = candidates if isinstance(candidates, list) else str(candidates).split(",")
+    names = [item.strip() for item in raw if str(item).strip()]
+    if not names:
+        return "Sans"
+    installed = families if families is not None else list_font_families(runner)
+    lookup = {item.lower(): item for item in installed}
+    for name in names:
+        match = lookup.get(name.lower())
+        if match:
+            return match
+    return names[-1]
 
 
 def normalize_font(value: str, default_size: int = 11) -> str:

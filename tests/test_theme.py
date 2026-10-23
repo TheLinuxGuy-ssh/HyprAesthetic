@@ -116,6 +116,28 @@ class ThemePackageTests(unittest.TestCase):
         self.assertEqual(pkg.defaults["file_manager"], "nautilus")
         self.assertEqual(pkg.quotes, [])
 
+    def test_flatten_uses_theme_hypr_and_identity(self) -> None:
+        body = V2_TOML + """
+[hypr]
+gaps_in = 3
+gaps_out = 6
+border_size = 2
+rounding = 2
+
+[identity]
+font_ui = "Barlow Condensed, Inter"
+matrix_chars = "/\\\\|Y"
+matrix_cols = 2
+music_radius = 2
+"""
+        pkg = ThemePackage.load(write_theme(self.root, body))
+        self.assertEqual(pkg.hypr["gaps_in"], 3)
+        self.assertEqual(pkg.identity["matrix_chars"], "/\\|Y")
+        flat = pkg.flatten()
+        self.assertEqual(flat["hypr_gaps_in"], "3")
+        self.assertEqual(flat["identity_matrix_chars"], "/\\|Y")
+        self.assertEqual(flat["identity_music_radius"], "2")
+
     def test_flatten_exposes_template_keys(self) -> None:
         pkg = ThemePackage.load(write_theme(self.root, V2_TOML))
         flat = pkg.flatten()
