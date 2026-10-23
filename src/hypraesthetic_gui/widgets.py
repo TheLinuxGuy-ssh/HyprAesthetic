@@ -67,6 +67,14 @@ CSS = b"""
   min-height: 118px;
   min-width: 196px;
 }
+.ha-hero .ha-preview {
+  min-width: 640px;
+  min-height: 360px;
+}
+.ha-filmstrip .ha-preview {
+  min-width: 160px;
+  min-height: 90px;
+}
 .ha-tile-title {
   padding: 8px 12px 4px;
   font-weight: 600;
@@ -187,14 +195,25 @@ def _preview_widget(image: Path | None, color: str | None = None) -> Gtk.Widget:
     return preview_widget(image, color)
 
 
-def _tile(title: str, subtitle: str = "", image: Path | None = None, color: str | None = None, selected: bool = False) -> Gtk.Button:
+def _tile(
+    title: str,
+    subtitle: str = "",
+    image: Path | None = None,
+    color: str | None = None,
+    selected: bool = False,
+    width: int | None = None,
+    height: int | None = None,
+) -> Gtk.Button:
     button = Gtk.Button()
     button.add_css_class("ha-tile")
     button.add_css_class("flat")
     if selected:
         button.add_css_class("selected")
     box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-    box.append(_preview_widget(image, color))
+    if width is not None and height is not None:
+        box.append(preview_widget(image, color, width=width, height=height))
+    else:
+        box.append(_preview_widget(image, color))
     name = Gtk.Label(label=title, xalign=0, wrap=True)
     name.add_css_class("ha-tile-title")
     box.append(name)
@@ -939,15 +958,26 @@ def _look_spin(value: object, lower: float, upper: float, fallback: int) -> Gtk.
 
 
 def look_page() -> Gtk.Widget:
-    overlay, box = _page(
+    overlay, box, apply_button = _form_page(
         "Look",
-        "Wallpaper tiles apply immediately. GTK and icon dropdowns list what this machine already has installed.",
+        "Wallpaper tiles apply immediately. GTK, icons, and Hyprland need Apply changes.",
     )
     prefs = Prefs.load()
     current_wall = str(prefs.get("wallpaper") or "")
     live_wall = resolve_wallpaper(pkg=_safe_theme(), override=current_wall, live=True)
-    flow = _flow()
     wall_buttons: dict[str, Gtk.Button] = {}
+    hero = Gtk.Box(halign=Gtk.Align.START)
+    hero.add_css_class("ha-hero")
+
+    def show_hero(path: Path | None) -> None:
+        while child := hero.get_first_child():
+            hero.remove(child)
+        if path is not None:
+            hero.append(preview_widget(path, width=640, height=360))
+            return
+        missing = Gtk.Label(label="No wallpaper", xalign=0)
+        missing.set_size_request(640, 360)
+        hero.append(missing)
 
     def apply_wallpaper(path: Path) -> None:
         loaded = Prefs.load()
@@ -955,6 +985,7 @@ def look_page() -> Gtk.Widget:
         loaded.save()
         if _apply(overlay, components=["wallpaper"], message=f"Wallpaper: {path.name}"):
             _set_selected(wall_buttons, str(path))
+            show_hero(path)
 
     def is_current(image: Path) -> bool:
         if live_wall is not None:
@@ -965,23 +996,36 @@ def look_page() -> Gtk.Widget:
         return str(image) == current_wall or image.name == Path(current_wall).name
 
     box.append(Gtk.Label(label="Wallpaper", xalign=0, css_classes=["heading"]))
+    show_hero(live_wall)
+    box.append(hero)
+
+    strip = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    strip.add_css_class("ha-filmstrip")
     for image in list_wallpapers():
-        tile = _tile(image.stem.replace("_", " "), image.name, image=image, selected=is_current(image))
+        tile = _tile(
+            image.stem.replace("_", " "),
+            image.name,
+            image=image,
+            selected=is_current(image),
+            width=160,
+            height=90,
+        )
         tile.connect("clicked", lambda _b, path=image: apply_wallpaper(path))
         wall_buttons[str(image)] = tile
-        flow.append(tile)
-    # Cap the tile list so the first Save look stays on screen.
-    wall_pane = Gtk.ScrolledWindow(hexpand=True, vexpand=False)
-    wall_pane.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-    wall_pane.set_propagate_natural_height(True)
-    wall_pane.set_max_content_height(280)
-    wall_pane.set_child(flow)
-    box.append(wall_pane)
-    browse = Gtk.Button(label="Browse wallpaper…", halign=Gtk.Align.START)
+        strip.append(tile)
+    film = Gtk.ScrolledWindow(hexpand=True, vexpand=False)
+    film.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
+    film.set_propagate_natural_height(True)
+    film.set_child(strip)
+    box.append(film)
+
+    actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8, halign=Gtk.Align.START)
+    browse = Gtk.Button(label="Browse wallpaper…")
     browse.connect("clicked", lambda *_: _browse_wallpaper(overlay, apply_wallpaper))
-    box.append(browse)
+    actions.append(browse)
     if shutil.which("wallust") or shutil.which("matugen"):
-        generate = Gtk.Button(label="Generate palette from wallpaper", halign=Gtk.Align.START)
+        generate = Gtk.Button(label="Generate palette from wallpaper")
+        generate.add_css_class("flat")
 
         def on_generate(_button: Gtk.Button) -> None:
             name = f"{current_theme_name()}-export"
@@ -997,7 +1041,8 @@ def look_page() -> Gtk.Widget:
             _toast(overlay, message)
 
         generate.connect("clicked", on_generate)
-        box.append(generate)
+        actions.append(generate)
+    box.append(actions)
 
     gtk_themes = list_gtk_themes()
     icon_themes = list_icon_themes()
@@ -1030,6 +1075,26 @@ def look_page() -> Gtk.Widget:
         ("Rounding", rounding),
     )
 
+    def collect() -> dict:
+        return {
+            "gtk_theme": _selected_text(gtk_drop, gtk_values),
+            "icon_theme": _selected_text(icon_drop, icon_values),
+            "cursor_theme": _selected_text(cursor_drop, cursor_values),
+            "hyprwave": hypr_switch.get_active(),
+            "gaps_in": int(gaps_in.get_value()),
+            "gaps_out": int(gaps_out.get_value()),
+            "border_size": int(border.get_value()),
+            "rounding": int(rounding.get_value()),
+        }
+
+    snapshot = collect()
+    refresh = bind_dirty_apply(apply_button, snapshot, collect)
+    for dropdown in (gtk_drop, icon_drop, cursor_drop):
+        dropdown.connect("notify::selected", refresh)
+    hypr_switch.connect("notify::active", refresh)
+    for spin in (gaps_in, gaps_out, border, rounding):
+        spin.connect("notify::value", refresh)
+
     def persist(_button: Gtk.Button) -> None:
         loaded = Prefs.load()
         loaded.set("gtk_theme", _selected_text(gtk_drop, gtk_values))
@@ -1051,11 +1116,11 @@ def look_page() -> Gtk.Widget:
         if hypr_switch.get_active():
             components.append("hyprwave")
         _apply(overlay, components=components, message="Look applied")
+        snapshot.clear()
+        snapshot.update(collect())
+        refresh()
 
-    save = Gtk.Button(label="Save look", halign=Gtk.Align.START)
-    save.add_css_class("suggested-action")
-    save.connect("clicked", persist)
-    box.append(save)
+    apply_button.connect("clicked", persist)
 
     box.append(Gtk.Label(label="GTK and icons", xalign=0, css_classes=["heading"]))
     theme_name = current_theme_name()
@@ -1066,11 +1131,6 @@ def look_page() -> Gtk.Widget:
     box.append(icon_row)
     box.append(cursor_row)
     box.append(hypr_row)
-    save_gtk = Gtk.Button(label="Save look", halign=Gtk.Align.START)
-    save_gtk.add_css_class("suggested-action")
-    save_gtk.connect("clicked", persist)
-    box.append(save_gtk)
-
     box.append(Gtk.Label(label="Hyprland", xalign=0, css_classes=["heading"]))
     for title, spin in hypr_rows:
         row = Adw.ActionRow(title=title)

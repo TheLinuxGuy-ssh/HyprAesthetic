@@ -270,10 +270,21 @@ def _page_marks(page: Gtk.Widget) -> list[str]:
     )
     box = heading.get_parent()
     marks: list[str] = []
+
+    def take(widget: Gtk.Widget) -> None:
+        if isinstance(widget, (Gtk.Label, Gtk.Button)) and widget.get_label():
+            marks.append(widget.get_label())
+            return
+        if isinstance(widget, Gtk.Box):
+            nested = widget.get_first_child()
+            while nested is not None:
+                if isinstance(nested, (Gtk.Label, Gtk.Button)) and nested.get_label():
+                    marks.append(nested.get_label())
+                nested = nested.get_next_sibling()
+
     child = box.get_first_child()
     while child is not None:
-        if isinstance(child, (Gtk.Label, Gtk.Button)) and child.get_label():
-            marks.append(child.get_label())
+        take(child)
         child = child.get_next_sibling()
     return marks
 
@@ -289,52 +300,28 @@ def _spin_by_title(root: Gtk.Widget, title: str) -> Gtk.SpinButton:
 
 
 class LookPageTests(unittest.TestCase):
-    def test_sections_put_save_look_above_gtk(self) -> None:
-        walls = [Path(f"/tmp/ha-look-walls/paper-{index:02d}.png") for index in range(24)]
+    def test_look_hero_filmstrip_and_one_apply(self) -> None:
+        walls = [Path(f"/tmp/ha-look-walls/paper-{index:02d}.png") for index in range(8)]
         with patch("hypraesthetic_gui.widgets.list_wallpapers", return_value=walls):
             page = look_page()
+        labels = [b.get_label() for b in _labeled_buttons(page)]
+        self.assertEqual(labels.count("Apply changes"), 1)
+        self.assertNotIn("Save look", labels)
+        apply = next(b for b in _labeled_buttons(page) if b.get_label() == "Apply changes")
+        self.assertFalse(apply.get_sensitive())
         marks = _page_marks(page)
-        for label in ("Look", "Wallpaper", "Save look", "GTK and icons", "Hyprland"):
-            self.assertIn(label, marks)
-        self.assertLess(marks.index("Wallpaper"), marks.index("Save look"))
-        self.assertLess(marks.index("Save look"), marks.index("GTK and icons"))
+        self.assertLess(marks.index("Wallpaper"), marks.index("GTK and icons"))
         self.assertLess(marks.index("GTK and icons"), marks.index("Hyprland"))
-        second = marks.index("Save look", marks.index("Save look") + 1)
-        self.assertLess(marks.index("GTK and icons"), second)
-        self.assertLess(second, marks.index("Hyprland"))
         self.assertIn("Browse wallpaper…", marks)
-
-        flow = next(widget for widget in _descendants(page) if isinstance(widget, Gtk.FlowBox))
-        tiles = 0
-        child = flow.get_first_child()
-        while child is not None:
-            tiles += 1
-            child = child.get_next_sibling()
-        self.assertGreaterEqual(tiles, 24)
-        pane = flow.get_ancestor(Gtk.ScrolledWindow)
-        self.assertIsInstance(pane, Gtk.ScrolledWindow)
-        cap = pane.get_max_content_height()
-        self.assertGreater(cap, 0)
-        self.assertLessEqual(cap, 360)
-        self.assertTrue(pane.get_propagate_natural_height())
-        _minimum, flow_natural, _baseline, _natural_baseline = flow.measure(
-            Gtk.Orientation.VERTICAL, 900
+        panes = [w for w in _descendants(page) if isinstance(w, Gtk.ScrolledWindow)]
+        film = next(
+            p for p in panes
+            if p.get_policy()[0] == Gtk.PolicyType.AUTOMATIC
+            and p.get_policy()[1] == Gtk.PolicyType.NEVER
         )
-        self.assertGreater(flow_natural, cap)
-        save = next(button for button in _labeled_buttons(page) if button.get_label() == "Save look")
-        self.assertIsNot(save.get_ancestor(Gtk.ScrolledWindow), pane)
-        self.assertIs(save.get_parent(), pane.get_parent())
-        seen_wall = False
-        sibling = save.get_parent().get_first_child()
-        while sibling is not None:
-            if sibling is pane:
-                seen_wall = True
-            if sibling is save:
-                self.assertTrue(seen_wall)
-                break
-            sibling = sibling.get_next_sibling()
-        else:
-            self.fail("Save look is not on the page column")
+        # Unset is -1 on this GTK. The old bug was a 280px cap.
+        self.assertNotEqual(film.get_max_content_height(), 280)
+        self.assertFalse(apply.get_ancestor(Gtk.ScrolledWindow) is film)
 
     def test_gtk_mismatch_hint_and_hypr_spins(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -410,6 +397,10 @@ class LookPageTests(unittest.TestCase):
                 ):
                     page = look_page()
                     _spin_by_title(page, "Gaps in").set_value(11)
+                    apply_button = next(
+                        button for button in _labeled_buttons(page) if button.get_label() == "Apply changes"
+                    )
+                    self.assertTrue(apply_button.get_sensitive())
                     _spin_by_title(page, "Gaps out").set_value(13)
                     _spin_by_title(page, "Border").set_value(2)
                     _spin_by_title(page, "Rounding").set_value(8)
@@ -420,10 +411,7 @@ class LookPageTests(unittest.TestCase):
                     self.assertEqual(cursor_values[0], "")
                     self.assertIn("Bibata-Modern-Classic", cursor_values)
                     cursor.set_selected(cursor_values.index("Bibata-Modern-Classic"))
-                    save = next(
-                        button for button in _labeled_buttons(page) if button.get_label() == "Save look"
-                    )
-                    save.emit("clicked")
+                    apply_button.emit("clicked")
                 loaded = Prefs.load()
                 self.assertEqual(loaded.get("cursor_theme"), "Bibata-Modern-Classic")
                 self.assertEqual(loaded.get("hypr.gaps_in"), 11)
