@@ -191,6 +191,7 @@ class AurTests(unittest.TestCase):
             if cwd and "makepkg" in cmd:
                 source_built["ok"] = True
                 Path(cwd, "paru-1-1-x86_64.pkg.tar.zst").touch()
+                return SimpleNamespace(returncode=0)
             if cmd[:1] == ["paru"] and "--version" in cmd:
                 return SimpleNamespace(returncode=0 if source_built["ok"] else 127)
             return SimpleNamespace(returncode=0)
@@ -209,11 +210,192 @@ class AurTests(unittest.TestCase):
         self.assertTrue(clones)
         self.assertIn("https://aur.archlinux.org/paru.git", clones[-1])
         self.assertNotIn("https://aur.archlinux.org/paru-bin.git", clones[-1])
-        removed = [cmd for cmd in calls if "paru-bin" in cmd and any(flag.startswith("-R") for flag in cmd)]
-        self.assertTrue(removed)
-        self.assertIn("sudo", removed[0])
-        debug = [cmd for cmd in calls if "paru-bin-debug" in cmd and any(flag.startswith("-R") for flag in cmd)]
-        self.assertTrue(debug)
+        removes = [cmd for cmd in calls if any(tok.startswith("-R") for tok in cmd)]
+        self.assertEqual(
+            removes,
+            [
+                ["sudo", "pacman", "-Rns", "--noconfirm", "paru-bin-debug"],
+                ["sudo", "pacman", "-Rns", "--noconfirm", "paru-bin"],
+            ],
+        )
+        self.assertFalse(any("-Rcns" in cmd or "-c" in cmd for cmd in calls))
+        makepkg_at = next(i for i, cmd in enumerate(calls) if "makepkg" in cmd)
+        debug_at = next(i for i, cmd in enumerate(calls) if cmd[-1:] == ["paru-bin-debug"])
+        bin_at = next(i for i, cmd in enumerate(calls) if cmd[-1:] == ["paru-bin"] and "-Rns" in cmd)
+        installs = [i for i, cmd in enumerate(calls) if "-U" in cmd]
+        self.assertTrue(installs)
+        install_at = installs[0]
+        self.assertLess(makepkg_at, debug_at)
+        self.assertLess(debug_at, bin_at)
+        self.assertLess(bin_at, install_at)
+        self.assertEqual(calls[makepkg_at], ["makepkg", "-s", "--noconfirm"])
+        self.assertTrue(any(part.endswith(".pkg.tar.zst") for part in calls[install_at]))
+
+    def test_root_broken_helper_builds_package_before_removing(self) -> None:
+        """Root rebuilds with runuser, and the package file exists before -Rns."""
+        calls: list[list[str]] = []
+        installed = {"ok": False}
+        built: dict[str, str] = {}
+        present_at_remove: list[bool] = []
+        user = SimpleNamespace(pw_uid=os.getuid(), pw_gid=os.getgid(), pw_name="builder")
+
+        def runner(cmd, **kwargs):
+            calls.append(list(cmd))
+            cwd = kwargs.get("cwd")
+            if cwd and "makepkg" in cmd:
+                path = Path(cwd, "paru-1-1-x86_64.pkg.tar.zst")
+                path.touch()
+                built["path"] = str(path)
+                return SimpleNamespace(returncode=0)
+            if any(tok.startswith("-R") for tok in cmd):
+                present_at_remove.append(bool(built.get("path") and Path(built["path"]).is_file()))
+            if "-U" in cmd:
+                installed["ok"] = True
+                return SimpleNamespace(returncode=0)
+            if cmd[:1] == ["paru"] and "--version" in cmd:
+                return SimpleNamespace(returncode=0 if installed["ok"] else 127)
+            return SimpleNamespace(returncode=0)
+
+        with patch("subprocess.run", side_effect=AssertionError("real subprocess")):
+            found = ensure_helper(
+                "paru",
+                runner=runner,
+                euid=0,
+                which=lambda name: "/usr/bin/paru" if name == "paru" else None,
+                privileged=privileged_command,
+                environ={},
+                users=[user],
+            )
+        self.assertEqual(found, "paru")
+        self.assertEqual(
+            [cmd for cmd in calls if any(tok.startswith("-R") for tok in cmd)],
+            [
+                ["pacman", "-Rns", "--noconfirm", "paru-bin-debug"],
+                ["pacman", "-Rns", "--noconfirm", "paru-bin"],
+            ],
+        )
+        self.assertEqual(present_at_remove, [True, True])
+        self.assertFalse(any("-Rcns" in cmd or "-c" in cmd for cmd in calls))
+        self.assertFalse(any(cmd and cmd[0] in {"makepkg", "sudo"} for cmd in calls))
+        clone = next(cmd for cmd in calls if "clone" in cmd)
+        self.assertEqual(clone[:5], ["runuser", "-u", "builder", "--", "git"])
+        self.assertIn("https://aur.archlinux.org/paru.git", clone)
+        self.assertNotIn("https://aur.archlinux.org/paru-bin.git", clone)
+        makepkg = [cmd for cmd in calls if "makepkg" in cmd]
+        self.assertEqual(makepkg, [["runuser", "-u", "builder", "--", "makepkg", "-s", "--noconfirm"]])
+        install = next(cmd for cmd in calls if "-U" in cmd)
+        self.assertEqual(install[:3], ["pacman", "-U", "--noconfirm"])
+        self.assertTrue(install[-1].endswith(".pkg.tar.zst"))
+        makepkg_at = next(i for i, cmd in enumerate(calls) if "makepkg" in cmd)
+        remove_at = next(i for i, cmd in enumerate(calls) if any(tok.startswith("-R") for tok in cmd))
+        install_at = next(i for i, cmd in enumerate(calls) if "-U" in cmd)
+        self.assertLess(makepkg_at, remove_at)
+        self.assertLess(remove_at, install_at)
+
+    def test_failed_makepkg_does_not_remove_broken_helper(self) -> None:
+        calls: list[list[str]] = []
+
+        def runner(cmd, **_kwargs):
+            calls.append(list(cmd))
+            if cmd[:1] == ["paru"] and "--version" in cmd:
+                return SimpleNamespace(returncode=127)
+            if "makepkg" in cmd:
+                return SimpleNamespace(returncode=1)
+            return SimpleNamespace(returncode=0)
+
+        with patch("subprocess.run", side_effect=AssertionError("real subprocess")):
+            found = ensure_helper(
+                "paru",
+                runner=runner,
+                euid=1000,
+                which=lambda name: "/usr/bin/paru" if name == "paru" else None,
+                privileged=privileged_command,
+                environ={},
+            )
+        self.assertIsNone(found)
+        self.assertFalse(any(any(tok.startswith("-R") for tok in cmd) for cmd in calls))
+        self.assertFalse(any("-U" in cmd for cmd in calls))
+
+    def test_root_missing_package_file_does_not_remove_or_install(self) -> None:
+        calls: list[list[str]] = []
+        saw_makepkg = {"ok": False}
+        user = SimpleNamespace(pw_uid=os.getuid(), pw_gid=os.getgid(), pw_name="builder")
+
+        def runner(cmd, **_kwargs):
+            calls.append(list(cmd))
+            if "makepkg" in cmd:
+                saw_makepkg["ok"] = True
+                return SimpleNamespace(returncode=0)
+            if cmd[:1] == ["paru"] and "--version" in cmd:
+                return SimpleNamespace(returncode=0 if saw_makepkg["ok"] else 127)
+            return SimpleNamespace(returncode=0)
+
+        with patch("subprocess.run", side_effect=AssertionError("real subprocess")):
+            found = ensure_helper(
+                "paru",
+                runner=runner,
+                euid=0,
+                which=lambda name: "/usr/bin/paru" if name == "paru" else None,
+                privileged=privileged_command,
+                environ={},
+                users=[user],
+            )
+        self.assertIsNone(found)
+        self.assertFalse(any(any(tok.startswith("-R") for tok in cmd) for cmd in calls))
+        self.assertFalse(any("-U" in cmd for cmd in calls))
+
+    def test_pacman_u_failure_does_not_count_as_installed(self) -> None:
+        calls: list[list[str]] = []
+        saw_makepkg = {"ok": False}
+
+        def runner(cmd, **kwargs):
+            calls.append(list(cmd))
+            cwd = kwargs.get("cwd")
+            if cwd and "makepkg" in cmd:
+                Path(cwd, "paru-1-1-x86_64.pkg.tar.zst").touch()
+                saw_makepkg["ok"] = True
+                return SimpleNamespace(returncode=0)
+            if "-U" in cmd:
+                return SimpleNamespace(returncode=1)
+            if cmd[:1] == ["paru"] and "--version" in cmd:
+                return SimpleNamespace(returncode=0 if saw_makepkg["ok"] else 127)
+            return SimpleNamespace(returncode=0)
+
+        with patch("subprocess.run", side_effect=AssertionError("real subprocess")):
+            found = ensure_helper(
+                "paru",
+                runner=runner,
+                euid=1000,
+                which=lambda name: "/usr/bin/paru" if name == "paru" else None,
+                privileged=privileged_command,
+                environ={},
+            )
+        self.assertIsNone(found)
+
+    def test_root_clone_failure_skips_makepkg_and_install(self) -> None:
+        calls: list[list[str]] = []
+        user = SimpleNamespace(pw_uid=os.getuid(), pw_gid=os.getgid(), pw_name="builder")
+
+        def runner(cmd, **_kwargs):
+            calls.append(list(cmd))
+            if "clone" in cmd:
+                return SimpleNamespace(returncode=128)
+            return SimpleNamespace(returncode=0)
+
+        with patch("subprocess.run", side_effect=AssertionError("real subprocess")):
+            found = ensure_helper(
+                "paru",
+                runner=runner,
+                euid=0,
+                which=lambda _name: None,
+                privileged=privileged_command,
+                environ={},
+                users=[user],
+            )
+        self.assertIsNone(found)
+        self.assertTrue(any("clone" in cmd for cmd in calls))
+        self.assertFalse(any("makepkg" in cmd for cmd in calls))
+        self.assertFalse(any("-U" in cmd for cmd in calls))
 
     def test_user_makepkg_installs_with_si(self) -> None:
         calls: list[list[str]] = []

@@ -104,7 +104,29 @@ def ensure_helper(
     def ready() -> bool:
         return bool(probe(name) and helper_runs(name, runner))
 
-    def build(pkg: str) -> bool:
+    def succeeded(result) -> bool:
+        return getattr(result, "returncode", 1) == 0
+
+    def package_files(directory: str) -> list[str]:
+        return sorted(str(path) for path in Path(directory).glob("*.pkg.tar.zst"))
+
+    def remove_bin(bin_pkg: str) -> None:
+        # -Rns only. -c / -Rcns would cascade through packages that depend on the helper.
+        runner(
+            privileged(["pacman", "-Rns", "--noconfirm", f"{bin_pkg}-debug"], euid=euid),
+            check=False,
+        )
+        runner(
+            privileged(["pacman", "-Rns", "--noconfirm", bin_pkg], euid=euid),
+            check=False,
+        )
+
+    def install_files(paths: list[str]) -> bool:
+        return succeeded(
+            runner(privileged(["pacman", "-U", "--noconfirm", *paths], euid=euid), check=False)
+        )
+
+    def build(pkg: str, *, replace_bin: str | None = None) -> bool:
         user = build_user(euid=euid, environ=environ, users=users)
         if not user:
             return False
@@ -120,21 +142,41 @@ def ensure_helper(
                 if ids is None:
                     return False
                 os.chown(tmpdir, ids[0], ids[1])
-                runner(["runuser", "-u", user, "--", "git", "clone", url, tmpdir], check=False)
-                runner(
-                    ["runuser", "-u", user, "--", "makepkg", "-s", "--noconfirm"],
+                cloned = runner(
+                    ["runuser", "-u", user, "--", "git", "clone", url, tmpdir],
                     check=False,
-                    cwd=tmpdir,
                 )
-                built = sorted(str(path) for path in Path(tmpdir).glob("*.pkg.tar.zst"))
-                if built:
-                    runner(privileged(["pacman", "-U", "--noconfirm", *built], euid=euid), check=False)
-            else:
-                runner(["git", "clone", url, tmpdir], check=False)
-                runner(["makepkg", "-si", "--noconfirm"], check=False, cwd=tmpdir)
+                if not succeeded(cloned):
+                    return False
+                if not succeeded(
+                    runner(
+                        ["runuser", "-u", user, "--", "makepkg", "-s", "--noconfirm"],
+                        check=False,
+                        cwd=tmpdir,
+                    )
+                ):
+                    return False
+                built = package_files(tmpdir)
+                if not built:
+                    return False
+                # Package is on disk before the broken -bin helper is removed.
+                if replace_bin:
+                    remove_bin(replace_bin)
+                return install_files(built)
+            if not succeeded(runner(["git", "clone", url, tmpdir], check=False)):
+                return False
+            if replace_bin:
+                packed = runner(["makepkg", "-s", "--noconfirm"], check=False, cwd=tmpdir)
+                if not succeeded(packed):
+                    return False
+                built = package_files(tmpdir)
+                if not built:
+                    return False
+                remove_bin(replace_bin)
+                return install_files(built)
+            return succeeded(runner(["makepkg", "-si", "--noconfirm"], check=False, cwd=tmpdir))
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
-        return True
 
     if ready():
         return name
@@ -147,15 +189,7 @@ def ensure_helper(
                 return None
     if probe(name) and not ready():
         # paru-bin / yay-bin provide the command but are linked to an older libalpm.
-        runner(
-            privileged(["pacman", "-Rns", "--noconfirm", f"{AUR_BIN[name]}-debug"], euid=euid),
-            check=False,
-        )
-        runner(
-            privileged(["pacman", "-Rcns", "--noconfirm", AUR_BIN[name]], euid=euid),
-            check=False,
-        )
-        if probe(name):
-            runner(privileged(["pacman", "-Rns", "--noconfirm", name], euid=euid), check=False)
-        build(name)
+        # Build the source package first; remove the -bin packages only after it exists.
+        if not build(name, replace_bin=AUR_BIN[name]):
+            return None
     return name if ready() else None
