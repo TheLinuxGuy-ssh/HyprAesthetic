@@ -36,6 +36,10 @@ def allow_root_install(
 def privileged_command(argv: list[str], *, euid: int) -> list[str]:
     if euid == 0:
         return list(argv)
-    if argv and argv[0] == "sudo":
+    if not argv or argv[0] == "sudo":
+        return list(argv)
+    # nix profile install writes the invoking user's profile. sudo would
+    # install into root's profile and leave the desktop user without it.
+    if argv[:3] == ["nix", "profile", "install"]:
         return list(argv)
     return ["sudo", *argv]

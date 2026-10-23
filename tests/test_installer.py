@@ -11,7 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from hypraesthetic.installer import AUTOMATIC_SELECTION, Installer
+from hypraesthetic.installer import AUTOMATIC_SELECTION, Installer, _package_installed
 from hypraesthetic.prefs import Prefs
 
 
@@ -372,6 +372,68 @@ class InstallerTests(unittest.TestCase):
         with redirect_stdout(StringIO()):
             installer._install_packages(["eww-git"])
         self.assertEqual(commands, [["yay", "-S", "--needed", "--noconfirm", "eww-git"]])
+
+    def test_user_nix_profile_install_is_unprefixed_and_success_is_not_a_skip(self) -> None:
+        commands: list[list[str]] = []
+
+        def runner(cmd, **_kwargs):
+            commands.append(list(cmd))
+            return SimpleNamespace(returncode=0)
+
+        installer = Installer(
+            repo_root=self.repo,
+            distro_id="nixos",
+            runner=runner,
+            assume_yes=True,
+            euid=1000,
+            write_session=False,
+            package_installed=lambda _pkg: False,
+            which=lambda _name: None,
+        )
+        ok = installer._install_packages(["hyprland", "waybar"])
+        self.assertTrue(ok)
+        self.assertEqual(commands, [["nix", "profile", "install", "hyprland", "waybar"]])
+        self.assertEqual(installer.packages_installed, ["hyprland", "waybar"])
+        self.assertEqual(installer.packages_skipped, [])
+
+    def test_failed_nix_profile_install_stays_a_skip(self) -> None:
+        commands: list[list[str]] = []
+
+        def runner(cmd, **_kwargs):
+            commands.append(list(cmd))
+            return SimpleNamespace(returncode=1)
+
+        installer = Installer(
+            repo_root=self.repo,
+            distro_id="nixos",
+            runner=runner,
+            assume_yes=True,
+            euid=1000,
+            write_session=False,
+            package_installed=lambda _pkg: False,
+            which=lambda _name: None,
+        )
+        self.assertFalse(installer._install_packages(["hyprland"]))
+        self.assertEqual(commands, [["nix", "profile", "install", "hyprland"]])
+        self.assertEqual(installer.packages_installed, [])
+        self.assertEqual(installer.packages_skipped, ["hyprland"])
+
+    def test_package_installed_recognizes_a_nix_profile_hit(self) -> None:
+        listing = "0 - - nixpkgs#legacyPackages.x86_64-linux.hyprland\n"
+
+        def which(name: str) -> str | None:
+            return "/usr/bin/nix" if name == "nix" else None
+
+        def run(cmd, **_kwargs):
+            self.assertEqual(cmd[:3], ["nix", "profile", "list"])
+            return SimpleNamespace(returncode=0, stdout=listing, stderr="")
+
+        with (
+            patch("hypraesthetic.installer.shutil.which", side_effect=which),
+            patch("hypraesthetic.installer.subprocess.run", side_effect=run),
+        ):
+            self.assertTrue(_package_installed("hyprland"))
+            self.assertFalse(_package_installed("waybar"))
 
     def _arch_installer(self, runner, *, euid: int = 1000, which=None, package_installed=None) -> Installer:
         return Installer(

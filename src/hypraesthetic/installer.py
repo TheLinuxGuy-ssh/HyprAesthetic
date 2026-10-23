@@ -166,10 +166,15 @@ class Installer:
             self.packages_skipped = list(packages)
             return False
         repo, aur = split_repo_and_aur(packages, extra_aur=self.catalog.aur_names(family.name))
+        nix_ok: set[str] = set()
         if repo:
             cmd = _install_command(family.manager, repo)
             if cmd:
-                self.runner(privileged_command(cmd, euid=self.euid), check=False)
+                result = self.runner(privileged_command(cmd, euid=self.euid), check=False)
+                # NixOS has no rpm/pacman/dpkg. A zero exit from the user's
+                # nix profile install is the probe for those names.
+                if family.manager == "nix" and getattr(result, "returncode", 1) == 0:
+                    nix_ok.update(repo)
         if aur:
             helper = find_helper(which=self.which)
             if helper and not helper_runs(helper, self.runner):
@@ -190,7 +195,7 @@ class Installer:
         installed: list[str] = []
         skipped: list[str] = []
         for name in packages:
-            if self.package_installed(name):
+            if name in nix_ok or self.package_installed(name):
                 installed.append(name)
             else:
                 skipped.append(name)
@@ -272,6 +277,14 @@ def _install_command(manager: str, packages: list[str]) -> list[str] | None:
     return None
 
 
+def _nix_profile_hit(listing: str, pkg: str) -> bool:
+    for raw in listing.splitlines():
+        tokens = raw.replace("#", " ").replace("/", " ").replace(":", " ").split()
+        if pkg in tokens or any(token.endswith("." + pkg) for token in tokens):
+            return True
+    return False
+
+
 def _package_installed(pkg: str) -> bool:
     probes = [
         ["rpm", "-q", pkg],
@@ -280,5 +293,9 @@ def _package_installed(pkg: str) -> bool:
     ]
     for cmd in probes:
         if shutil.which(cmd[0]) and subprocess.run(cmd, capture_output=True).returncode == 0:
+            return True
+    if shutil.which("nix"):
+        listed = subprocess.run(["nix", "profile", "list"], capture_output=True, text=True)
+        if listed.returncode == 0 and _nix_profile_hit(listed.stdout or "", pkg):
             return True
     return False

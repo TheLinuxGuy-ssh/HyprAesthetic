@@ -100,6 +100,10 @@ class PrivilegeTests(unittest.TestCase):
             ["sudo", "pacman", "-S", "hyprland"],
         )
 
+    def test_privileged_command_leaves_nix_profile_install_unprefixed(self) -> None:
+        argv = ["nix", "profile", "install", "hyprland", "waybar"]
+        self.assertEqual(privileged_command(argv, euid=1000), argv)
+
 
 if __name__ == "__main__":
     unittest.main()
