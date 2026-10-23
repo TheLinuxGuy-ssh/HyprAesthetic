@@ -15,6 +15,9 @@ from typing import Any, Callable
 from hypraesthetic.catalog import ThemeCatalog
 from hypraesthetic.discover import (
     font_family_only,
+    list_font_families,
+    normalize_font,
+    pick_installed_font,
     resolve_wallpaper,
     widget_ids_from_prefs,
     widget_window,
@@ -172,6 +175,7 @@ class ApplyEngine:
             ids = [str(item) for item in (prefs.widgets_for(name) or pkg.widgets)]
             prefs.set_widgets_for(name, ids)
             prefs.set("widgets", ids)
+            self._apply_identity(pkg, prefs)
         prefs.adopt_legacy_geometry(name)
         if components is None:
             theme_bar = str(pkg.layout.get("bar_style") or "").strip()
@@ -179,6 +183,7 @@ class ApplyEngine:
                 prefs.set("bar_style", theme_bar)
         prefs.save()
         variables = pkg.flatten()
+        self._identity_variables(pkg, prefs, variables)
         for cid in pkg.components:
             if cid not in wanted or not pkg.enabled(cid):
                 result.skipped.append(cid)
@@ -309,6 +314,53 @@ class ApplyEngine:
             text += 'pcall(require, "custom")\n'
         prepare_dest(entry).write_text(text, encoding="utf-8")
 
+    def _apply_identity(self, pkg: ThemePackage, prefs: Prefs) -> None:
+        raw = pkg.data
+        if isinstance(raw.get("hypr"), dict):
+            for key, default in (
+                ("gaps_in", 5),
+                ("gaps_out", 7),
+                ("border_size", 1),
+                ("rounding", 10),
+            ):
+                value = pkg.hypr.get(key, default)
+                try:
+                    prefs.set(f"hypr.{key}", int(value))
+                except (TypeError, ValueError):
+                    prefs.set(f"hypr.{key}", default)
+        if not isinstance(raw.get("identity"), dict):
+            return
+        families = list_font_families()
+        ui = pick_installed_font(pkg.identity.get("font_ui", ""), families=families)
+        mono = pick_installed_font(pkg.identity.get("font_mono", ""), families=families)
+        prefs.set("fonts.ui", normalize_font(ui))
+        prefs.set("fonts.bar", normalize_font(mono))
+        prefs.set("fonts.terminal", font_family_only(mono) or mono)
+
+    def _identity_variables(
+        self, pkg: ThemePackage, prefs: Prefs, variables: dict[str, str]
+    ) -> None:
+        families = list_font_families()
+        picked = {
+            "font_ui": pick_installed_font(pkg.identity.get("font_ui", ""), families=families),
+            "font_clock": pick_installed_font(
+                pkg.identity.get("font_clock") or pkg.identity.get("font_mono", ""),
+                families=families,
+            ),
+            "font_mono": pick_installed_font(pkg.identity.get("font_mono", ""), families=families),
+            "font_quote": pick_installed_font(
+                pkg.identity.get("font_quote") or pkg.identity.get("font_ui", ""),
+                families=families,
+            ),
+        }
+        for key, value in pkg.identity.items():
+            variables[f"identity_{key}"] = str(value)
+        for key, value in picked.items():
+            variables[f"identity_{key}"] = value
+        ui = str(prefs.get("fonts.ui") or "")
+        if ui:
+            variables["identity_font_ui"] = font_family_only(ui) or picked["font_ui"]
+
     def _merge_hypr_look(self, prefs: Prefs, variables: dict[str, str]) -> None:
         # render_string looks up {{hypr.gaps_in}} as hypr_gaps_in.
         defaults = {
@@ -426,6 +478,10 @@ class ApplyEngine:
         dest.mkdir(parents=True, exist_ok=True)
         self._merge_component(pkg, "eww", dest, overlay_skip=self._eww_overlay_skip(pkg))
         self._render_template("eww/eww.scss", dest / "eww.scss", variables)
+        self._render_template("eww/scripts/matrix.sh", dest / "scripts" / "matrix.sh", variables)
+        script = dest / "scripts" / "matrix.sh"
+        if script.is_file():
+            script.chmod(script.stat().st_mode | 0o111)
         self._write_quotes(pkg, dest)
         source = self._eww_source_yuck(pkg)
         if source is not None:

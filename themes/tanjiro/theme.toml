@@ -74,7 +74,26 @@ success_fg = "{{palette.base00}}"
 bar = "waybar"
 bar_style = "v4"
 launcher = "rofi"
-widgets = ["clock", "system", "matrix", "wakatime", "toji"]
+widgets = ["clock", "quote", "music", "weather", "system"]
+
+[hypr]
+gaps_in = 6
+gaps_out = 12
+border_size = 1
+rounding = 12
+
+[identity]
+font_ui = "Nunito, Cantarell, Adwaita Sans"
+font_clock = "Nunito, Cantarell, Adwaita Sans"
+font_mono = "JetBrainsMono Nerd Font, Iosevka, monospace"
+font_quote = "Nunito, Cantarell, Adwaita Sans"
+clock_size = 72
+music_radius = 16
+cover_size = 64
+matrix_chars = "010101$#%&"
+matrix_rows = 48
+matrix_cols = 1
+matrix_density = 3
 
 [defaults]
 file_manager = "nautilus"

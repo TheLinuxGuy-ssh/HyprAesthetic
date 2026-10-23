@@ -14,6 +14,13 @@ $warning: {{colors.eww.warning}};
 $warning-fg: {{colors.eww.warning_fg}};
 $success: {{colors.eww.success}};
 $success-fg: {{colors.eww.success_fg}};
+$font-ui: "{{identity.font_ui}}";
+$font-clock: "{{identity.font_clock}}";
+$font-mono: "{{identity.font_mono}}";
+$font-quote: "{{identity.font_quote}}";
+$clock-size: {{identity.clock_size}}px;
+$music-radius: {{identity.music_radius}}px;
+$cover-size: {{identity.cover_size}}px;
 
 /** Global *******************************************/
 .matrix-container {}
@@ -29,7 +36,7 @@ $success-fg: {{colors.eww.success_fg}};
   font-size: 14px;
   font-weight: 500;
   opacity: 0.7;
-  font-family: "monospace";
+  font-family: $font-mono;
 }
 
 .waka-container {}
@@ -47,14 +54,14 @@ $success-fg: {{colors.eww.success_fg}};
 
 .toji-text {
   color: $foreground-muted;
-  font-size: 14px;
+  font-size: 16px;
   font-style: italic;
-  font-family: "Iosevka";
+  font-family: $font-quote;
 }
 
 * {
   all: unset;
-  font-family: "Iosevka";
+  font-family: $font-ui;
 }
 
 window {
@@ -164,9 +171,9 @@ window {
 /** Clock ********************************************/
 .time_hour, .time_min {
   color: $foreground;
-  font-size: 80px;
+  font-size: $clock-size;
   font-weight: bold;
-  font-family: "JetBrainsMono";
+  font-family: $font-clock;
 }
 .time_hour {
   margin: 15px 0px 0px 20px;
@@ -209,59 +216,55 @@ window {
 }
 
 /** Music ***************************************/
+.music-card {
+  border-radius: $music-radius;
+}
+
 .album_art {
-  background-size: 240px;
-  min-height: 240px;
-  min-width: 240px;
-  margin: 20px;
-  border-radius: 14px;
+  background-size: cover;
+  background-position: center;
+  min-height: $cover-size;
+  min-width: $cover-size;
+  margin: 0;
+  border-radius: $music-radius;
 }
 
 .song {
   color: $primary;
-  font-size: 24px;
+  font-size: 14px;
   font-weight: bold;
-  margin: 40px 0px 0px 0px;
+  margin: 0;
 }
 
 .artist {
-  color: $warning;
-  font-size: 16px;
+  color: $foreground-muted;
+  font-size: 12px;
   font-weight: normal;
-  margin: 0px 0px 15px 0px;
+  margin: 0;
 }
 
 .btn_prev, .btn_play, .btn_next {
-  font-family: "Iosevka Nerd Font";
-}
-.btn_prev {
-  color: $warning;
-  font-size: 32px;
-  font-weight: normal;
+  font-family: $font-mono;
+  font-size: 12px;
+  font-weight: bold;
+  color: $foreground;
 }
 .btn_play {
-  color: $success;
-  font-size: 48px;
-  font-weight: bold;
-}
-.btn_next {
-  color: $warning;
-  font-size: 32px;
-  font-weight: normal;
+  color: $primary;
 }
 
 .music_bar scale trough highlight {
   all: unset;
   background-color: $primary;
-  border-radius: 8px;
+  border-radius: 2px;
 }
 .music_bar scale trough {
   all: unset;
   background-color: $surface-hover;
-  border-radius: 8px;
-  min-height: 20px;
-  min-width: 310px;
-  margin: 10px 0px 0px 0px;
+  border-radius: 2px;
+  min-height: 4px;
+  min-width: 220px;
+  margin: 0;
 }
 
 /** Weather ***************************************/

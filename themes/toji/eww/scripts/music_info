@@ -36,7 +36,7 @@ get_song() {
   if [[ -z "$song" ]] && mpc_ok; then
     song="$(mpc -f %title% current 2>/dev/null || true)"
   fi
-  printf '%s\n' "${song:-Offline}"
+  printf '%s\n' "${song:-—}"
 }
 
 get_artist() {
@@ -47,7 +47,7 @@ get_artist() {
   if [[ -z "$artist" ]] && mpc_ok; then
     artist="$(mpc -f %artist% current 2>/dev/null || true)"
   fi
-  printf '%s\n' "${artist:-Offline}"
+  printf '%s\n' "${artist:-nothing playing}"
 }
 
 get_time() {
