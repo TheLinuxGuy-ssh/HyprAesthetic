@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import json
+import re
+
+# Same `,` before `}` / `]` cleanup as sanitize_waybar_config. The full
+# sanitizer also rewrites clicks and drops modules, so the schematic only
+# borrows this step after comments are gone.
+_TRAILING_COMMA_RE = re.compile(r",\s*([\]}])")
 
 
 def modules_for_bar(config_text: str) -> tuple[list[str], list[str], list[str]]:
     """Left, center, right module names from a waybar jsonc string."""
     try:
-        data = json.loads(_strip_jsonc(config_text or ""))
+        data = json.loads(_TRAILING_COMMA_RE.sub(r"\1", _strip_jsonc(config_text or "")))
     except (json.JSONDecodeError, ValueError, TypeError):
         return [], [], []
     if not isinstance(data, dict):

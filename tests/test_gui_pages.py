@@ -922,9 +922,60 @@ class BarPageTests(unittest.TestCase):
                 child = child.get_next_sibling()
             return found
 
-        self.assertEqual(pills(groups[0]), [name.rsplit("/", 1)[-1] for name in left])
-        self.assertEqual(pills(groups[1]), [name.rsplit("/", 1)[-1] for name in center])
-        self.assertEqual(pills(groups[2]), [name.rsplit("/", 1)[-1] for name in right])
+        capsule_groups = (
+            ["hyprland/workspaces", "custom/separator", "tray", "idle_inhibitor", "custom/separator2", "mpris"],
+            ["custom/separator", "custom/clock", "custom/separator2"],
+            [
+                "custom/separator",
+                "bluetooth",
+                "custom/separator3",
+                "backlight",
+                "custom/separator4",
+                "power-profiles-daemon",
+                "custom/separator3",
+                "pulseaudio",
+                "custom/separator3",
+                "cpu",
+                "custom/separator3",
+                "memory",
+                "custom/separator4",
+                "battery",
+            ],
+        )
+        compact_groups = (
+            ["hyprland/workspaces"],
+            ["custom/clock"],
+            ["pulseaudio", "battery", "tray"],
+        )
+        self.assertEqual((left, center, right), capsule_groups)
+
+        def pill_names(group: Gtk.Widget) -> list[str]:
+            found: list[str] = []
+            child = group.get_first_child()
+            while child is not None:
+                if isinstance(child, Gtk.Label):
+                    found.append(child.get_tooltip_text() or "")
+                child = child.get_next_sibling()
+            return found
+
+        self.assertEqual(pills(groups[0]), [name.rsplit("/", 1)[-1] for name in capsule_groups[0]])
+        self.assertEqual(pills(groups[1]), [name.rsplit("/", 1)[-1] for name in capsule_groups[1]])
+        self.assertEqual(pills(groups[2]), [name.rsplit("/", 1)[-1] for name in capsule_groups[2]])
+        self.assertEqual(pill_names(groups[0]), list(capsule_groups[0]))
+        self.assertEqual(pill_names(groups[1]), list(capsule_groups[1]))
+        self.assertEqual(pill_names(groups[2]), list(capsule_groups[2]))
+
+        compact_tile = next(button for button in builtin if _tile_title(button) == "Compact")
+        compact_drawn = schematic_of(compact_tile)
+        compact_boxes: list[Gtk.Widget] = []
+        compact_group = compact_drawn.get_first_child()
+        while compact_group is not None:
+            compact_boxes.append(compact_group)
+            compact_group = compact_group.get_next_sibling()
+        self.assertEqual(
+            [pill_names(group) for group in compact_boxes],
+            [list(names) for names in compact_groups],
+        )
 
         search = next(widget for widget in _descendants(page) if isinstance(widget, Gtk.SearchEntry))
         search.set_text("v2.9e")

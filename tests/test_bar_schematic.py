@@ -3,9 +3,37 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 from hypraesthetic.bar_schematic import modules_for_bar
 from hypraesthetic.discover import bar_display_name
+
+_REPO = Path(__file__).resolve().parents[1]
+_CAPSULE = (
+    ["hyprland/workspaces", "custom/separator", "tray", "idle_inhibitor", "custom/separator2", "mpris"],
+    ["custom/separator", "custom/clock", "custom/separator2"],
+    [
+        "custom/separator",
+        "bluetooth",
+        "custom/separator3",
+        "backlight",
+        "custom/separator4",
+        "power-profiles-daemon",
+        "custom/separator3",
+        "pulseaudio",
+        "custom/separator3",
+        "cpu",
+        "custom/separator3",
+        "memory",
+        "custom/separator4",
+        "battery",
+    ],
+)
+_COMPACT = (
+    ["hyprland/workspaces"],
+    ["custom/clock"],
+    ["pulseaudio", "battery", "tray"],
+)
 
 
 _ENGLISH = (
@@ -49,6 +77,29 @@ class BarSchematicTests(unittest.TestCase):
         self.assertEqual(left, ["hyprland/workspaces"])
         self.assertEqual(center, ["custom/clock"])
         self.assertEqual(right, ["tray"])
+
+    def test_modules_for_bar_drops_trailing_commas_left_by_comments(self) -> None:
+        text = """
+        {
+          "modules-left": ["hyprland/workspaces",],
+          "modules-center": ["custom/clock"],
+          "modules-right": ["tray"],
+          "status-icons": { "paused": "x" },
+          //"ignored-players": ["firefox"]
+        }
+        """
+        left, center, right = modules_for_bar(text)
+        self.assertEqual(left, ["hyprland/workspaces"])
+        self.assertEqual(center, ["custom/clock"])
+        self.assertEqual(right, ["tray"])
+
+    def test_shipped_capsule_and_compact_configs_have_modules(self) -> None:
+        capsule = (_REPO / "layouts" / "bars" / "default" / "config.jsonc").read_text(encoding="utf-8")
+        compact = (_REPO / "layouts" / "bars" / "compact" / "config.jsonc").read_text(encoding="utf-8")
+        self.assertEqual(modules_for_bar(capsule), _CAPSULE)
+        self.assertEqual(modules_for_bar(compact), _COMPACT)
+        self.assertTrue(all(_CAPSULE))
+        self.assertTrue(all(_COMPACT))
 
     def test_modules_for_bar_returns_empty_groups_on_parse_error(self) -> None:
         self.assertEqual(modules_for_bar("not json"), ([], [], []))
