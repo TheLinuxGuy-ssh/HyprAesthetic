@@ -23,9 +23,11 @@ from hypraesthetic.preset import prepare_preset_switch
 from hypraesthetic.store import StoreEntry
 from hypraesthetic_gui.pages import PAGES
 from hypraesthetic.discover import geom_to_fraction
+from hypraesthetic.paths import layouts_dir
 from hypraesthetic_gui.widgets import (
     WidgetEditor,
     apps_page,
+    bar_page,
     doctor_page,
     fonts_page,
     look_page,
@@ -754,6 +756,235 @@ class WidgetsPageTests(unittest.TestCase):
                 self.assertEqual(loaded.get("widgets"), ["clock", "quote"])
                 apply.assert_called_once()
                 self.assertEqual(apply.call_args.kwargs["components"], ["eww"])
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+
+
+def _tile_title(button: Gtk.Button) -> str:
+    for widget in _descendants(button):
+        if isinstance(widget, Gtk.Label) and widget.has_css_class("ha-tile-title"):
+            return widget.get_label() or ""
+    return ""
+
+
+def _tile_subtitle(button: Gtk.Button) -> str:
+    for widget in _descendants(button):
+        if isinstance(widget, Gtk.Label) and widget.has_css_class("ha-tile-sub"):
+            return widget.get_label() or ""
+    return ""
+
+
+def _flow_children(flow: Gtk.FlowBox) -> list[Gtk.Widget]:
+    children: list[Gtk.Widget] = []
+    child = flow.get_first_child()
+    while child is not None:
+        children.append(child)
+        child = child.get_next_sibling()
+    return children
+
+
+def _visible_flow_buttons(flow: Gtk.FlowBox) -> list[Gtk.Button]:
+    buttons: list[Gtk.Button] = []
+    for child in _flow_children(flow):
+        if not child.get_child_visible():
+            continue
+        button = child.get_child()
+        if isinstance(button, Gtk.Button):
+            buttons.append(button)
+    return buttons
+
+
+class BarPageTests(unittest.TestCase):
+    def test_bar_page_has_no_imported_heading(self) -> None:
+        page = bar_page()
+        marks = _page_marks(page)
+        self.assertNotIn("Imported (search to filter)", marks)
+        self.assertNotIn("First-party", marks)
+        self.assertIn("For this preset", marks)
+        self.assertIn("Built-in styles", marks)
+        self.assertIn("Type to browse extra Waybar layouts.", marks)
+        titles = [
+            widget.get_label()
+            for widget in _descendants(page)
+            if isinstance(widget, Gtk.Label) and widget.has_css_class("ha-tile-title")
+        ]
+        self.assertNotIn("v2.9e", titles)
+        self.assertNotIn("v1.1", titles)
+
+    def test_bar_page_bands_schematic_and_search(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = tmp
+            try:
+                page = bar_page()
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+
+        labels = [button.get_label() for button in _labeled_buttons(page)]
+        self.assertNotIn("Apply changes", labels)
+        hint = next(
+            widget
+            for widget in _descendants(page)
+            if isinstance(widget, Gtk.Label)
+            and widget.get_label() == "Type to browse extra Waybar layouts."
+        )
+        self.assertTrue(hint.has_css_class("dim-label"))
+        heading = next(
+            widget
+            for widget in _descendants(page)
+            if isinstance(widget, Gtk.Label) and widget.has_css_class("title-1")
+        )
+        kinds: list[str] = []
+        child = heading.get_parent().get_first_child()
+        while child is not None:
+            if isinstance(child, Gtk.SearchEntry):
+                kinds.append(child.get_placeholder_text() or "")
+            elif isinstance(child, Gtk.Label) and child.get_label() in {
+                "For this preset",
+                "Built-in styles",
+                "Type to browse extra Waybar layouts.",
+            }:
+                kinds.append(child.get_label())
+            child = child.get_next_sibling()
+        self.assertEqual(
+            kinds,
+            [
+                "Search extra bar layouts",
+                "For this preset",
+                "Built-in styles",
+                "Type to browse extra Waybar layouts.",
+            ],
+        )
+        self.assertFalse(any(isinstance(widget, Gtk.Picture) for widget in _descendants(page)))
+
+        flows = [widget for widget in _descendants(page) if isinstance(widget, Gtk.FlowBox)]
+        self.assertGreaterEqual(len(flows), 3)
+        preset = _visible_flow_buttons(flows[0])
+        self.assertEqual(len(preset), 1)
+        self.assertEqual(_tile_title(preset[0]), "Toji thin")
+        self.assertEqual(_tile_subtitle(preset[0]), "Used by Toji")
+        builtin = _visible_flow_buttons(flows[1])
+        self.assertEqual(
+            [_tile_title(button) for button in builtin],
+            ["Hide the bar", "Capsule", "Compact", "Dock", "Night City"],
+        )
+        self.assertEqual(
+            [_tile_subtitle(button) for button in builtin],
+            [
+                "No status bar",
+                "Rounded island bar",
+                "Workspaces, clock, and tray",
+                "Centered workspaces with meters",
+                "Flat modules with window title",
+            ],
+        )
+        extra = flows[2]
+        self.assertEqual(_visible_flow_buttons(extra), [])
+
+        def schematic_of(button: Gtk.Button) -> Gtk.Widget:
+            box = button.get_child()
+            self.assertIsNotNone(box)
+            drawn = box.get_first_child()
+            self.assertIsNotNone(drawn)
+            width, height = drawn.get_size_request()
+            self.assertEqual(height, 36)
+            self.assertTrue(any(name.startswith("ha-swatch-") for name in drawn.get_css_classes()))
+            return drawn
+
+        for button in [preset[0], *builtin]:
+            schematic_of(button)
+
+        from hypraesthetic.bar_schematic import modules_for_bar
+
+        text = (layouts_dir() / "bars" / "default" / "config.jsonc").read_text(encoding="utf-8")
+        left, center, right = modules_for_bar(text)
+        capsule = next(button for button in builtin if _tile_title(button) == "Capsule")
+        drawn = schematic_of(capsule)
+        groups: list[Gtk.Widget] = []
+        group = drawn.get_first_child()
+        while group is not None:
+            groups.append(group)
+            group = group.get_next_sibling()
+        self.assertEqual(len(groups), 3)
+
+        def pills(group: Gtk.Widget) -> list[str]:
+            found: list[str] = []
+            child = group.get_first_child()
+            while child is not None:
+                if isinstance(child, Gtk.Label):
+                    found.append(child.get_label() or "")
+                child = child.get_next_sibling()
+            return found
+
+        self.assertEqual(pills(groups[0]), [name.rsplit("/", 1)[-1] for name in left])
+        self.assertEqual(pills(groups[1]), [name.rsplit("/", 1)[-1] for name in center])
+        self.assertEqual(pills(groups[2]), [name.rsplit("/", 1)[-1] for name in right])
+
+        search = next(widget for widget in _descendants(page) if isinstance(widget, Gtk.SearchEntry))
+        search.set_text("v2.9e")
+        search.emit("search-changed")
+        shown = _visible_flow_buttons(extra)
+        shown_titles = [_tile_title(button) for button in shown]
+        self.assertIn("Capsule dock", shown_titles)
+        self.assertNotIn("Top split", shown_titles)
+        dock = next(button for button in shown if _tile_title(button) == "Capsule dock")
+        self.assertEqual(_tile_subtitle(dock), "Centered workspaces with meters")
+        search.set_text("v6.ab2")
+        search.emit("search-changed")
+        shown = _visible_flow_buttons(extra)
+        self.assertTrue(any(_tile_title(button) == "Waybar layout" for button in shown))
+        plain = next(button for button in shown if button.get_name().startswith("v6.ab2 "))
+        self.assertEqual(_tile_title(plain), "Waybar layout")
+        self.assertEqual(_tile_subtitle(plain), "v6.ab2")
+
+    def test_bar_page_without_a_theme_still_paints(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            old_home = os.environ.get("HOME")
+            old_root = os.environ.get("HYPRAESTHETIC_ROOT")
+            os.environ["HOME"] = tmp
+            os.environ["HYPRAESTHETIC_ROOT"] = tmp
+            try:
+                page = bar_page()
+                self.assertIn("For this preset", _page_marks(page))
+                flows = [widget for widget in _descendants(page) if isinstance(widget, Gtk.FlowBox)]
+                preset = _visible_flow_buttons(flows[0])
+                self.assertEqual(_tile_title(preset[0]), "Hide the bar")
+                self.assertEqual(_tile_subtitle(preset[0]), "Used by toji")
+            finally:
+                if old_home is None:
+                    os.environ.pop("HOME", None)
+                else:
+                    os.environ["HOME"] = old_home
+                if old_root is None:
+                    os.environ.pop("HYPRAESTHETIC_ROOT", None)
+                else:
+                    os.environ["HYPRAESTHETIC_ROOT"] = old_root
+
+    def test_bar_tile_click_applies_immediately(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            old_home = os.environ.get("HOME")
+            os.environ["HOME"] = tmp
+            try:
+                with patch("hypraesthetic_gui.widgets._apply", return_value=True) as apply:
+                    page = bar_page()
+                    flows = [widget for widget in _descendants(page) if isinstance(widget, Gtk.FlowBox)]
+                    compact = next(
+                        button
+                        for button in _visible_flow_buttons(flows[1])
+                        if _tile_title(button) == "Compact"
+                    )
+                    compact.emit("clicked")
+                self.assertEqual(Prefs.load().get("bar"), "waybar")
+                self.assertEqual(Prefs.load().get("bar_style"), "compact")
+                apply.assert_called_once()
+                self.assertEqual(apply.call_args.kwargs["components"], ["waybar"])
+                self.assertNotIn("Apply changes", [button.get_label() for button in _labeled_buttons(page)])
             finally:
                 if old_home is None:
                     os.environ.pop("HOME", None)

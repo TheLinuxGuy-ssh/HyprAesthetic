@@ -15,11 +15,13 @@ from gi.repository import Adw, Gdk, GdkPixbuf, Gtk, Pango
 
 from hypraesthetic.apply import ApplyEngine
 from hypraesthetic.catalog import ThemeCatalog
+from hypraesthetic.bar_schematic import modules_for_bar
 from hypraesthetic.discover import (
     APP_CANDIDATES,
     FIRST_PARTY_BAR_IDS,
     WIDGET_CATALOG,
     WIDGET_DEFAULT_GEOMETRY,
+    bar_display_name,
     current_theme_name,
     desktop_preview_image,
     format_percent,
@@ -379,6 +381,101 @@ def _undo_last_apply(overlay: Adw.ToastOverlay, buttons: dict[str, Gtk.Button]) 
     _set_selected(buttons, result.theme)
 
 
+def _paint(widget: Gtk.Widget, color: str, rules: str = "") -> None:
+    if not color:
+        return
+    body = f"background: {color};"
+    if rules:
+        body = f"{body} {rules}"
+    klass = f"ha-swatch-{abs(hash((color, rules))) % 10_000_000}"
+    widget.add_css_class(klass)
+    provider = Gtk.CssProvider()
+    provider.load_from_data(f".{klass} {{ {body} }}".encode())
+    widget.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+
+def _theme_bar_colors(pkg) -> tuple[str, str]:
+    waybar = {}
+    if pkg is not None:
+        waybar = pkg.colors.get("waybar") or {}
+    primary = str(waybar.get("primary") or "") or "#74b9ff"
+    surface = str(waybar.get("surface") or "") or "#1a1a1a"
+    return primary, surface
+
+
+def _modules_for_style(style) -> tuple[list[str], list[str], list[str]]:
+    if style is None:
+        return [], [], []
+    path = style.path / "config.jsonc"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return [], [], []
+    return modules_for_bar(text)
+
+
+def _bar_copy(style_id: str, style) -> tuple[str, str]:
+    meta = ""
+    if style is not None:
+        raw = str(style.name or "").strip()
+        if raw.casefold() != style_id.casefold():
+            meta = raw
+    return bar_display_name(style_id, meta)
+
+
+def _bar_schematic(
+    groups: tuple[list[str], list[str], list[str]],
+    primary: str,
+    surface: str,
+) -> Gtk.Box:
+    bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+    bar.set_size_request(-1, 36)
+    bar.set_hexpand(True)
+    _paint(bar, surface, "border-radius: 8px; padding: 4px;")
+    aligns = (Gtk.Align.START, Gtk.Align.CENTER, Gtk.Align.END)
+    for align, names in zip(aligns, groups, strict=True):
+        group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=3)
+        group.set_hexpand(True)
+        group.set_halign(align)
+        group.set_valign(Gtk.Align.CENTER)
+        for name in names:
+            pill = Gtk.Label(label=name.rsplit("/", 1)[-1])
+            pill.set_tooltip_text(name)
+            _paint(pill, primary, "border-radius: 6px; padding: 1px 5px; font-size: 8px;")
+            group.append(pill)
+        bar.append(group)
+    return bar
+
+
+def _bar_tile(title: str, subtitle: str, schematic: Gtk.Widget, selected: bool) -> Gtk.Button:
+    button = Gtk.Button()
+    button.add_css_class("ha-tile")
+    button.add_css_class("flat")
+    if selected:
+        button.add_css_class("selected")
+    column = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+    column.append(schematic)
+    name = Gtk.Label(label=title, xalign=0, wrap=True)
+    name.add_css_class("ha-tile-title")
+    column.append(name)
+    if subtitle:
+        sub = Gtk.Label(label=subtitle, xalign=0, wrap=True)
+        sub.add_css_class("ha-tile-sub")
+        sub.add_css_class("dim-label")
+        column.append(sub)
+    button.set_child(column)
+    return button
+
+
+def _set_selected_groups(groups: dict[str, list[Gtk.Button]], active: str) -> None:
+    for key, items in groups.items():
+        for button in items:
+            if key == active:
+                button.add_css_class("selected")
+            else:
+                button.remove_css_class("selected")
+
+
 def bar_page() -> Gtk.Widget:
     overlay, box = _page(
         "Bar",
@@ -388,12 +485,22 @@ def bar_page() -> Gtk.Widget:
     current_style = str(prefs.get("bar_style") or "default")
     if prefs.get("bar") == "none":
         current_style = "none"
-    search = Gtk.SearchEntry(placeholder_text="Search bar layouts")
+    pkg = _safe_theme()
+    if pkg is None or str(pkg.layout.get("bar") or "") == "none":
+        preset_id = "none"
+        preset_owner = current_theme_name() if pkg is None else pkg.display_name
+    else:
+        preset_id = str(pkg.layout.get("bar_style") or "").strip() or "none"
+        preset_owner = pkg.display_name
+    primary, surface = _theme_bar_colors(pkg)
+    listed = list_bar_styles()
+    styles = {style.id: style for style in listed}
+    search = Gtk.SearchEntry(placeholder_text="Search extra bar layouts")
 
     def _flow_box() -> Gtk.FlowBox:
         return Gtk.FlowBox(
             max_children_per_line=5,
-            min_children_per_line=2,
+            min_children_per_line=1,
             selection_mode=Gtk.SelectionMode.NONE,
             homogeneous=True,
             row_spacing=12,
@@ -402,28 +509,19 @@ def bar_page() -> Gtk.Widget:
             hexpand=True,
         )
 
-    first_flow = _flow_box()
-    imported_flow = _flow_box()
-    buttons: dict[str, Gtk.Button] = {}
-    accent = _accent_color()
-    first_party = [("none", "None", "Hide the status bar", None)]
-    imported: list[tuple[str, str, str, Path | None]] = []
-    for style in list_bar_styles():
-        item = (style.id, style.name, style.description, style.preview)
-        if style.id in FIRST_PARTY_BAR_IDS:
-            first_party.append(item)
-        else:
-            imported.append(item)
-
+    preset_flow = _flow_box()
+    builtin_flow = _flow_box()
+    extra_flow = _flow_box()
+    buttons: dict[str, list[Gtk.Button]] = {}
     needle = [""]
 
-    def imported_visible(child: Gtk.FlowBoxChild) -> bool:
+    def extra_visible(child: Gtk.FlowBoxChild) -> bool:
         button = child.get_child()
         hay = (button.get_name() if button is not None else "") or ""
         style_id = hay.split(" ", 1)[0] if hay else ""
         return bool(visible_bar_ids([(style_id, hay)], needle[0]))
 
-    imported_flow.set_filter_func(imported_visible)
+    extra_flow.set_filter_func(extra_visible)
 
     def apply_style(style_id: str) -> None:
         loaded = Prefs.load()
@@ -434,35 +532,44 @@ def bar_page() -> Gtk.Widget:
             loaded.set("bar_style", style_id)
         loaded.save()
         if _apply(overlay, components=["waybar"], message=f"Bar: {style_id}"):
-            _set_selected(buttons, style_id)
+            _set_selected_groups(buttons, style_id)
 
     def on_search(entry: Gtk.SearchEntry) -> None:
         needle[0] = entry.get_text().strip().lower()
-        imported_flow.invalidate_filter()
+        extra_flow.invalidate_filter()
 
     search.connect("search-changed", on_search)
 
-    def add_tiles(rows: list[tuple[str, str, str, Path | None]], parent: Gtk.FlowBox) -> None:
-        for style_id, title, blurb, preview in rows:
-            tile = _tile(
-                title,
-                blurb,
-                image=preview if isinstance(preview, Path) else None,
-                color=accent if style_id != "none" else "#3a3a3a",
-                selected=style_id == current_style,
-            )
-            tile.set_name(f"{style_id} {title} {blurb}")
-            tile.connect("clicked", lambda _b, sid=style_id: apply_style(sid))
-            buttons[style_id] = tile
-            parent.append(tile)
+    def add_tile(parent: Gtk.FlowBox, style_id: str, title: str, subtitle: str) -> None:
+        tile = _bar_tile(
+            title,
+            subtitle,
+            _bar_schematic(_modules_for_style(styles.get(style_id)), primary, surface),
+            style_id == current_style,
+        )
+        tile.set_name(f"{style_id} {title} {subtitle}")
+        tile.connect("clicked", lambda _b, sid=style_id: apply_style(sid))
+        buttons.setdefault(style_id, []).append(tile)
+        parent.append(tile)
 
-    add_tiles(first_party, first_flow)
-    add_tiles(imported, imported_flow)
+    preset_title, _preset_blurb = _bar_copy(preset_id, styles.get(preset_id))
+    add_tile(preset_flow, preset_id, preset_title, f"Used by {preset_owner}")
+    for style_id in ("none", "default", "compact", "a70", "cyberpunk"):
+        title, blurb = _bar_copy(style_id, styles.get(style_id))
+        add_tile(builtin_flow, style_id, title, blurb)
+    for style in listed:
+        if style.id in FIRST_PARTY_BAR_IDS:
+            continue
+        title, blurb = _bar_copy(style.id, style)
+        add_tile(extra_flow, style.id, title, blurb)
+
     box.append(search)
-    box.append(_status_label("First-party"))
-    box.append(first_flow)
-    box.append(_status_label("Imported (search to filter)"))
-    box.append(imported_flow)
+    box.append(Gtk.Label(label="For this preset", xalign=0))
+    box.append(preset_flow)
+    box.append(Gtk.Label(label="Built-in styles", xalign=0))
+    box.append(builtin_flow)
+    box.append(_status_label("Type to browse extra Waybar layouts."))
+    box.append(extra_flow)
     return overlay
 
 

@@ -165,6 +165,36 @@ _BAR_PREVIEW_NAMES = ("preview.png", "preview.jpg", "preview.jpeg", "preview.gif
 _BAR_SCREENSHOT_GLOBS = ("screenshot*.png", "screenshot*.jpg")
 FIRST_PARTY_BAR_IDS = frozenset({"none", "default", "compact", "a70", "cyberpunk"})
 
+_BAR_DISPLAY: dict[str, tuple[str, str]] = {
+    "v1": ("Top split", "Workspaces left, tray right"),
+    "v1.1": ("Toji thin", "Slim top bar"),
+    "v1.2": ("Light clash", "Used with Toji vs Sukuna"),
+    "v2": ("Red island", "Rounded modules"),
+    "v2.9e": ("Capsule dock", "Centered workspaces with meters"),
+    "v3": ("Violet modules", "Used with Choso"),
+    "v4": ("Ember", "Used with Tanjiro"),
+    "v5": ("Night City classic", "Flat modules with window title"),
+    "v7": ("Sky slim", "Open-air bar"),
+    "default": ("Capsule", "Rounded island bar"),
+    "compact": ("Compact", "Workspaces, clock, and tray"),
+    "a70": ("Dock", "Centered workspaces with meters"),
+    "cyberpunk": ("Night City", "Flat modules with window title"),
+    "none": ("Hide the bar", "No status bar"),
+}
+
+
+def bar_display_name(style_id: str, meta_name: str = "") -> tuple[str, str]:
+    """(title, blurb). meta_name from bar.toml wins when non-empty."""
+    mapped = _BAR_DISPLAY.get(style_id)
+    if mapped is None:
+        title, blurb = "Waybar layout", style_id
+    else:
+        title, blurb = mapped
+    custom = (meta_name or "").strip()
+    if custom:
+        title = custom
+    return title, blurb
+
 
 def _preview_search_dirs(root: Path) -> list[Path]:
     return [
