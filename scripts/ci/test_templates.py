@@ -46,12 +46,16 @@ def test_hyprland_template() -> None:
 
 
 def test_hyprwave_template() -> None:
+    from hypraesthetic.hyprwave_cfg import resolve_hyprwave
+
     pkg = ThemePackage.load(ROOT / "themes" / "cyberpunk")
+    variables = {**pkg.flatten(), **resolve_hyprwave(pkg.hyprwave, {})}
     rendered = render_string(
-        (ROOT / "themes" / "_template" / "hyprwave" / "config.toml.template").read_text(),
-        pkg.flatten(),
+        (ROOT / "themes" / "_template" / "hyprwave" / "config.conf.template").read_text(),
+        variables,
     )
-    assert 'background = "#0d0d0d"' in rendered
+    assert "edge = right" in rendered
+    assert "[Visualizer]" in rendered
     print("Hyprwave template OK")
 
 

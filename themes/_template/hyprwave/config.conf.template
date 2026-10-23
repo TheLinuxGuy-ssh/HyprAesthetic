@@ -1,0 +1,26 @@
+# HyprWave — rendered by HyprAesthetic from theme.toml + Look prefs
+
+[General]
+edge = {{hyprwave_edge}}
+margin = {{hyprwave_margin}}
+exclusive_zone = 0
+layer = foreground
+
+[MusicPlayer]
+preference = {{hyprwave_preference}}
+
+[Keybinds]
+toggle_visibility = Super+Shift+M
+toggle_expand = Super+M
+
+[Notifications]
+enabled = true
+now_playing = true
+
+[Visualizer]
+enabled = true
+idle_timeout = 1
+
+[VerticalDisplay]
+enabled = false
+idle_timeout = 5

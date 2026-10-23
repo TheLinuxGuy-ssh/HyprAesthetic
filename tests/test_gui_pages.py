@@ -420,6 +420,7 @@ class LookPageTests(GtkTestCase):
                 self.assertTrue(hint.has_css_class("dim-label"))
                 by_title = {row.get_title() for row in _rows(page)}
                 self.assertIn("Cursor theme", by_title)
+                self.assertIn("Visualizer edge", by_title)
                 for title, value in (
                     ("Gaps in", 5),
                     ("Gaps out", 7),

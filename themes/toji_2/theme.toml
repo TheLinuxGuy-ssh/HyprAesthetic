@@ -96,6 +96,10 @@ matrix_rows = 48
 matrix_cols = 2
 matrix_density = 5
 
+[hyprwave]
+edge = "bottom"
+margin = 10
+
 [defaults]
 file_manager = "nautilus"
 terminal = "kitty"

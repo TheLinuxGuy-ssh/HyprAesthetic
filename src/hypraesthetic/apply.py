@@ -27,6 +27,7 @@ from hypraesthetic.prefs import Prefs
 from hypraesthetic.render import VAR_RE, render_file, render_string
 from hypraesthetic.theme import ThemePackage
 from hypraesthetic.rofi_style import deploy_rofi_theme
+from hypraesthetic.hyprwave_cfg import resolve_hyprwave, sync_hyprwave_prefs
 from hypraesthetic.waybar_config import sanitize_waybar_config
 from hypraesthetic.waybar_css import set_bar_font, theme_waybar_css
 
@@ -189,6 +190,7 @@ class ApplyEngine:
         prefs.save()
         variables = pkg.flatten()
         self._identity_variables(pkg, prefs, variables)
+        variables.update(resolve_hyprwave(pkg.hyprwave, prefs.data))
         for cid in pkg.components:
             if cid not in wanted or not pkg.enabled(cid):
                 result.skipped.append(cid)
@@ -343,6 +345,7 @@ class ApplyEngine:
         prefs.set("fonts.ui", normalize_font(ui))
         prefs.set("fonts.bar", normalize_font(mono))
         prefs.set("fonts.terminal", font_family_only(mono) or mono)
+        sync_hyprwave_prefs(prefs, raw.get("hyprwave"))
 
     def _identity_variables(
         self, pkg: ThemePackage, prefs: Prefs, variables: dict[str, str]
@@ -657,13 +660,10 @@ class ApplyEngine:
             path = dest / leftover
             if path.is_file():
                 path.unlink()
-        overlay = pkg.overlay_dir("hyprwave")
-        if overlay and (overlay / "config.toml").is_file():
-            copy_file(overlay / "config.toml", dest / "config.toml")
-        elif overlay and (overlay / "config.conf").is_file():
-            copy_file(overlay / "config.conf", dest / "config.conf")
-        else:
-            self._render_template("hyprwave/config.toml", dest / "config.toml", variables)
+        variables.update(resolve_hyprwave(pkg.hyprwave, prefs.data))
+        self._render_template("hyprwave/config.conf", dest / "config.conf", variables)
+        if self.live and self.which("hyprwave"):
+            self._restart_process("hyprwave")
 
     def _apply_rofi(
         self, pkg: ThemePackage, prefs: Prefs, variables: dict[str, str], restart: bool = False

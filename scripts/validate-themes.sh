@@ -17,7 +17,7 @@ TEMPLATES=(
     "kitty/kitty.conf"
     "hypr/colors.conf"
     "hypr/appearences.lua"
-    "hyprwave/config.toml"
+    "hyprwave/config.conf"
     "eww/eww.scss"
     "eww/eww.yuck"
     "nvim/current_theme.lua"

@@ -43,6 +43,7 @@ from hypraesthetic.discover import (
     widget_ids_from_prefs,
 )
 from hypraesthetic.export_theme import generate_from_wallpaper
+from hypraesthetic.hyprwave_cfg import HYPRWAVE_EDGES
 from hypraesthetic.paths import layouts_dir
 from hypraesthetic.doctor import Doctor
 from hypraesthetic.install_theme import ThemeInstaller
@@ -1190,10 +1191,23 @@ def look_page() -> Gtk.Widget:
     cursor_row.add_suffix(cursor_drop)
 
     extras = list(prefs.get("extras") or [])
-    hypr_row = Adw.ActionRow(title="Hyprwave", subtitle="Audio visualizer follows the active theme")
+    hypr_row = Adw.ActionRow(
+        title="Hyprwave",
+        subtitle="Visualizer on/off; edge resets when you switch presets",
+    )
     hypr_switch = Gtk.Switch(valign=Gtk.Align.CENTER, active="hyprwave" in extras)
     hypr_row.add_suffix(hypr_switch)
     hypr_row.set_activatable_widget(hypr_switch)
+    edge_options = list(HYPRWAVE_EDGES)
+    edge_drop, edge_values = _combo(
+        edge_options,
+        str(prefs.get("hyprwave.edge") or "bottom"),
+    )
+    edge_row = Adw.ActionRow(
+        title="Visualizer edge",
+        subtitle="Top, left, bottom, or right screen edge",
+    )
+    edge_row.add_suffix(edge_drop)
 
     gaps_in = _look_spin(prefs.get("hypr.gaps_in"), 0, 200, 5)
     gaps_out = _look_spin(prefs.get("hypr.gaps_out"), 0, 200, 7)
@@ -1212,6 +1226,7 @@ def look_page() -> Gtk.Widget:
             "icon_theme": _selected_text(icon_drop, icon_values),
             "cursor_theme": _selected_text(cursor_drop, cursor_values),
             "hyprwave": hypr_switch.get_active(),
+            "hyprwave_edge": _selected_text(edge_drop, edge_values),
             "gaps_in": int(gaps_in.get_value()),
             "gaps_out": int(gaps_out.get_value()),
             "border_size": int(border.get_value()),
@@ -1223,6 +1238,7 @@ def look_page() -> Gtk.Widget:
     for dropdown in (gtk_drop, icon_drop, cursor_drop):
         dropdown.connect("notify::selected", refresh)
     hypr_switch.connect("notify::active", refresh)
+    edge_drop.connect("notify::selected", refresh)
     for spin in (gaps_in, gaps_out, border, rounding):
         spin.connect("notify::value", refresh)
 
@@ -1235,6 +1251,7 @@ def look_page() -> Gtk.Widget:
         loaded.set("hypr.gaps_out", int(gaps_out.get_value()))
         loaded.set("hypr.border_size", int(border.get_value()))
         loaded.set("hypr.rounding", int(rounding.get_value()))
+        loaded.set("hyprwave.edge", _selected_text(edge_drop, edge_values))
         extra = list(loaded.get("extras") or [])
         if hypr_switch.get_active():
             if "hyprwave" not in extra:
@@ -1262,6 +1279,7 @@ def look_page() -> Gtk.Widget:
     box.append(icon_row)
     box.append(cursor_row)
     box.append(hypr_row)
+    box.append(edge_row)
     box.append(Gtk.Label(label="Hyprland", xalign=0, css_classes=["heading"]))
     for title, spin in hypr_rows:
         row = Adw.ActionRow(title=title)

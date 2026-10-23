@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from hypraesthetic.hyprwave_cfg import hyprwave_from_theme
+
 PALETTE_KEYS = [f"base{i:02X}" for i in range(16)]
 
 COMPONENT_IDS = (
@@ -227,6 +229,7 @@ class ThemePackage:
     quotes: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     hypr: dict[str, int] = field(default_factory=lambda: dict(HYPR_DEFAULTS))
+    hyprwave: dict[str, Any] = field(default_factory=dict)
     identity: dict[str, str] = field(default_factory=lambda: dict(IDENTITY_DEFAULTS))
 
     @classmethod
@@ -286,6 +289,7 @@ class ThemePackage:
         }
         defaults.update({k: str(v) for k, v in (raw.get("defaults") or {}).items()})
         hypr = _int_map(raw.get("hypr"), HYPR_DEFAULTS)
+        hyprwave = hyprwave_from_theme(raw.get("hyprwave"))
         identity = _identity_map(raw.get("identity"))
 
         misc = raw.get("misc") or {}
@@ -326,6 +330,7 @@ class ThemePackage:
             quotes=_quote_list(raw, misc),
             errors=errors,
             hypr=hypr,
+            hyprwave=hyprwave,
             identity=identity,
         )
         if errors:
@@ -355,6 +360,7 @@ class ThemePackage:
             "misc": {"wallpaper": self.wallpaper, "hw_theme": self.hw_theme},
             "layout": {k: v for k, v in self.layout.items() if not isinstance(v, list)},
             "hypr": self.hypr,
+            "hyprwave": self.hyprwave,
             "identity": self.identity,
             "defaults": self.defaults,
             "components": self.components,
