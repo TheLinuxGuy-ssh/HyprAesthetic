@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+from hypraesthetic.aur import choose_helper, ensure_helper as bootstrap_helper, find_helper, split_repo_and_aur
 from hypraesthetic.packages import PackageCatalog, os_release_ids
 from hypraesthetic.privilege import allow_root_install, privileged_command
 from hypraesthetic.paths import repo_root as detect_repo_root
@@ -64,6 +65,12 @@ class Installer:
         catalog: PackageCatalog | None = None,
         confirm: Callable[[list[str]], bool] | None = None,
         euid: int | None = None,
+        aur_assume: bool = False,
+        root_assume: bool = False,
+        root_confirm: Callable[[], bool] | None = None,
+        which: Callable[[str], str | None] | None = None,
+        ensure_helper: Callable[..., Any] | None = None,
+        aur_ask: Callable[[], str] | None = None,
     ):
         self.repo_root = repo_root or detect_repo_root()
         if distro_id:
@@ -80,6 +87,14 @@ class Installer:
         self.catalog = catalog or PackageCatalog.load()
         self.confirm = confirm
         self.euid = os.geteuid() if euid is None else euid
+        self.aur_assume = aur_assume
+        self.root_assume = root_assume
+        self.root_confirm = root_confirm
+        self.which = which or shutil.which
+        self.ensure_helper = ensure_helper or bootstrap_helper
+        self.aur_ask = aur_ask
+        self.packages_installed: list[str] = []
+        self.packages_skipped: list[str] = []
         self._root_allowed: bool | None = None
 
     def allow_root(self) -> bool:
@@ -87,7 +102,8 @@ class Installer:
             return self._root_allowed
         self._root_allowed = allow_root_install(
             euid=self.euid,
-            assume_yes=self.assume_yes,
+            assume_yes=self.root_assume,
+            confirm=self.root_confirm,
             stdin_isatty=sys.stdin.isatty(),
         )
         return self._root_allowed
@@ -116,10 +132,9 @@ class Installer:
         installed: list[str] = []
         skipped: list[str] = []
         if missing:
-            if self._install_packages(missing):
-                installed = list(missing)
-            else:
-                skipped = list(missing)
+            self._install_packages(missing)
+            installed = list(self.packages_installed)
+            skipped = list(self.packages_skipped)
 
         self._install_cli()
         if self.write_session:
@@ -141,12 +156,36 @@ class Installer:
     def _install_packages(self, packages: list[str]) -> bool:
         family = self.catalog.family_for_ids(self.distro_ids)
         if not self.assume_yes and not self._confirm_packages(packages):
+            self.packages_installed = []
+            self.packages_skipped = list(packages)
             return False
-        cmd = _install_command(family.manager, packages)
-        if not cmd:
-            return False
-        self.runner(privileged_command(cmd, euid=self.euid), check=False)
-        return True
+        repo, aur = split_repo_and_aur(packages)
+        if repo:
+            cmd = _install_command(family.manager, repo)
+            if cmd:
+                self.runner(privileged_command(cmd, euid=self.euid), check=False)
+        if aur:
+            helper = find_helper(which=self.which)
+            if not helper:
+                helper = self.ensure_helper(
+                    choose_helper(assume_yes=self.aur_assume, which=self.which, ask=self.aur_ask),
+                    runner=self.runner,
+                    euid=self.euid,
+                    which=self.which,
+                    privileged=privileged_command,
+                )
+            if helper:
+                self.runner([helper, "-S", "--needed", "--noconfirm", *aur], check=False)
+        installed: list[str] = []
+        skipped: list[str] = []
+        for name in packages:
+            if self.package_installed(name):
+                installed.append(name)
+            else:
+                skipped.append(name)
+        self.packages_installed = installed
+        self.packages_skipped = skipped
+        return not skipped
 
     def _confirm_packages(self, packages: list[str]) -> bool:
         if self.confirm is not None:

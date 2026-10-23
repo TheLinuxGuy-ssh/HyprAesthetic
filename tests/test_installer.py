@@ -8,6 +8,7 @@ import unittest
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from hypraesthetic.installer import AUTOMATIC_SELECTION, Installer
@@ -141,6 +142,7 @@ class InstallerTests(unittest.TestCase):
                 backup_fn=lambda: "stamp",
                 package_installed=lambda pkg: False,
                 write_session=False,
+                which=lambda name: "/usr/bin/paru" if name == "paru" else None,
             )
             result = installer.run(mode="automatic", theme="toji")
         self.assertTrue(any(cmd[:3] == ["sudo", "pacman", "-S"] for cmd in commands))
@@ -164,11 +166,13 @@ class InstallerTests(unittest.TestCase):
             distro_id="cachyos",
             runner=runner,
             assume_yes=True,
+            root_assume=True,
             euid=0,
             apply_fn=lambda theme, **kwargs: None,
             backup_fn=lambda: "stamp",
             package_installed=lambda pkg: False,
             write_session=False,
+            which=lambda name: "/usr/bin/paru" if name == "paru" else None,
         )
         with redirect_stdout(StringIO()):
             installer.run(mode="automatic", theme="toji")
@@ -201,6 +205,139 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(commands, [])
         desktop = self.home / ".local" / "share" / "applications" / "hyprland.desktop"
         self.assertFalse(desktop.exists())
+
+    def test_root_assume_false_denies_even_when_packages_assume_yes(self) -> None:
+        installer = Installer(
+            repo_root=self.repo,
+            distro_id="cachyos",
+            assume_yes=True,
+            root_assume=False,
+            euid=0,
+            root_confirm=lambda: False,
+            write_session=False,
+            package_installed=lambda _pkg: False,
+        )
+        with redirect_stdout(StringIO()):
+            self.assertFalse(installer.allow_root())
+
+    def test_repo_pacman_failure_skips_names_not_in_installed(self) -> None:
+        commands: list[list[str]] = []
+
+        def runner(cmd, **_kwargs):
+            commands.append(list(cmd))
+            return SimpleNamespace(returncode=1)
+
+        installer = self._arch_installer(runner, package_installed=lambda _pkg: False)
+        ok = installer._install_packages(["hyprland", "waybar", "eww-git", "hyprwave-git"])
+        self.assertFalse(ok)
+        self.assertEqual(installer.packages_installed, [])
+        self.assertEqual(installer.packages_skipped, ["hyprland", "waybar", "eww-git", "hyprwave-git"])
+        pacman = [cmd for cmd in commands if "pacman" in cmd]
+        self.assertEqual(pacman, [["sudo", "pacman", "-S", "--needed", "--noconfirm", "hyprland", "waybar"]])
+        self.assertEqual(
+            [cmd for cmd in commands if cmd and cmd[0] == "paru"],
+            [["paru", "-S", "--needed", "--noconfirm", "eww-git", "hyprwave-git"]],
+        )
+
+    def test_aur_names_skip_sudo_for_user_and_root(self) -> None:
+        for euid in (1000, 0):
+            with self.subTest(euid=euid):
+                commands: list[list[str]] = []
+
+                def runner(cmd, **_kwargs):
+                    commands.append(list(cmd))
+                    return SimpleNamespace(returncode=0)
+
+                installer = self._arch_installer(runner, euid=euid)
+                installer._install_packages(["hyprland", "eww-git", "hyprwave-git", "waybar"])
+                self.assertEqual(
+                    [cmd for cmd in commands if cmd and cmd[0] in {"paru", "yay"}],
+                    [["paru", "-S", "--needed", "--noconfirm", "eww-git", "hyprwave-git"]],
+                )
+                repo = next(cmd for cmd in commands if "hyprland" in cmd)
+                if euid == 0:
+                    self.assertEqual(repo[:4], ["pacman", "-S", "--needed", "--noconfirm"])
+                else:
+                    self.assertEqual(repo[:5], ["sudo", "pacman", "-S", "--needed", "--noconfirm"])
+                self.assertNotIn("eww-git", repo)
+                self.assertNotIn("hyprwave-git", repo)
+
+    def test_aur_assume_bootstraps_paru_before_aur_packages(self) -> None:
+        commands: list[list[str]] = []
+        state = {"have": False}
+
+        def which(name: str) -> str | None:
+            if name == "paru" and state["have"]:
+                return "/usr/bin/paru"
+            return None
+
+        def runner(cmd, **_kwargs):
+            commands.append(list(cmd))
+            if "pacman" in cmd and "paru" in cmd:
+                state["have"] = True
+            return SimpleNamespace(returncode=0)
+
+        installer = self._arch_installer(runner, which=which, euid=0)
+        installer.aur_assume = True
+        installer._install_packages(["waybar", "eww-git"])
+        bootstrap = ["pacman", "-S", "--needed", "--noconfirm", "paru"]
+        helper = ["paru", "-S", "--needed", "--noconfirm", "eww-git"]
+        self.assertIn(bootstrap, commands)
+        self.assertIn(helper, commands)
+        self.assertLess(commands.index(bootstrap), commands.index(helper))
+        self.assertFalse(any("clone" in cmd or "makepkg" in cmd for cmd in commands))
+        self.assertNotIn("eww-git", next(cmd for cmd in commands if "waybar" in cmd))
+
+    def test_run_reprobes_installed_and_skipped(self) -> None:
+        present: set[str] = set()
+
+        def runner(cmd, **_kwargs):
+            if "waybar" in cmd and "pacman" in cmd:
+                present.add("waybar")
+            return SimpleNamespace(returncode=0)
+
+        def probe(name: str) -> bool:
+            if name == "waybar":
+                return name in present
+            if name == "eww-git":
+                return False
+            return True
+
+        installer = self._arch_installer(runner, package_installed=probe)
+        result = installer.run(mode="automatic", theme="toji")
+        self.assertEqual(result.packages_installed, ["waybar"])
+        self.assertEqual(result.packages_skipped, ["eww-git"])
+
+    def test_aur_question_is_not_tied_to_package_assume_yes(self) -> None:
+        commands: list[list[str]] = []
+
+        def runner(cmd, **_kwargs):
+            commands.append(list(cmd))
+            return SimpleNamespace(returncode=0)
+
+        installer = self._arch_installer(runner, which=lambda _name: None)
+        installer.assume_yes = True
+        installer.aur_assume = False
+        installer.aur_ask = lambda: "2"
+        installer.ensure_helper = lambda name, **_kwargs: name
+        with redirect_stdout(StringIO()):
+            installer._install_packages(["eww-git"])
+        self.assertEqual(commands, [["yay", "-S", "--needed", "--noconfirm", "eww-git"]])
+
+    def _arch_installer(self, runner, *, euid: int = 1000, which=None, package_installed=None) -> Installer:
+        return Installer(
+            repo_root=self.repo,
+            distro_id="cachyos",
+            runner=runner,
+            assume_yes=True,
+            root_assume=True,
+            euid=euid,
+            apply_fn=lambda theme, **kwargs: None,
+            backup_fn=lambda: "stamp",
+            package_installed=package_installed or (lambda _pkg: False),
+            write_session=False,
+            which=which or (lambda name: "/usr/bin/paru" if name == "paru" else None),
+        )
 
 
 if __name__ == "__main__":

@@ -248,6 +248,8 @@ def cmd_install(rest: list[str]) -> int:
     theme = ns.theme or _ask_theme()
     installer = Installer(
         assume_yes=ns.yes or mode == "automatic",
+        root_assume=ns.yes,
+        aur_assume=ns.yes or not sys.stdin.isatty(),
         apply_fn=lambda name: ApplyEngine().apply(name),
         backup_fn=lambda: _bash("backup-configs.sh", ["backup"]),
     )

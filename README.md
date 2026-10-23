@@ -72,6 +72,8 @@ cd ~/.local/share/HyprAesthetic
 
 A normal user with sudo is recommended; running as root prints a warning and asks before continuing.
 
+On Arch, package names ending in `-git` are installed with paru or yay; if neither helper is installed, the installer asks which to bootstrap (paru when `--yes` is set or stdin is not a terminal).
+
 Automatic or Custom. Packages for the detected distro. Backup of managed dirs (`hypr`, `waybar`, `hyprwave`, `eww`, `rofi`, `kitty`, `gtk-3.0`, `gtk-4.0`, `dunst`, `nvim`). Theme apply. `prefs.toml`. Links `ha-theme`, `hat`, `hyprwall` into `~/.local/bin`.
 
 Custom without `--yes` asks before packages. Declining (or no TTY) skips packages and reports an incomplete install.
