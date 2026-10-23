@@ -6,6 +6,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from hypraesthetic.apply import ApplyEngine
 from hypraesthetic.prefs import Prefs
@@ -789,6 +790,45 @@ class ApplyEngineTests(unittest.TestCase):
         self.assertNotIn("XCURSOR_THEME", apps)
         ini = (self.home / ".config" / "gtk-3.0" / "settings.ini").read_text(encoding="utf-8")
         self.assertNotIn("gtk-cursor-theme-name", ini)
+
+    def _write_identity_sample(self) -> None:
+        toml = self.repo / "themes" / "sample" / "theme.toml"
+        toml.write_text(
+            toml.read_text(encoding="utf-8")
+            + "\n[hypr]\ngaps_in = 3\ngaps_out = 6\nborder_size = 2\nrounding = 2\n"
+            + "\n[identity]\n"
+            + 'font_ui = "Orbitron, Inter"\n'
+            + 'font_mono = "Share Tech Mono, Fancy Mono"\n'
+            + 'matrix_chars = "/\\\\|Y"\n'
+            + "matrix_cols = 2\n",
+            encoding="utf-8",
+        )
+        scripts = self.repo / "themes" / "_template" / "eww" / "scripts"
+        scripts.mkdir(parents=True, exist_ok=True)
+        (scripts / "matrix.sh.template").write_text(
+            'CHARS="{{identity.matrix_chars}}"\nCOLS={{identity.matrix_cols}}\n',
+            encoding="utf-8",
+        )
+
+    def test_full_apply_writes_identity_fonts_hypr_and_matrix(self) -> None:
+        self._write_identity_sample()
+        with patch("hypraesthetic.apply.list_font_families", return_value=["Inter", "Cantarell"]):
+            self.engine.apply("sample")
+        prefs = Prefs.load()
+        self.assertTrue(str(prefs.get("fonts.ui")).startswith("Inter"))
+        self.assertEqual(int(prefs.get("hypr.gaps_in")), 3)
+        self.assertEqual(int(prefs.get("hypr.rounding")), 2)
+        script = (self.home / ".config" / "eww" / "scripts" / "matrix.sh").read_text(encoding="utf-8")
+        self.assertIn("/\\|Y", script)
+        self.assertIn("COLS=2", script)
+
+    def test_identity_font_falls_back_when_missing(self) -> None:
+        self._write_identity_sample()
+        with patch("hypraesthetic.apply.list_font_families", return_value=["Cantarell"]):
+            self.engine.apply("sample")
+        prefs = Prefs.load()
+        self.assertTrue(str(prefs.get("fonts.ui")).startswith("Inter"))
+        self.assertTrue(str(prefs.get("fonts.terminal")).startswith("Fancy Mono"))
 
 
 if __name__ == "__main__":

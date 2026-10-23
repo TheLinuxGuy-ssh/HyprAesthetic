@@ -17,10 +17,10 @@ quotes = [
 ]
 
 [palette]
-base00 = "#0d0d0d"
-base01 = "#1a1a1a"
-base02 = "#2a2a2a"
-base03 = "#3a3a3a"
+base00 = "#080808"
+base01 = "#121212"
+base02 = "#1c1c1c"
+base03 = "#2a2a2a"
 base04 = "#cccccc"
 base05 = "#ffffff"
 base06 = "#ffffff"
@@ -75,7 +75,26 @@ success_fg = "{{palette.base00}}"
 bar = "waybar"
 bar_style = "v2"
 launcher = "rofi"
-widgets = ["clock", "system", "matrix", "wakatime", "toji"]
+widgets = ["clock", "quote", "music", "system", "matrix"]
+
+[hypr]
+gaps_in = 3
+gaps_out = 6
+border_size = 2
+rounding = 0
+
+[identity]
+font_ui = "Barlow Condensed, Oswald, Inter, Adwaita Sans"
+font_clock = "Barlow Condensed, Oswald, Inter, JetBrainsMono Nerd Font"
+font_mono = "JetBrainsMono Nerd Font, Iosevka, monospace"
+font_quote = "Inter, Adwaita Sans"
+clock_size = 80
+music_radius = 0
+cover_size = 64
+matrix_chars = "/\\|Y"
+matrix_rows = 48
+matrix_cols = 2
+matrix_density = 5
 
 [defaults]
 file_manager = "nautilus"

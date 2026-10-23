@@ -61,7 +61,7 @@ surface = "{{palette.base01}}"
 surface_hover = "{{palette.base02}}"
 border = "{{palette.base03}}"
 foreground_muted = "{{palette.base04}}"
-primary = "#b3a6ff"
+primary = "#d080a8"
 primary_fg = "{{palette.base00}}"
 error = "{{palette.base08}}"
 error_fg = "{{palette.base00}}"
@@ -74,7 +74,26 @@ success_fg = "{{palette.base00}}"
 bar = "waybar"
 bar_style = "v3"
 launcher = "rofi"
-widgets = ["clock", "system", "matrix", "wakatime", "toji"]
+widgets = ["clock", "quote", "music", "system", "matrix"]
+
+[hypr]
+gaps_in = 5
+gaps_out = 10
+border_size = 1
+rounding = 8
+
+[identity]
+font_ui = "Outfit, Nunito, Adwaita Sans"
+font_clock = "Outfit, Nunito, Adwaita Sans"
+font_mono = "JetBrainsMono Nerd Font, Iosevka, monospace"
+font_quote = "Nunito, Outfit, Adwaita Sans"
+clock_size = 72
+music_radius = 10
+cover_size = 64
+matrix_chars = "│|¦"
+matrix_rows = 48
+matrix_cols = 1
+matrix_density = 2
 
 [defaults]
 file_manager = "nautilus"

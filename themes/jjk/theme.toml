@@ -74,7 +74,26 @@ success_fg = "{{palette.base00}}"
 bar = "waybar"
 bar_style = "v1"
 launcher = "rofi"
-widgets = ["clock", "system", "matrix", "wakatime", "toji"]
+widgets = ["clock", "quote", "music", "system", "matrix"]
+
+[hypr]
+gaps_in = 5
+gaps_out = 10
+border_size = 2
+rounding = 4
+
+[identity]
+font_ui = "JetBrainsMono Nerd Font, Iosevka, Adwaita Sans"
+font_clock = "JetBrainsMono Nerd Font, Iosevka, monospace"
+font_mono = "JetBrainsMono Nerd Font, Iosevka, monospace"
+font_quote = "Noto Serif CJK JP, Noto Serif, Iosevka"
+clock_size = 64
+music_radius = 6
+cover_size = 64
+matrix_chars = "*+x"
+matrix_rows = 48
+matrix_cols = 1
+matrix_density = 2
 
 [defaults]
 file_manager = "nautilus"

@@ -55,9 +55,9 @@ success = "{{palette.base0B}}"
 success_fg = "#0d1526"
 
 [colors.eww]
-background = "{{palette.base00}}"
+background = "#15233d"
 foreground = "#eef4ff"
-surface = "{{palette.base01}}"
+surface = "#1c2d4d"
 surface_hover = "{{palette.base02}}"
 border = "{{palette.base03}}"
 foreground_muted = "{{palette.base04}}"
@@ -74,7 +74,26 @@ success_fg = "{{palette.base00}}"
 bar = "waybar"
 bar_style = "v7"
 launcher = "rofi"
-widgets = ["clock", "wakatime", "system"]
+widgets = ["clock", "music", "weather"]
+
+[hypr]
+gaps_in = 12
+gaps_out = 24
+border_size = 1
+rounding = 20
+
+[identity]
+font_ui = "Montserrat, Inter, Adwaita Sans"
+font_clock = "Montserrat, Inter, Adwaita Sans"
+font_mono = "JetBrainsMono Nerd Font, Inter, monospace"
+font_quote = "Inter, Montserrat, Adwaita Sans"
+clock_size = 96
+music_radius = 20
+cover_size = 0
+matrix_chars = "010101$#%&"
+matrix_rows = 48
+matrix_cols = 1
+matrix_density = 3
 
 [defaults]
 file_manager = "nautilus"

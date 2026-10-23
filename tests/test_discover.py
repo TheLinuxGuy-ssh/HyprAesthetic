@@ -59,6 +59,19 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(found, ["nautilus", "thunar"])
         self.assertEqual(list_on_path(["zen"], which=lambda _name: None, current=""), [])
 
+    def test_pick_installed_font_walks_fallbacks(self) -> None:
+        from hypraesthetic.discover import pick_installed_font
+
+        self.assertEqual(
+            pick_installed_font("Orbitron, Inter, Sans", families=["Inter", "Adwaita Sans"]),
+            "Inter",
+        )
+        self.assertEqual(
+            pick_installed_font("Orbitron, Fancy Display", families=["Cantarell"]),
+            "Fancy Display",
+        )
+        self.assertEqual(pick_installed_font("", families=["Inter"]), "Sans")
+
     def test_font_desc_with_zero_size_becomes_11(self) -> None:
         from hypraesthetic.discover import normalize_font
 

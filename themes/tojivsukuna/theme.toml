@@ -74,7 +74,26 @@ success_fg = "{{palette.base07}}"
 bar = "waybar"
 bar_style = "v1.2"
 launcher = "rofi"
-widgets = ["clock", "system", "wakatime", "toji"]
+widgets = ["clock", "quote", "music", "system"]
+
+[hypr]
+gaps_in = 8
+gaps_out = 16
+border_size = 1
+rounding = 16
+
+[identity]
+font_ui = "IBM Plex Sans, Source Sans 3, Adwaita Sans"
+font_clock = "IBM Plex Sans, Source Sans 3, Adwaita Sans"
+font_mono = "IBM Plex Mono, JetBrainsMono Nerd Font, monospace"
+font_quote = "Noto Serif, IBM Plex Sans, Adwaita Sans"
+clock_size = 72
+music_radius = 20
+cover_size = 64
+matrix_chars = "010101$#%&"
+matrix_rows = 48
+matrix_cols = 1
+matrix_density = 3
 
 [defaults]
 file_manager = "nautilus"
