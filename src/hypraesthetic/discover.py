@@ -256,7 +256,10 @@ def parse_wallpaper_query(text: str) -> Path | None:
 def live_wallpaper_path(runner: Runner | None = None) -> Path | None:
     run = runner or subprocess.run
     for cmd in (["swww", "query"], ["awww", "query"]):
-        result = run(cmd, check=False, capture_output=True, text=True)
+        try:
+            result = run(cmd, check=False, capture_output=True, text=True)
+        except FileNotFoundError:
+            continue
         found = parse_wallpaper_query(getattr(result, "stdout", "") or "")
         if found is not None:
             return found
@@ -306,12 +309,15 @@ def resolve_wallpaper(
 
 def primary_screen_size(runner: Runner | None = None) -> tuple[int, int]:
     run = runner or subprocess.run
-    result = run(
-        ["hyprctl", "monitors", "-j"],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = run(
+            ["hyprctl", "monitors", "-j"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        return 1920, 1080
     raw = getattr(result, "stdout", "") or ""
     try:
         monitors = json.loads(raw)

@@ -206,6 +206,12 @@ class DiscoverTests(unittest.TestCase):
         self.assertEqual(found, pref)
         tmp.cleanup()
 
+    def test_missing_wallpaper_daemons_do_not_raise(self) -> None:
+        def boom(*_args, **_kwargs):
+            raise FileNotFoundError("swww")
+
+        self.assertIsNone(resolve_wallpaper(live=True, runner=boom))
+
     def test_primary_screen_uses_logical_pixels(self) -> None:
         class MonitorRunner:
             def __call__(self, args, **_kwargs):
@@ -216,6 +222,12 @@ class DiscoverTests(unittest.TestCase):
                 return Result()
 
         self.assertEqual(primary_screen_size(runner=MonitorRunner()), (1600, 1000))
+
+    def test_missing_hyprctl_falls_back_to_1080p(self) -> None:
+        def boom(*_args, **_kwargs):
+            raise FileNotFoundError("hyprctl")
+
+        self.assertEqual(primary_screen_size(runner=boom), (1920, 1080))
 
     def test_bar_toml_supplies_name_and_preview(self) -> None:
         tmp = tempfile.TemporaryDirectory()
