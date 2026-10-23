@@ -157,6 +157,10 @@ def ensure_helper(
             if install_files(paths):
                 keep_archive = False
                 return True
+            print("pacman -U failed; package archive kept in:")
+            print(tmpdir)
+            for path in paths:
+                print(path)
             return False
 
         try:

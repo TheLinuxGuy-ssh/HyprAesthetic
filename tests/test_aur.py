@@ -408,7 +408,7 @@ class AurTests(unittest.TestCase):
                 shutil.rmtree(path.parent, ignore_errors=True)
 
         self.addCleanup(cleanup)
-        with patch("subprocess.run", side_effect=AssertionError("real subprocess")):
+        with redirect_stdout(StringIO()), patch("subprocess.run", side_effect=AssertionError("real subprocess")):
             found = ensure_helper(
                 "paru",
                 runner=runner,
@@ -456,7 +456,7 @@ class AurTests(unittest.TestCase):
                 shutil.rmtree(path.parent, ignore_errors=True)
 
         self.addCleanup(cleanup)
-        with patch("subprocess.run", side_effect=AssertionError("real subprocess")):
+        with redirect_stdout(StringIO()), patch("subprocess.run", side_effect=AssertionError("real subprocess")):
             found = ensure_helper(
                 "paru",
                 runner=runner,
@@ -559,6 +559,97 @@ class AurTests(unittest.TestCase):
                 except OSError as exc:
                     self.fail(f"missing {missing} raised {exc!r}")
                 self.assertIsNone(found)
+
+    def test_pacman_u_failure_prints_archive_directory_and_packages(self) -> None:
+        built: dict[str, Path] = {}
+        user = SimpleNamespace(pw_uid=os.getuid(), pw_gid=os.getgid(), pw_name="builder")
+
+        def runner(cmd, **kwargs):
+            cwd = kwargs.get("cwd")
+            if cwd and "makepkg" in cmd:
+                first = Path(cwd, "paru-bin-1-1-x86_64.pkg.tar.zst")
+                second = Path(cwd, "paru-bin-debug-1-1-x86_64.pkg.tar.zst")
+                first.touch()
+                second.touch()
+                built["dir"] = Path(cwd)
+                built["paths"] = [first, second]
+                return SimpleNamespace(returncode=0)
+            if "-U" in cmd:
+                return SimpleNamespace(returncode=1)
+            return SimpleNamespace(returncode=0)
+
+        def cleanup() -> None:
+            directory = built.get("dir")
+            if directory is not None:
+                shutil.rmtree(directory, ignore_errors=True)
+
+        self.addCleanup(cleanup)
+        buf = StringIO()
+        with redirect_stdout(buf), patch("subprocess.run", side_effect=AssertionError("real subprocess")):
+            found = ensure_helper(
+                "paru",
+                runner=runner,
+                euid=0,
+                which=lambda _name: None,
+                privileged=privileged_command,
+                environ={},
+                users=[user],
+            )
+        printed = buf.getvalue()
+        self.assertIsNone(found)
+        self.assertTrue(built["paths"])
+        self.assertIn(str(built["dir"]), printed)
+        for path in built["paths"]:
+            self.assertIn(str(path), printed)
+            self.assertTrue(path.is_file())
+
+    def test_removed_bin_helper_prints_same_archive_paths_when_pacman_u_fails(self) -> None:
+        calls: list[list[str]] = []
+        built: dict[str, Path] = {}
+
+        def runner(cmd, **kwargs):
+            calls.append(list(cmd))
+            cwd = kwargs.get("cwd")
+            if cwd and "makepkg" in cmd:
+                path = Path(cwd, "paru-1-1-x86_64.pkg.tar.zst")
+                path.touch()
+                built["path"] = path
+                return SimpleNamespace(returncode=0)
+            if any(tok.startswith("-R") for tok in cmd):
+                return SimpleNamespace(returncode=0)
+            if "-U" in cmd:
+                return SimpleNamespace(returncode=1)
+            if cmd[:1] == ["paru"] and "--version" in cmd:
+                return SimpleNamespace(returncode=127)
+            return SimpleNamespace(returncode=0)
+
+        def cleanup() -> None:
+            path = built.get("path")
+            if path is not None:
+                shutil.rmtree(path.parent, ignore_errors=True)
+
+        self.addCleanup(cleanup)
+        buf = StringIO()
+        with redirect_stdout(buf), patch("subprocess.run", side_effect=AssertionError("real subprocess")):
+            found = ensure_helper(
+                "paru",
+                runner=runner,
+                euid=1000,
+                which=lambda name: "/usr/bin/paru" if name == "paru" else None,
+                privileged=privileged_command,
+                environ={},
+            )
+        printed = buf.getvalue()
+        self.assertIsNone(found)
+        self.assertIn(str(built["path"].parent), printed)
+        self.assertIn(str(built["path"]), printed)
+        self.assertTrue(built["path"].is_file())
+        removes = [cmd for cmd in calls if any(tok.startswith("-R") for tok in cmd)]
+        self.assertEqual(removes[-1][-1], "paru-bin")
+        self.assertEqual(
+            [line for line in printed.splitlines() if line.endswith(".pkg.tar.zst")],
+            [str(built["path"])],
+        )
 
     def test_readme_installation_mentions_aur_helper(self) -> None:
         readme = Path(__file__).resolve().parents[1] / "README.md"
