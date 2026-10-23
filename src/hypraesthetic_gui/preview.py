@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 import gi
@@ -13,28 +14,62 @@ from gi.repository import Gdk, GdkPixbuf, GLib, Gtk
 
 TILE_WIDTH = 196
 TILE_HEIGHT = 118
+PRESET_WIDTH = 420
+PRESET_HEIGHT = 236
+FILM_WIDTH = 160
+FILM_HEIGHT = 90
+HERO_WIDTH = 640
+HERO_HEIGHT = 360
 MAX_ANIM_BYTES = 8 * 1024 * 1024
 MAX_ANIM_PIXELS = 8_000_000
+
+
+def _interp_type() -> GdkPixbuf.InterpType:
+    return getattr(GdkPixbuf.InterpType, "HYPSERSAMPLE", GdkPixbuf.InterpType.BILINEAR)
+
+
+def _cover_dims(src_w: int, src_h: int, width: int, height: int) -> tuple[int, int]:
+    src_w = max(int(src_w), 1)
+    src_h = max(int(src_h), 1)
+    width = max(int(width), 1)
+    height = max(int(height), 1)
+    if src_w * height >= src_h * width:
+        scaled_h = height
+        scaled_w = math.ceil(src_w * height / src_h)
+    else:
+        scaled_w = width
+        scaled_h = math.ceil(src_h * width / src_w)
+    return max(int(scaled_w), 1), max(int(scaled_h), 1)
+
+
+def _scale_cover(src: GdkPixbuf.Pixbuf, width: int, height: int) -> GdkPixbuf.Pixbuf | None:
+    src_w = max(src.get_width(), 1)
+    src_h = max(src.get_height(), 1)
+    scaled_w, scaled_h = _cover_dims(src_w, src_h, width, height)
+    if scaled_w == src_w and scaled_h == src_h:
+        return src
+    return src.scale_simple(scaled_w, scaled_h, _interp_type())
 
 
 def cover_pixbuf(src: GdkPixbuf.Pixbuf, width: int, height: int) -> GdkPixbuf.Pixbuf | None:
     width = max(1, int(width))
     height = max(1, int(height))
-    src_w = max(src.get_width(), 1)
-    src_h = max(src.get_height(), 1)
-    scale = max(width / src_w, height / src_h)
-    scaled_w = max(1, int(src_w * scale))
-    scaled_h = max(1, int(src_h * scale))
-    scaled = src.scale_simple(scaled_w, scaled_h, GdkPixbuf.InterpType.BILINEAR)
+    decode_size = (width * 2, height * 2)
+    scaled = _scale_cover(src, decode_size[0], decode_size[1])
     if scaled is None:
         return None
-    x = max(0, (scaled_w - width) // 2)
-    y = max(0, (scaled_h - height) // 2)
-    crop_w = min(width, scaled_w)
-    crop_h = min(height, scaled_h)
-    cropped = scaled.new_subpixbuf(x, y, crop_w, crop_h)
+    fitted = _scale_cover(scaled, width, height)
+    if fitted is None:
+        return None
+    fitted_w = fitted.get_width()
+    fitted_h = fitted.get_height()
+    x = max(0, (fitted_w - width) // 2)
+    y = max(0, (fitted_h - height) // 2)
+    crop_w = min(width, fitted_w)
+    crop_h = min(height, fitted_h)
+    cropped = fitted.new_subpixbuf(x, y, crop_w, crop_h)
     if cropped is None:
-        return scaled
+        return fitted
     return cropped.copy()
 
 
@@ -80,6 +115,7 @@ def preview_widget(
     color: str | None = None,
     width: int = TILE_WIDTH,
     height: int = TILE_HEIGHT,
+    placeholder: str | None = None,
 ) -> Gtk.Widget:
     frame = Gtk.Frame()
     frame.add_css_class("ha-preview")
@@ -88,13 +124,44 @@ def preview_widget(
     if picture is not None:
         frame.set_child(picture)
         return frame
+    if placeholder:
+        frame.set_child(_placeholder(placeholder, width, height))
+        return frame
     frame.set_child(_swatch(color, width, height))
     return frame
 
 
+def _decode_static_cover(path: Path | str, width: int, height: int) -> GdkPixbuf.Pixbuf | None:
+    width = max(1, int(width))
+    height = max(1, int(height))
+    decode_size = (width * 2, height * 2)
+    src_w, src_h = _file_pixel_size(path)
+    if src_w > decode_size[0] or src_h > decode_size[1]:
+        load_w, load_h = _cover_dims(src_w, src_h, decode_size[0], decode_size[1])
+        try:
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(str(path), load_w, load_h, True)
+        except GLib.Error:
+            pixbuf = None
+        if pixbuf is not None:
+            return pixbuf
+    return load_static_pixbuf(path)
+
+
+def _file_pixel_size(path: Path | str) -> tuple[int, int]:
+    try:
+        info = GdkPixbuf.Pixbuf.get_file_info(str(path))
+    except GLib.Error:
+        return 0, 0
+    if not info:
+        return 0, 0
+    try:
+        return max(int(info[1] or 0), 0), max(int(info[2] or 0), 0)
+    except (TypeError, ValueError, IndexError):
+        return 0, 0
+
+
 def _picture_for(image: Path, width: int, height: int) -> Gtk.Picture | None:
-    anim = load_animation(image)
-    src = anim.get_static_image() if anim is not None else load_static_pixbuf(image)
+    anim, src = _preview_source(image, width, height)
     if src is None:
         return None
     picture = Gtk.Picture()
@@ -112,6 +179,43 @@ def _picture_for(image: Path, width: int, height: int) -> Gtk.Picture | None:
         if picture.get_mapped():
             player.start()
     return picture
+
+
+def _preview_source(
+    image: Path, width: int, height: int
+) -> tuple[GdkPixbuf.PixbufAnimation | None, GdkPixbuf.Pixbuf | None]:
+    suffix = image.suffix.lower()
+    decode_size = (max(1, int(width)) * 2, max(1, int(height)) * 2)
+    if suffix in {".gif", ".webp"} and _worth_animating(image):
+        anim = load_animation(image)
+        if anim is not None:
+            frame = anim.get_static_image()
+            if frame is not None and not anim.is_static_image():
+                return anim, frame
+            if (
+                frame is not None
+                and frame.get_width() <= decode_size[0]
+                and frame.get_height() <= decode_size[1]
+            ):
+                return None, frame
+    return None, _decode_static_cover(image, width, height)
+
+
+def _worth_animating(image: Path) -> bool:
+    try:
+        return image.stat().st_size <= MAX_ANIM_BYTES
+    except OSError:
+        return False
+
+
+def _placeholder(text: str, width: int, height: int) -> Gtk.Box:
+    box = Gtk.Box()
+    box.set_size_request(width, height)
+    label = Gtk.Label(label=text, wrap=True, justify=Gtk.Justification.CENTER)
+    label.set_halign(Gtk.Align.CENTER)
+    label.set_valign(Gtk.Align.CENTER)
+    box.append(label)
+    return box
 
 
 def _set_cover(picture: Gtk.Picture, src: GdkPixbuf.Pixbuf, width: int, height: int) -> bool:

@@ -336,6 +336,21 @@ class DiscoverTests(unittest.TestCase):
         self.assertNotIn("v1", blank)
         self.assertIn("cyberpunk", blank)
 
+    def test_desktop_preview_ignores_wallpaper_and_preview_png(self) -> None:
+        from hypraesthetic.discover import desktop_preview_image
+
+        tmp = tempfile.TemporaryDirectory()
+        root = Path(tmp.name)
+        (root / "wallpaper.png").write_bytes(b"png")
+        (root / "preview.png").write_bytes(b"png")
+        pkg = SimpleNamespace(root=root, wallpaper="wallpaper.png", preview="preview.png")
+        self.assertIsNone(desktop_preview_image(pkg))
+        self.assertIsNone(desktop_preview_image(None))
+        desktop = root / "desktop.png"
+        desktop.write_bytes(b"png")
+        self.assertEqual(desktop_preview_image(pkg), desktop)
+        tmp.cleanup()
+
 
 if __name__ == "__main__":
     unittest.main()

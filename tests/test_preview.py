@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 STATIC_GIF = bytes.fromhex(
@@ -45,6 +46,39 @@ class PreviewTests(unittest.TestCase):
         self.assertIsNotNone(cropped)
         self.assertEqual(cropped.get_width(), 10)
         self.assertEqual(cropped.get_height(), 10)
+
+    def test_cover_pixbuf_decodes_at_least_target_size(self) -> None:
+        from gi.repository import GdkPixbuf
+
+        from hypraesthetic_gui.preview import (
+            FILM_HEIGHT,
+            FILM_WIDTH,
+            HERO_HEIGHT,
+            HERO_WIDTH,
+            PRESET_HEIGHT,
+            PRESET_WIDTH,
+            cover_pixbuf,
+        )
+
+        self.assertEqual((PRESET_WIDTH, PRESET_HEIGHT), (420, 236))
+        self.assertEqual((FILM_WIDTH, FILM_HEIGHT), (160, 90))
+        self.assertEqual((HERO_WIDTH, HERO_HEIGHT), (640, 360))
+        src = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, False, 8, 2000, 1000)
+        self.assertIsNotNone(src)
+        src.fill(0x11223300)
+        seen: list[tuple[int, int]] = []
+        original = GdkPixbuf.Pixbuf.scale_simple
+
+        def spy(pixbuf, width, height, interp):
+            seen.append((int(width), int(height)))
+            return original(pixbuf, width, height, interp)
+
+        with unittest.mock.patch.object(GdkPixbuf.Pixbuf, "scale_simple", spy):
+            cropped = cover_pixbuf(src, PRESET_WIDTH, PRESET_HEIGHT)
+        self.assertIsNotNone(cropped)
+        self.assertEqual(cropped.get_width(), 420)
+        self.assertEqual(cropped.get_height(), 236)
+        self.assertTrue(any(width >= 840 and height >= 472 for width, height in seen), seen)
 
     def test_load_animation_reads_static_gif(self) -> None:
         from hypraesthetic_gui.preview import load_animation, load_static_pixbuf

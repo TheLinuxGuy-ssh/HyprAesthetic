@@ -21,6 +21,7 @@ from hypraesthetic.discover import (
     WIDGET_CATALOG,
     WIDGET_DEFAULT_GEOMETRY,
     current_theme_name,
+    desktop_preview_image,
     format_percent,
     geom_to_fraction,
     list_bar_styles,
@@ -47,7 +48,17 @@ from hypraesthetic.prefs import Prefs
 from hypraesthetic.preset import prepare_preset_switch
 from hypraesthetic.store import ThemeStore
 from hypraesthetic_gui.dirty import bind_dirty_apply
-from hypraesthetic_gui.preview import cover_pixbuf, load_static_pixbuf, preview_widget
+from hypraesthetic_gui.preview import (
+    FILM_HEIGHT,
+    FILM_WIDTH,
+    HERO_HEIGHT,
+    HERO_WIDTH,
+    PRESET_HEIGHT,
+    PRESET_WIDTH,
+    cover_pixbuf,
+    load_static_pixbuf,
+    preview_widget,
+)
 
 CSS = b"""
 .ha-tile {
@@ -62,10 +73,6 @@ CSS = b"""
 }
 .ha-tile:hover {
   border-color: alpha(@accent_color, 0.55);
-}
-.ha-preview {
-  min-height: 118px;
-  min-width: 196px;
 }
 .ha-hero .ha-preview {
   min-width: 640px;
@@ -203,6 +210,7 @@ def _tile(
     selected: bool = False,
     width: int | None = None,
     height: int | None = None,
+    placeholder: str | None = None,
 ) -> Gtk.Button:
     button = Gtk.Button()
     button.add_css_class("ha-tile")
@@ -211,9 +219,17 @@ def _tile(
         button.add_css_class("selected")
     box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     if width is not None and height is not None:
-        box.append(preview_widget(image, color, width=width, height=height))
+        box.append(
+            preview_widget(
+                image,
+                color,
+                width=width,
+                height=height,
+                placeholder=placeholder,
+            )
+        )
     else:
-        box.append(_preview_widget(image, color))
+        box.append(preview_widget(image, color, placeholder=placeholder))
     name = Gtk.Label(label=title, xalign=0, wrap=True)
     name.add_css_class("ha-tile-title")
     box.append(name)
@@ -324,12 +340,16 @@ def presets_page() -> Gtk.Widget:
             _set_selected(buttons, name)
 
     for pkg in ThemeCatalog().list():
+        shot = desktop_preview_image(pkg)
         tile = _tile(
             pkg.display_name,
             pkg.description or pkg.name,
-            image=theme_preview_image(pkg),
+            image=shot,
             color=pkg.colors.get("waybar", {}).get("primary") or pkg.palette.get("base0D"),
             selected=pkg.name == active,
+            width=PRESET_WIDTH,
+            height=PRESET_HEIGHT,
+            placeholder=None if shot is not None else "Desktop screenshot not added yet",
         )
         tile.connect("clicked", lambda _b, name=pkg.name: apply_theme(name))
         buttons[pkg.name] = tile
@@ -973,10 +993,10 @@ def look_page() -> Gtk.Widget:
         while child := hero.get_first_child():
             hero.remove(child)
         if path is not None:
-            hero.append(preview_widget(path, width=640, height=360))
+            hero.append(preview_widget(path, width=HERO_WIDTH, height=HERO_HEIGHT))
             return
         missing = Gtk.Label(label="No wallpaper", xalign=0)
-        missing.set_size_request(640, 360)
+        missing.set_size_request(HERO_WIDTH, HERO_HEIGHT)
         hero.append(missing)
 
     def apply_wallpaper(path: Path) -> None:
@@ -1007,8 +1027,8 @@ def look_page() -> Gtk.Widget:
             image.name,
             image=image,
             selected=is_current(image),
-            width=160,
-            height=90,
+            width=FILM_WIDTH,
+            height=FILM_HEIGHT,
         )
         tile.connect("clicked", lambda _b, path=image: apply_wallpaper(path))
         wall_buttons[str(image)] = tile

@@ -175,6 +175,21 @@ def _preview_search_dirs(root: Path) -> list[Path]:
     ]
 
 
+_DESKTOP_NAMES = ("desktop.png", "desktop.jpg", "desktop.webp")
+
+
+def desktop_preview_image(pkg) -> Path | None:
+    if pkg is None:
+        return None
+    root = Path(getattr(pkg, "root"))
+    for directory in _preview_search_dirs(root):
+        for name in _DESKTOP_NAMES:
+            path = directory / name
+            if path.is_file():
+                return path
+    return None
+
+
 def theme_preview_image(pkg) -> Path | None:
     if pkg is None:
         return None

@@ -188,6 +188,52 @@ class PresetsUndoTests(unittest.TestCase):
                 else:
                     os.environ["HOME"] = old_home
 
+    def test_preset_tiles_do_not_use_wallpaper_as_the_card(self) -> None:
+        from gi.repository import GdkPixbuf
+
+        from hypraesthetic.discover import desktop_preview_image, theme_preview_image
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "theme"
+            root.mkdir()
+            wall = root / "wallpaper.png"
+            pixbuf = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, False, 8, 8, 8)
+            pixbuf.fill(0x336699FF)
+            pixbuf.savev(str(wall), "png", [], [])
+            (root / "preview.png").write_bytes(wall.read_bytes())
+            pkg = SimpleNamespace(
+                name="sample",
+                display_name="Sample Theme",
+                description="A quiet desktop",
+                root=root,
+                wallpaper="wallpaper.png",
+                preview="preview.png",
+                colors={"waybar": {"primary": "#112233"}},
+                palette={"base0D": "#445566"},
+            )
+            self.assertEqual(theme_preview_image(pkg), wall)
+            self.assertIsNone(desktop_preview_image(pkg))
+            with patch("hypraesthetic_gui.widgets.ThemeCatalog") as catalog:
+                catalog.return_value.list.return_value = [pkg]
+                page = presets_page()
+        pictures = [
+            widget for widget in _descendants(page) if isinstance(widget, Gtk.Picture)
+        ]
+        self.assertFalse(any(picture.get_paintable() is not None for picture in pictures))
+        labels = [
+            widget.get_label()
+            for widget in _descendants(page)
+            if isinstance(widget, Gtk.Label)
+        ]
+        self.assertIn("Desktop screenshot not added yet", labels)
+        self.assertIn("Sample Theme", labels)
+        self.assertIn("A quiet desktop", labels)
+        sized = [
+            widget.get_size_request()
+            for widget in _descendants(page)
+        ]
+        self.assertIn((420, 236), sized)
+
 
 class FontsPageTests(unittest.TestCase):
     def test_family_only_terminal_font_shows_size_11(self) -> None:
