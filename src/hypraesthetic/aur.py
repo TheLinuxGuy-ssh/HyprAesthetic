@@ -139,6 +139,12 @@ def ensure_helper(
         tmpdir = tempfile.mkdtemp(prefix=f"hypraesthetic-{pkg}-")
         keep_archive = False
 
+        def invoke(argv: list[str], **kwargs):
+            try:
+                return runner(argv, **kwargs)
+            except OSError:
+                return None
+
         def commit(paths: list[str]) -> bool:
             nonlocal keep_archive
             # -R only runs while the built archive is still on disk. Hold the
@@ -159,14 +165,14 @@ def ensure_helper(
                 if ids is None:
                     return False
                 os.chown(tmpdir, ids[0], ids[1])
-                cloned = runner(
+                cloned = invoke(
                     ["runuser", "-u", user, "--", "git", "clone", url, tmpdir],
                     check=False,
                 )
                 if not succeeded(cloned):
                     return False
                 if not succeeded(
-                    runner(
+                    invoke(
                         ["runuser", "-u", user, "--", "makepkg", "-s", "--noconfirm"],
                         check=False,
                         cwd=tmpdir,
@@ -174,14 +180,14 @@ def ensure_helper(
                 ):
                     return False
                 return commit(package_files(tmpdir))
-            if not succeeded(runner(["git", "clone", url, tmpdir], check=False)):
+            if not succeeded(invoke(["git", "clone", url, tmpdir], check=False)):
                 return False
             if replace_bin:
-                packed = runner(["makepkg", "-s", "--noconfirm"], check=False, cwd=tmpdir)
+                packed = invoke(["makepkg", "-s", "--noconfirm"], check=False, cwd=tmpdir)
                 if not succeeded(packed):
                     return False
                 return commit(package_files(tmpdir))
-            return succeeded(runner(["makepkg", "-si", "--noconfirm"], check=False, cwd=tmpdir))
+            return succeeded(invoke(["makepkg", "-si", "--noconfirm"], check=False, cwd=tmpdir))
         finally:
             if not keep_archive:
                 shutil.rmtree(tmpdir, ignore_errors=True)

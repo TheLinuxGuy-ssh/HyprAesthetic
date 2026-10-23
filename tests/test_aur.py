@@ -528,6 +528,38 @@ class AurTests(unittest.TestCase):
         self.assertFalse(any(cmd and cmd[0] == "runuser" for cmd in calls))
         self.assertFalse(any("-U" in cmd for cmd in calls))
 
+    def test_missing_git_or_runuser_does_not_raise(self) -> None:
+        user = SimpleNamespace(pw_uid=os.getuid(), pw_gid=os.getgid(), pw_name="builder")
+        cases = (
+            ("git", 1000, None),
+            ("runuser", 0, [user]),
+            ("makepkg", 1000, None),
+        )
+        for missing, euid, users in cases:
+            with self.subTest(missing=missing):
+                def runner(cmd, **_kwargs):
+                    if missing == "makepkg" and "makepkg" in cmd:
+                        raise FileNotFoundError("makepkg")
+                    if missing == "git" and (cmd[0] == "git" or (len(cmd) >= 5 and cmd[4] == "git")):
+                        raise FileNotFoundError("git")
+                    if missing == "runuser" and cmd[0] == "runuser":
+                        raise FileNotFoundError("runuser")
+                    return SimpleNamespace(returncode=0 if "clone" in cmd or "makepkg" in cmd else 1)
+
+                try:
+                    found = ensure_helper(
+                        "paru",
+                        runner=runner,
+                        euid=euid,
+                        which=lambda _name: None,
+                        privileged=privileged_command,
+                        environ={"SUDO_USER": "builder"} if euid != 0 else {},
+                        users=users,
+                    )
+                except OSError as exc:
+                    self.fail(f"missing {missing} raised {exc!r}")
+                self.assertIsNone(found)
+
     def test_readme_installation_mentions_aur_helper(self) -> None:
         readme = Path(__file__).resolve().parents[1] / "README.md"
         install = readme.read_text(encoding="utf-8").split("## Installation", 1)[1].split("\n## ", 1)[0]
