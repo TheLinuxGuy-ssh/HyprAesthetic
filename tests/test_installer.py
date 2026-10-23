@@ -225,6 +225,8 @@ class InstallerTests(unittest.TestCase):
 
         def runner(cmd, **_kwargs):
             commands.append(list(cmd))
+            if cmd[:2] == ["paru", "--version"]:
+                return SimpleNamespace(returncode=0)
             return SimpleNamespace(returncode=1)
 
         installer = self._arch_installer(runner, package_installed=lambda _pkg: False)
@@ -235,8 +237,11 @@ class InstallerTests(unittest.TestCase):
         pacman = [cmd for cmd in commands if "pacman" in cmd]
         self.assertEqual(pacman, [["sudo", "pacman", "-S", "--needed", "--noconfirm", "hyprland", "waybar"]])
         self.assertEqual(
-            [cmd for cmd in commands if cmd and cmd[0] == "paru"],
-            [["paru", "-S", "--needed", "--noconfirm", "eww-git", "hyprwave-git"]],
+            [cmd for cmd in commands if cmd and cmd[0] == "paru" and "-S" in cmd],
+            [
+                ["paru", "-S", "--needed", "--noconfirm", "eww-git"],
+                ["paru", "-S", "--needed", "--noconfirm", "hyprwave-git"],
+            ],
         )
 
     def test_aur_names_skip_sudo_for_user_and_root(self) -> None:
@@ -251,8 +256,11 @@ class InstallerTests(unittest.TestCase):
                 installer = self._arch_installer(runner, euid=euid)
                 installer._install_packages(["hyprland", "eww-git", "hyprwave-git", "waybar"])
                 self.assertEqual(
-                    [cmd for cmd in commands if cmd and cmd[0] in {"paru", "yay"}],
-                    [["paru", "-S", "--needed", "--noconfirm", "eww-git", "hyprwave-git"]],
+                    [cmd for cmd in commands if cmd and cmd[0] in {"paru", "yay"} and "-S" in cmd],
+                    [
+                        ["paru", "-S", "--needed", "--noconfirm", "eww-git"],
+                        ["paru", "-S", "--needed", "--noconfirm", "hyprwave-git"],
+                    ],
                 )
                 repo = next(cmd for cmd in commands if "hyprland" in cmd)
                 if euid == 0:
@@ -261,6 +269,47 @@ class InstallerTests(unittest.TestCase):
                     self.assertEqual(repo[:5], ["sudo", "pacman", "-S", "--needed", "--noconfirm"])
                 self.assertNotIn("eww-git", repo)
                 self.assertNotIn("hyprwave-git", repo)
+
+    def test_catalog_aur_name_uses_helper_not_pacman(self) -> None:
+        commands: list[list[str]] = []
+
+        def runner(cmd, **_kwargs):
+            commands.append(list(cmd))
+            if cmd[:2] == ["paru", "--version"]:
+                return SimpleNamespace(returncode=0)
+            return SimpleNamespace(returncode=0)
+
+        installer = self._arch_installer(
+            runner,
+            package_installed=lambda name: name not in {"hyprwave", "eww-git"},
+        )
+        installer._install_packages(["hyprland", "hyprwave", "eww-git"])
+        self.assertIn(["paru", "-S", "--needed", "--noconfirm", "hyprwave"], commands)
+        self.assertIn(["paru", "-S", "--needed", "--noconfirm", "eww-git"], commands)
+        pacman = [cmd for cmd in commands if "pacman" in cmd]
+        self.assertTrue(any("hyprland" in cmd for cmd in pacman))
+        self.assertFalse(any("hyprwave" in cmd for cmd in pacman))
+
+    def test_unrunnable_helper_is_rebuilt_before_aur_packages(self) -> None:
+        commands: list[list[str]] = []
+
+        def runner(cmd, **_kwargs):
+            commands.append(list(cmd))
+            if cmd[:2] == ["paru", "--version"]:
+                return SimpleNamespace(returncode=127)
+            return SimpleNamespace(returncode=0)
+
+        def ensure(name, **_kwargs):
+            commands.append(["ensure", name])
+            return name
+
+        installer = self._arch_installer(runner, which=lambda name: "/usr/bin/paru" if name == "paru" else None)
+        installer.ensure_helper = ensure
+        installer._install_packages(["eww-git"])
+        self.assertIn(["ensure", "paru"], commands)
+        self.assertLess(commands.index(["ensure", "paru"]), commands.index(
+            ["paru", "-S", "--needed", "--noconfirm", "eww-git"]
+        ))
 
     def test_aur_assume_bootstraps_paru_before_aur_packages(self) -> None:
         commands: list[list[str]] = []

@@ -10,7 +10,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from hypraesthetic.aur import choose_helper, ensure_helper as bootstrap_helper, find_helper, split_repo_and_aur
+from hypraesthetic.aur import (
+    choose_helper,
+    ensure_helper as bootstrap_helper,
+    find_helper,
+    helper_runs,
+    split_repo_and_aur,
+)
 from hypraesthetic.packages import PackageCatalog, os_release_ids
 from hypraesthetic.privilege import allow_root_install, privileged_command
 from hypraesthetic.paths import repo_root as detect_repo_root
@@ -159,13 +165,15 @@ class Installer:
             self.packages_installed = []
             self.packages_skipped = list(packages)
             return False
-        repo, aur = split_repo_and_aur(packages)
+        repo, aur = split_repo_and_aur(packages, extra_aur=self.catalog.aur_names(family.name))
         if repo:
             cmd = _install_command(family.manager, repo)
             if cmd:
                 self.runner(privileged_command(cmd, euid=self.euid), check=False)
         if aur:
             helper = find_helper(which=self.which)
+            if helper and not helper_runs(helper, self.runner):
+                helper = None
             if not helper:
                 helper = self.ensure_helper(
                     choose_helper(assume_yes=self.aur_assume, which=self.which, ask=self.aur_ask),
@@ -175,7 +183,10 @@ class Installer:
                     privileged=privileged_command,
                 )
             if helper:
-                self.runner([helper, "-S", "--needed", "--noconfirm", *aur], check=False)
+                # One package per invocation so a missing AUR name does not
+                # abort the rest of the transaction.
+                for pkg in aur:
+                    self.runner([helper, "-S", "--needed", "--noconfirm", pkg], check=False)
         installed: list[str] = []
         skipped: list[str] = []
         for name in packages:

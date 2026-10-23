@@ -26,6 +26,14 @@ class AurTests(unittest.TestCase):
         self.assertEqual(repo, ["hyprland", "waybar"])
         self.assertEqual(aur, ["eww-git", "hyprwave-git"])
 
+    def test_explicit_aur_names_skip_the_repo_manager(self) -> None:
+        repo, aur = split_repo_and_aur(
+            ["hyprland", "hyprwave", "eww-git"],
+            extra_aur={"hyprwave"},
+        )
+        self.assertEqual(repo, ["hyprland"])
+        self.assertEqual(aur, ["hyprwave", "eww-git"])
+
     def test_find_helper_prefers_paru(self) -> None:
         self.assertEqual(find_helper(which=lambda n: "/usr/bin/paru" if n == "paru" else None), "paru")
         self.assertEqual(find_helper(which=lambda n: f"/usr/bin/{n}"), "paru")
@@ -104,7 +112,13 @@ class AurTests(unittest.TestCase):
                 users=[],
             )
         self.assertEqual(found, "paru")
-        self.assertEqual(calls, [["pacman", "-S", "--needed", "--noconfirm", "paru"]])
+        self.assertEqual(
+            calls,
+            [
+                ["pacman", "-S", "--needed", "--noconfirm", "paru"],
+                ["paru", "--version"],
+            ],
+        )
 
     def test_ensure_helper_skips_clone_without_build_user(self) -> None:
         calls: list[list[str]] = []
@@ -160,6 +174,46 @@ class AurTests(unittest.TestCase):
         self.assertTrue(any(cmd[:3] == ["pacman", "-U", "--noconfirm"] for cmd in commands))
         self.assertFalse(any(cmd and cmd[0] == "makepkg" for cmd in commands))
         self.assertFalse(any(cmd and cmd[0] == "sudo" for cmd in commands))
+
+    def test_broken_bin_helper_is_replaced_with_source_build(self) -> None:
+        """A prebuilt helper that cannot load libalpm must not count as installed."""
+        calls: list[list[str]] = []
+        source_built = {"ok": False}
+
+        def which(name: str) -> str | None:
+            if name == "paru":
+                return "/usr/bin/paru"
+            return None
+
+        def runner(cmd, **kwargs):
+            calls.append(list(cmd))
+            cwd = kwargs.get("cwd")
+            if cwd and "makepkg" in cmd:
+                source_built["ok"] = True
+                Path(cwd, "paru-1-1-x86_64.pkg.tar.zst").touch()
+            if cmd[:1] == ["paru"] and "--version" in cmd:
+                return SimpleNamespace(returncode=0 if source_built["ok"] else 127)
+            return SimpleNamespace(returncode=0)
+
+        with patch("subprocess.run", side_effect=AssertionError("real subprocess")):
+            found = ensure_helper(
+                "paru",
+                runner=runner,
+                euid=1000,
+                which=which,
+                privileged=privileged_command,
+                environ={},
+            )
+        self.assertEqual(found, "paru")
+        clones = [cmd for cmd in calls if "clone" in cmd]
+        self.assertTrue(clones)
+        self.assertIn("https://aur.archlinux.org/paru.git", clones[-1])
+        self.assertNotIn("https://aur.archlinux.org/paru-bin.git", clones[-1])
+        removed = [cmd for cmd in calls if "paru-bin" in cmd and any(flag.startswith("-R") for flag in cmd)]
+        self.assertTrue(removed)
+        self.assertIn("sudo", removed[0])
+        debug = [cmd for cmd in calls if "paru-bin-debug" in cmd and any(flag.startswith("-R") for flag in cmd)]
+        self.assertTrue(debug)
 
     def test_user_makepkg_installs_with_si(self) -> None:
         calls: list[list[str]] = []

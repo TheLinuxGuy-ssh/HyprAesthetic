@@ -89,6 +89,41 @@ class ApplyEngineTests(unittest.TestCase):
         yuck = (self.home / ".config" / "eww" / "eww.yuck").read_text(encoding="utf-8")
         self.assertIn("matrix", yuck)
 
+    def test_live_apply_without_running_hyprland_is_not_an_error(self) -> None:
+        calls: list[list[str]] = []
+
+        def runner(cmd, **kwargs):
+            calls.append([str(part) for part in cmd])
+
+            class Result:
+                returncode = 1
+                stdout = ""
+                stderr = "HYPRLAND_INSTANCE_SIGNATURE not set! (is hyprland running?)"
+
+            return Result()
+
+        def popen(cmd, **kwargs):
+            calls.append(["popen", *[str(part) for part in cmd]])
+
+            class Proc:
+                pid = 1
+
+            return Proc()
+
+        engine = ApplyEngine(
+            repo_root=self.repo,
+            live=True,
+            runner=runner,
+            popen=popen,
+            which=lambda name: f"/usr/bin/{name}" if name in {"hyprctl", "eww", "waybar"} else None,
+        )
+        result = engine.apply("sample")
+        self.assertEqual(result.errors, [])
+        self.assertIn("hyprland", result.applied)
+        self.assertTrue((self.home / ".config" / "hypr" / "hyprland.lua").is_file())
+        self.assertFalse(any(cmd[:2] == ["hyprctl", "reload"] for cmd in calls))
+        self.assertFalse(any("eww" in cmd and "daemon" in cmd for cmd in calls))
+
     def test_dry_run_lists_without_writing(self) -> None:
         result = self.engine.apply("sample", dry_run=True)
         self.assertTrue(result.dry_run)

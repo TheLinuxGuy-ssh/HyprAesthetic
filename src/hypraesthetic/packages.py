@@ -39,6 +39,7 @@ class ComponentSpec:
     required: bool = False
     commands: list[str] = field(default_factory=list)
     packages: dict[str, list[str]] = field(default_factory=dict)
+    aur_packages: dict[str, list[str]] = field(default_factory=dict)
     choice_group: str | None = None
     choice_value: str | None = None
 
@@ -81,6 +82,10 @@ class PackageCatalog:
                 packages={
                     family: list(pkgs)
                     for family, pkgs in (body.get("packages") or {}).items()
+                },
+                aur_packages={
+                    family: list(pkgs)
+                    for family, pkgs in (body.get("aur_packages") or {}).items()
                 },
                 choice_group=body.get("choice_group"),
                 choice_value=body.get("choice_value"),
@@ -131,6 +136,12 @@ class PackageCatalog:
             if item.id in extras:
                 wanted.append(item)
         return wanted
+
+    def aur_names(self, family_name: str) -> set[str]:
+        names: set[str] = set()
+        for item in self.components.values():
+            names.update(item.aur_packages.get(family_name) or [])
+        return names
 
     def packages_for_selection(self, distro_id: str, selection: dict[str, Any]) -> list[str]:
         family = self.family_for(distro_id)

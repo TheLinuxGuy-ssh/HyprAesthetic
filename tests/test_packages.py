@@ -25,6 +25,12 @@ class PackageCatalogTests(unittest.TestCase):
         self.assertIn("portal", names)
         self.assertIn("fonts", names)
 
+    def test_arch_hyprwave_is_the_aur_release_not_a_missing_git_pkg(self) -> None:
+        item = self.catalog.component("hyprwave")
+        self.assertEqual(item.packages_for("arch"), ["hyprwave"])
+        self.assertIn("hyprwave", self.catalog.aur_names("arch"))
+        self.assertNotIn("hyprwave", self.catalog.aur_names("fedora"))
+
     def test_optional_hyprwave_on_debian(self) -> None:
         item = self.catalog.component("hyprwave")
         self.assertFalse(item.required)
