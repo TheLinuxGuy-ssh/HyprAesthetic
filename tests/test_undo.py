@@ -67,7 +67,7 @@ class UndoTests(unittest.TestCase):
         self._current().write_text("other\n", encoding="utf-8")
 
         restored = undo(self.engine)
-        self.assertEqual(restored, "sample")
+        self.assertEqual(restored.theme, "sample")
         self.assertEqual(self._current().read_text(encoding="utf-8").strip(), "sample")
         loaded = Prefs.load()
         self.assertEqual(loaded.get("wallpaper"), "/tmp/custom.png")
@@ -184,7 +184,7 @@ class UndoTests(unittest.TestCase):
         self.assertEqual(Prefs.load().get("bar_style"), "compact")
 
         first = undo(self.engine)
-        self.assertEqual(first, "sample")
+        self.assertEqual(first.theme, "sample")
         self.assertEqual(self._current().read_text(encoding="utf-8").strip(), "sample")
         back = Prefs.load()
         self.assertEqual(back.get("wallpaper"), "/tmp/a.png")
@@ -192,7 +192,7 @@ class UndoTests(unittest.TestCase):
         self.assertEqual(back.get("widgets"), ["clock"])
 
         second = undo(self.engine)
-        self.assertEqual(second, "other")
+        self.assertEqual(second.theme, "other")
         self.assertEqual(self._current().read_text(encoding="utf-8").strip(), "other")
         toggled = Prefs.load()
         self.assertEqual(toggled.get("wallpaper"), "/tmp/b.png")
@@ -219,7 +219,7 @@ class UndoTests(unittest.TestCase):
         self.assertEqual(on_other.widgets_for("other"), ["quote"])
         self.assertEqual(on_other.widgets_for("sample"), ["clock"])
         restored = undo(self.engine)
-        self.assertEqual(restored, "sample")
+        self.assertEqual(restored.theme, "sample")
         loaded = Prefs.load()
         self.assertEqual(loaded.widgets_for("sample"), ["clock"])
         self.assertEqual(loaded.get("widgets"), ["clock"])
@@ -228,6 +228,58 @@ class UndoTests(unittest.TestCase):
     def test_undo_without_snapshot_raises(self) -> None:
         with self.assertRaises(FileNotFoundError):
             undo(self.engine)
+
+    def _snapshot_after_switch_to_other(self):
+        _write_theme(self.repo, "other")
+        self._mark_current("sample")
+        prefs = Prefs.load()
+        prefs.set("wallpaper", "/tmp/custom.png")
+        prefs.set("bar_style", "default")
+        prefs.save()
+        self.engine.apply("other")
+        path = user_config_dir() / "last-apply.toml"
+        return path, path.read_text(encoding="utf-8")
+
+    def test_missing_theme_undo_leaves_previous_snapshot(self) -> None:
+        path, before = self._snapshot_after_switch_to_other()
+        self.assertIn('theme = "sample"', before)
+        broken = before.replace('theme = "sample"', 'theme = "missing-theme"', 1)
+        path.write_text(broken, encoding="utf-8")
+        with self.assertRaises(KeyError):
+            undo(self.engine)
+        self.assertEqual(path.read_text(encoding="utf-8"), broken)
+
+    def test_undo_apply_raise_leaves_previous_snapshot(self) -> None:
+        path, before = self._snapshot_after_switch_to_other()
+
+        def explode(*_args, **_kwargs):
+            raise RuntimeError("apply failed")
+
+        self.engine.apply = explode  # type: ignore[method-assign]
+        with self.assertRaises(RuntimeError):
+            undo(self.engine)
+        self.assertEqual(path.read_text(encoding="utf-8"), before)
+
+    def test_undo_returns_apply_errors(self) -> None:
+        _write_theme(self.repo, "other")
+        self._mark_current("sample")
+        prefs = Prefs.load()
+        prefs.set("wallpaper", "/tmp/custom.png")
+        prefs.set("bar_style", "default")
+        prefs.set("bar", "waybar")
+        prefs.save()
+        self.engine.apply("other")
+        original = self.engine.apply
+
+        def flaky(*args, **kwargs):
+            result = original(*args, **kwargs)
+            result.errors.append("waybar: failed")
+            return result
+
+        self.engine.apply = flaky  # type: ignore[method-assign]
+        result = undo(self.engine)
+        self.assertEqual(result.theme, "sample")
+        self.assertIn("waybar: failed", result.errors)
 
 
 if __name__ == "__main__":

@@ -155,7 +155,8 @@ class ApplyEngine:
         )
         if components is None and snapshot:
             # Record the pre-switch prefs before this apply rewrites bar_style.
-            # undo() passes snapshot=False: it already stored the outgoing theme.
+            # undo() passes snapshot=False and writes the outgoing snapshot
+            # itself only after apply returns.
             # If this theme already has its own widget set, that set is the
             # active list the snapshot should restore.
             from hypraesthetic.undo import snapshot

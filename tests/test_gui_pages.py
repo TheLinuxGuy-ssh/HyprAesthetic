@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 import tempfile
 import unittest
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import gi
@@ -146,7 +148,10 @@ class PresetsUndoTests(unittest.TestCase):
             button.emit("clicked")
         self.assertEqual(toast.call_args.args[1], "Nothing to undo")
         with (
-            patch("hypraesthetic.undo.undo", return_value="sample"),
+            patch(
+                "hypraesthetic.undo.undo",
+                return_value=SimpleNamespace(theme="sample", errors=[]),
+            ),
             patch("hypraesthetic_gui.widgets._toast") as toast,
         ):
             button.emit("clicked")
@@ -271,7 +276,8 @@ def _spin_by_title(root: Gtk.Widget, title: str) -> Gtk.SpinButton:
 
 class LookPageTests(unittest.TestCase):
     def test_sections_put_save_look_above_gtk(self) -> None:
-        with patch("hypraesthetic_gui.widgets.list_wallpapers", return_value=[]):
+        walls = [Path(f"/tmp/ha-look-walls/paper-{index:02d}.png") for index in range(24)]
+        with patch("hypraesthetic_gui.widgets.list_wallpapers", return_value=walls):
             page = look_page()
         marks = _page_marks(page)
         for label in ("Look", "Wallpaper", "Save look", "GTK and icons", "Hyprland"):
@@ -283,6 +289,38 @@ class LookPageTests(unittest.TestCase):
         self.assertLess(marks.index("GTK and icons"), second)
         self.assertLess(second, marks.index("Hyprland"))
         self.assertIn("Browse wallpaper…", marks)
+
+        flow = next(widget for widget in _descendants(page) if isinstance(widget, Gtk.FlowBox))
+        tiles = 0
+        child = flow.get_first_child()
+        while child is not None:
+            tiles += 1
+            child = child.get_next_sibling()
+        self.assertGreaterEqual(tiles, 24)
+        pane = flow.get_ancestor(Gtk.ScrolledWindow)
+        self.assertIsInstance(pane, Gtk.ScrolledWindow)
+        cap = pane.get_max_content_height()
+        self.assertGreater(cap, 0)
+        self.assertLessEqual(cap, 360)
+        self.assertTrue(pane.get_propagate_natural_height())
+        _minimum, flow_natural, _baseline, _natural_baseline = flow.measure(
+            Gtk.Orientation.VERTICAL, 900
+        )
+        self.assertGreater(flow_natural, cap)
+        save = next(button for button in _labeled_buttons(page) if button.get_label() == "Save look")
+        self.assertIsNot(save.get_ancestor(Gtk.ScrolledWindow), pane)
+        self.assertIs(save.get_parent(), pane.get_parent())
+        seen_wall = False
+        sibling = save.get_parent().get_first_child()
+        while sibling is not None:
+            if sibling is pane:
+                seen_wall = True
+            if sibling is save:
+                self.assertTrue(seen_wall)
+                break
+            sibling = sibling.get_next_sibling()
+        else:
+            self.fail("Save look is not on the page column")
 
     def test_gtk_mismatch_hint_and_hypr_spins(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

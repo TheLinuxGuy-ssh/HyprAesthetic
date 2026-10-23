@@ -6,7 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-from hypraesthetic.apply import ApplyEngine
+from hypraesthetic.apply import ApplyEngine, ApplyResult
 from hypraesthetic.paths import current_theme_file, user_config_dir
 from hypraesthetic.prefs import Prefs, _copy_spec, _dump_toml, _is_widget_spec
 
@@ -48,16 +48,26 @@ def load_snapshot() -> dict[str, Any] | None:
     return loaded if isinstance(loaded, dict) else None
 
 
-def undo(engine: ApplyEngine) -> str:
-    """Reapply snapshot theme+prefs. Raise FileNotFoundError if none."""
+def undo(engine: ApplyEngine) -> ApplyResult:
+    """Reapply snapshot theme+prefs. Raise FileNotFoundError if none.
+
+    The outgoing snapshot is kept in memory and written only after apply
+    returns, so a raised restore leaves last-apply.toml in place.
+    """
     saved = load_snapshot()
     theme = str((saved or {}).get("theme") or "").strip()
     if saved is None or not theme:
         raise FileNotFoundError(snapshot_path())
-    # Keep the theme being left, with its own live prefs, so a second undo
-    # toggles back. Must run before restore: apply() would otherwise snapshot
-    # the restored prefs under this still-current theme name.
-    _snapshot_outgoing()
+    # Capture the theme being left, with its own live prefs, so a second undo
+    # toggles back. Held until apply returns: writing it first would replace
+    # last-apply.toml even when the restore raises. apply(snapshot=False)
+    # must not write this file itself, or it would store the restored prefs
+    # under the theme that is still current at the start of apply.
+    outgoing_prefs = Prefs.load()
+    current_path = current_theme_file()
+    outgoing_theme = (
+        current_path.read_text(encoding="utf-8").strip() if current_path.is_file() else ""
+    )
     prefs = Prefs.load()
     for key in _SNAPSHOT_FIELDS:
         if key in saved:
@@ -74,7 +84,7 @@ def undo(engine: ApplyEngine) -> str:
     if theme and "widgets" in saved:
         prefs.set_widgets_for(theme, list(saved["widgets"]))
     prefs.save()
-    engine.apply(theme, snapshot=False)
+    result = engine.apply(theme, snapshot=False)
     # A full apply copies the theme's bar_style over the restored pref.
     # Put that pref back and deploy only the bar when the theme replaced it.
     restored_style = saved.get("bar_style")
@@ -84,15 +94,10 @@ def undo(engine: ApplyEngine) -> str:
             current.set("bar_style", restored_style)
             current.save()
             if current.get("bar") != "none":
-                engine.apply(theme, components=["waybar"])
-    return theme
-
-
-def _snapshot_outgoing() -> None:
-    prefs = Prefs.load()
-    path = current_theme_file()
-    theme = path.read_text(encoding="utf-8").strip() if path.is_file() else ""
-    snapshot(prefs, theme)
+                follow = engine.apply(theme, components=["waybar"])
+                result.errors.extend(follow.errors)
+    snapshot(outgoing_prefs, outgoing_theme)
+    return result
 
 
 def _geometry_for_theme(prefs: Prefs, theme: str) -> dict[str, Any]:

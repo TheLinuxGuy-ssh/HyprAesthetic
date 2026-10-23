@@ -26,7 +26,7 @@ Usage: ha-theme <command>
   list                         List installed themes
   current                      Show the active theme
   switch <theme> [--dry-run] [--restart]
-  switch-<component> <theme> [--restart]
+  switch-<component> <theme> [--dry-run] [--restart]
   undo                         Restore the last full apply
   export-theme <name>          Copy the current look into your theme folder
   validate [theme]
@@ -165,11 +165,16 @@ def cmd_undo() -> int:
     from hypraesthetic import undo as undo_mod
 
     try:
-        theme = undo_mod.undo(ApplyEngine())
+        result = undo_mod.undo(ApplyEngine())
     except FileNotFoundError:
         print("Nothing to undo", file=sys.stderr)
         return 1
-    print(f"Restored {theme}")
+    for err in result.errors:
+        print(f"error: {err}", file=sys.stderr)
+    if result.errors:
+        print(f"Theme switch finished with {len(result.errors)} error(s): {result.theme}")
+        return 1
+    print(f"Restored {result.theme}")
     return 0
 
 
@@ -178,7 +183,7 @@ def cmd_switch_one(component: str, rest: list[str]) -> int:
     dry = "--dry-run" in rest
     restart = "--restart" in rest
     try:
-        ApplyEngine(live=not dry).apply(
+        result = ApplyEngine(live=not dry).apply(
             theme,
             dry_run=dry,
             restart=restart,
@@ -191,6 +196,11 @@ def cmd_switch_one(component: str, rest: list[str]) -> int:
         print("DRY RUN - would switch:")
         print(f"  - {component}")
         return 0
+    for err in result.errors:
+        print(f"error: {err}", file=sys.stderr)
+    if result.errors:
+        print(f"Theme switch finished with {len(result.errors)} error(s): {result.theme}")
+        return 1
     print(f"{component} configured")
     return 0
 

@@ -145,6 +145,23 @@ source = "https://github.com/example/from-refresh.git"
             or (eng.call_args and eng.call_args.kwargs.get("live") is False)
         )
 
+    def test_switch_component_usage_includes_dry_run(self) -> None:
+        code, out, _err = self._run3(["--help"])
+        self.assertEqual(code, 0)
+        self.assertIn("switch-<component> <theme> [--dry-run] [--restart]", out)
+
+    def test_switch_component_apply_errors_exit_nonzero(self) -> None:
+        with patch("hypraesthetic.cli.ApplyEngine") as eng:
+            inst = eng.return_value
+            inst.apply.return_value = SimpleNamespace(
+                applied=[], errors=["waybar: boom"], theme="sky"
+            )
+            code, out, err = self._run3(["switch-waybar", "sky"])
+        self.assertEqual(code, 1)
+        self.assertIn("error: waybar: boom", err)
+        self.assertIn("1 error", out)
+        self.assertNotIn("configured", out)
+
     def test_restore_without_timestamp_lists_and_exits_zero(self) -> None:
         with patch("hypraesthetic.cli._bash", return_value=0) as bash:
             code, out, err = self._run3(["restore"])
@@ -170,12 +187,26 @@ source = "https://github.com/example/from-refresh.git"
         self.assertNotIn("Traceback", err)
 
     def test_undo_prints_restored_theme(self) -> None:
-        with patch("hypraesthetic.undo.undo", return_value="sample") as undo:
+        with patch(
+            "hypraesthetic.undo.undo",
+            return_value=SimpleNamespace(theme="sample", errors=[]),
+        ) as undo:
             code, out, err = self._run3(["undo"])
         self.assertEqual(code, 0)
         self.assertIn("Restored sample", out)
         self.assertEqual(err, "")
         undo.assert_called_once()
+
+    def test_undo_prints_apply_errors(self) -> None:
+        with patch(
+            "hypraesthetic.undo.undo",
+            return_value=SimpleNamespace(theme="sky", errors=["hyprland: nope"]),
+        ):
+            code, out, err = self._run3(["undo"])
+        self.assertEqual(code, 1)
+        self.assertIn("error: hyprland: nope", err)
+        self.assertIn("1 error", out)
+        self.assertNotIn("Restored", out)
 
     def test_export_theme_requires_a_name(self) -> None:
         code, _out, err = self._run3(["export-theme"])

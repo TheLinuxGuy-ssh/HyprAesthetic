@@ -302,15 +302,18 @@ def _undo_last_apply(overlay: Adw.ToastOverlay, buttons: dict[str, Gtk.Button]) 
     from hypraesthetic import undo as undo_mod
 
     try:
-        theme = undo_mod.undo(ApplyEngine())
+        result = undo_mod.undo(ApplyEngine())
     except FileNotFoundError:
         _toast(overlay, "Nothing to undo")
         return
     except Exception as exc:  # noqa: BLE001 - surface undo errors in the UI
         _toast(overlay, str(exc))
         return
-    _toast(overlay, f"Restored {theme}")
-    _set_selected(buttons, theme)
+    if result.errors:
+        _toast(overlay, result.errors[0])
+        return
+    _toast(overlay, f"Restored {result.theme}")
+    _set_selected(buttons, result.theme)
 
 
 def bar_page() -> Gtk.Widget:
@@ -913,7 +916,13 @@ def look_page() -> Gtk.Widget:
         tile.connect("clicked", lambda _b, path=image: apply_wallpaper(path))
         wall_buttons[str(image)] = tile
         flow.append(tile)
-    box.append(flow)
+    # Cap the tile list so the first Save look stays on screen.
+    wall_pane = Gtk.ScrolledWindow(hexpand=True, vexpand=False)
+    wall_pane.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+    wall_pane.set_propagate_natural_height(True)
+    wall_pane.set_max_content_height(280)
+    wall_pane.set_child(flow)
+    box.append(wall_pane)
     browse = Gtk.Button(label="Browse wallpaper…", halign=Gtk.Align.START)
     browse.connect("clicked", lambda *_: _browse_wallpaper(overlay, apply_wallpaper))
     box.append(browse)
