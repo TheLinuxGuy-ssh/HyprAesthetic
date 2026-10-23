@@ -228,7 +228,7 @@ class FontsPageTests(unittest.TestCase):
                     ]
                     buttons[0].set_font_desc(Pango.FontDescription.from_string("Cantarell 0"))
                     save = next(
-                        button for button in _labeled_buttons(page) if button.get_label() == "Save fonts"
+                        button for button in _labeled_buttons(page) if button.get_label() == "Apply changes"
                     )
                     save.emit("clicked")
                 self.assertEqual(Prefs.load().get("fonts.ui"), "Cantarell 11")
@@ -237,6 +237,20 @@ class FontsPageTests(unittest.TestCase):
                     os.environ.pop("HOME", None)
                 else:
                     os.environ["HOME"] = old_home
+
+    def test_fonts_apply_is_disabled_until_a_font_changes(self) -> None:
+        page = fonts_page()
+        apply = next(b for b in _labeled_buttons(page) if b.get_label() == "Apply changes")
+        self.assertFalse(apply.get_sensitive())
+        self.assertIsInstance(apply.get_ancestor(Gtk.ActionBar) or apply.get_parent(), Gtk.Widget)
+
+    def test_widgets_and_apps_use_apply_changes_not_save(self) -> None:
+        for builder in (widgets_page, apps_page, fonts_page):
+            labels = [b.get_label() for b in _labeled_buttons(builder())]
+            self.assertIn("Apply changes", labels)
+            self.assertNotIn("Save fonts", labels)
+            self.assertNotIn("Save apps", labels)
+            self.assertNotIn("Save widgets", labels)
 
 
 STORE_EMPTY = (
@@ -697,7 +711,7 @@ class WidgetsPageTests(unittest.TestCase):
                     self.assertFalse(_switch_by_title(page, "Quote").get_active())
                     _switch_by_title(page, "Quote").set_active(True)
                     save = next(
-                        button for button in _labeled_buttons(page) if button.get_label() == "Save widgets"
+                        button for button in _labeled_buttons(page) if button.get_label() == "Apply changes"
                     )
                     save.emit("clicked")
                 loaded = Prefs.load()

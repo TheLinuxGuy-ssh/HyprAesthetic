@@ -46,6 +46,7 @@ from hypraesthetic.install_theme import ThemeInstaller
 from hypraesthetic.prefs import Prefs
 from hypraesthetic.preset import prepare_preset_switch
 from hypraesthetic.store import ThemeStore
+from hypraesthetic_gui.dirty import bind_dirty_apply
 from hypraesthetic_gui.preview import cover_pixbuf, load_static_pixbuf, preview_widget
 
 CSS = b"""
@@ -143,6 +144,29 @@ def _page(title: str, blurb: str) -> tuple[Adw.ToastOverlay, Gtk.Box]:
     inner.append(_status_label(blurb))
     overlay = _toast_overlay(_scrolled(inner))
     return overlay, inner
+
+
+def _form_page(title: str, blurb: str) -> tuple[Adw.ToastOverlay, Gtk.Box, Gtk.Button]:
+    _install_css()
+    form_box = Gtk.Box(
+        orientation=Gtk.Orientation.VERTICAL,
+        spacing=14,
+        margin_top=18,
+        margin_bottom=24,
+        margin_start=18,
+        margin_end=18,
+    )
+    heading = Gtk.Label(label=title, xalign=0)
+    heading.add_css_class("title-1")
+    form_box.append(heading)
+    form_box.append(_status_label(blurb))
+    column = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, vexpand=True)
+    column.append(_scrolled(form_box))
+    apply_button = Gtk.Button(label="Apply changes")
+    bar = Gtk.ActionBar()
+    bar.pack_start(apply_button)
+    column.append(bar)
+    return _toast_overlay(column), form_box, apply_button
 
 
 def _flow() -> Gtk.FlowBox:
@@ -404,7 +428,7 @@ def bar_page() -> Gtk.Widget:
 
 
 def widgets_page() -> Gtk.Widget:
-    overlay, box = _page(
+    overlay, box, apply_button = _form_page(
         "Widgets",
         "Choose overlay widgets, then save to apply them. Placement is per theme: switching presets restores that theme's layout, and Reset restores it too.",
     )
@@ -434,13 +458,20 @@ def widgets_page() -> Gtk.Widget:
     dash.set_active(bool(prefs.get("dashboard")))
     box.append(dash)
     actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-    save = Gtk.Button(label="Save widgets")
-    save.add_css_class("suggested-action")
     edit = Gtk.Button(label="Edit layout")
     reset = Gtk.Button(label="Reset placement")
 
     def selected_ids() -> list[str]:
         return [item["id"] for item in WIDGET_CATALOG if switches[item["id"]].get_active()]
+
+    def collect() -> dict:
+        return {"widgets": selected_ids(), "dashboard": dash.get_active()}
+
+    snapshot = collect()
+    refresh = bind_dirty_apply(apply_button, snapshot, collect)
+    for switch in switches.values():
+        switch.connect("notify::active", refresh)
+    dash.connect("notify::active", refresh)
 
     def persist_and_apply(message: str) -> None:
         loaded = Prefs.load()
@@ -454,11 +485,13 @@ def widgets_page() -> Gtk.Widget:
         loaded.set("extras", extras)
         loaded.save()
         _apply(overlay, components=["eww"], message=message)
+        snapshot.clear()
+        snapshot.update(collect())
+        refresh()
 
-    save.connect("clicked", lambda *_: persist_and_apply("Widgets applied"))
+    apply_button.connect("clicked", lambda *_: persist_and_apply("Widgets applied"))
     edit.connect("clicked", lambda *_: _open_editor(overlay, selected_ids(), persist_and_apply))
     reset.connect("clicked", lambda *_: _reset_geometry(overlay))
-    actions.append(save)
     actions.append(edit)
     actions.append(reset)
     box.append(actions)
@@ -803,7 +836,7 @@ def _safe_theme():
 
 
 def fonts_page() -> Gtk.Widget:
-    overlay, box = _page(
+    overlay, box, apply_button = _form_page(
         "Fonts",
         "These pickers list fonts installed on this system, the same way GNOME Tweaks does.",
     )
@@ -819,30 +852,43 @@ def fonts_page() -> Gtk.Widget:
         row = Adw.ActionRow(title=title, subtitle=f"{len(families)} families discovered" if families else "fc-list found no fonts")
         row.add_suffix(buttons[key])
         box.append(row)
-    save = Gtk.Button(label="Save fonts", halign=Gtk.Align.START)
-    save.add_css_class("suggested-action")
+
+    def collect() -> dict:
+        return {
+            "ui": _font_value(buttons["ui"], "Adwaita Sans 11"),
+            "bar": _font_value(buttons["bar"], "JetBrainsMono Nerd Font 11"),
+            "terminal": _font_value(buttons["terminal"], "JetBrainsMono Nerd Font"),
+        }
+
+    snapshot = collect()
+    refresh = bind_dirty_apply(apply_button, snapshot, collect)
+    for button in buttons.values():
+        button.connect("notify::font-desc", refresh)
 
     def persist(_button: Gtk.Button) -> None:
         loaded = Prefs.load()
+        current = collect()
         loaded.set(
             "fonts",
             {
-                "ui": _font_value(buttons["ui"], "Adwaita Sans 11"),
-                "bar": _font_value(buttons["bar"], "JetBrainsMono Nerd Font 11"),
-                "terminal": _font_value(buttons["terminal"], "JetBrainsMono Nerd Font"),
+                "ui": current["ui"],
+                "bar": current["bar"],
+                "terminal": current["terminal"],
                 "icons": str(loaded.get("fonts.icons") or "Papirus-Dark"),
             },
         )
         loaded.save()
         _apply(overlay, components=["gtk", "kitty", "waybar"], message="Fonts applied")
+        snapshot.clear()
+        snapshot.update(collect())
+        refresh()
 
-    save.connect("clicked", persist)
-    box.append(save)
+    apply_button.connect("clicked", persist)
     return overlay
 
 
 def apps_page() -> Gtk.Widget:
-    overlay, box = _page("Apps", "Super+E file manager, Super+T terminal, Super+B browser.")
+    overlay, box, apply_button = _form_page("Apps", "Super+E file manager, Super+T terminal, Super+B browser.")
     groups = [
         ("file_manager", "File manager"),
         ("terminal", "Terminal"),
@@ -859,18 +905,26 @@ def apps_page() -> Gtk.Widget:
         dropdowns[key] = (dropdown, values)
         row.add_suffix(dropdown)
         box.append(row)
-    save = Gtk.Button(label="Save apps", halign=Gtk.Align.START)
-    save.add_css_class("suggested-action")
+
+    def collect() -> dict:
+        return {key: _selected_text(dropdown, values) for key, (dropdown, values) in dropdowns.items()}
+
+    snapshot = collect()
+    refresh = bind_dirty_apply(apply_button, snapshot, collect)
+    for dropdown, _values in dropdowns.values():
+        dropdown.connect("notify::selected", refresh)
 
     def persist(_button: Gtk.Button) -> None:
         loaded = Prefs.load()
-        for key, (dropdown, values) in dropdowns.items():
-            loaded.set(key, _selected_text(dropdown, values))
+        for key, value in collect().items():
+            loaded.set(key, value)
         loaded.save()
         _apply(overlay, components=["hyprland"], message="Apps applied")
+        snapshot.clear()
+        snapshot.update(collect())
+        refresh()
 
-    save.connect("clicked", persist)
-    box.append(save)
+    apply_button.connect("clicked", persist)
     return overlay
 
 
