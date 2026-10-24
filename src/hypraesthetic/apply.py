@@ -298,6 +298,7 @@ class ApplyEngine:
         self._merge_hypr_look(prefs, variables)
         self._render_template("hypr/appearences.lua", dest / "appearences.lua", variables)
         self._render_template("hypr/colors.conf", dest / "colors.conf", variables)
+        self._render_template("hypr/hyprland.conf", dest / "hyprland.conf", variables)
         self._write_apps_overlay(dest, prefs)
         self._write_gui_overlay(dest)
         self._ensure_hypr_entry(dest)
