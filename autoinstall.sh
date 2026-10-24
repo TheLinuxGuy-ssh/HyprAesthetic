@@ -191,14 +191,20 @@ setup_gdm() {
 # ─── Clone repo & deploy configs ──────────────────────────────
 
 clone_and_install() {
-    log_info "Cloning HyprAesthetic..."
-    if [[ -d "$REPO_DIR" ]]; then
-        log_warn "Directory $REPO_DIR exists, pulling latest..."
-        cd "$REPO_DIR"
-        git pull
+    # Check if we're already in the HyprAesthetic repo root
+    if [[ -f "ha-theme" ]] && git remote get-url origin 2>/dev/null | grep -q "HyprAesthetic"; then
+        log_info "Already in HyprAesthetic repo, using current directory..."
+        REPO_DIR="."
     else
-        git clone "$REPO_URL"
-        cd "$REPO_DIR"
+        log_info "Cloning HyprAesthetic..."
+        if [[ -d "$REPO_DIR" ]]; then
+            log_warn "Directory $REPO_DIR exists, pulling latest..."
+            cd "$REPO_DIR"
+            git pull
+        else
+            git clone "$REPO_URL"
+            cd "$REPO_DIR"
+        fi
     fi
 
     # Fix toji_2 wallpaper filename mismatch
@@ -351,12 +357,13 @@ prompt_reboot() {
 main() {
     clear
     cat <<'EOF'
-██╗  ██╗██╗   ██╗██████╗ ██████╗ ███████╗███████╗ ██████╗████████╗
-██║  ██║╚██╗ ██╔╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔════╝╚══██╔══╝
-███████║ ╚████╔╝ ██████╔╝██████╔╝█████╗  █████╗  ██║        ██║   
-██╔══██║  ╚██╔╝  ██╔═══╝ ██╔══██╗██╔══╝  ██╔══╝  ██║        ██║   
-██║  ██║   ██║   ██║     ██║  ██║██║     ███████╗╚██████╗   ██║   
-╚═╝  ══╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝╚═╝     ╚══════╝ ╚═════╝   ╚═╝   
+██╗  ██╗██╗   ██╗██████╗ ██████╗  █████╗ ███████╗███████╗████████╗██╗  ██╗███████╗████████╗██╗ ██████╗
+██║  ██║╚██╗ ██╔╝██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝╚══██╔══╝██║  ██║██╔════╝╚══██╔══╝██║██╔════╝
+███████║ ╚████╔╝ ██████╔╝██████╔╝███████║█████╗  ███████╗   ██║   ███████║█████╗     ██║   ██║██║     
+██╔══██║  ╚██╔╝  ██╔═══╝ ██╔══██╗██╔══██║██╔══╝  ╚════██║   ██║   ██╔══██║██╔══╝     ██║   ██║██║     
+██║  ██║   ██║   ██║     ██║  ██║██║  ██║███████╗███████║   ██║   ██║  ██║███████╗   ██║   ██║╚██████╗
+╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝ ╚═════╝
+                                                                                                      
 
        HyprAesthetic Auto-Installer for Arch / CachyOS
 EOF
