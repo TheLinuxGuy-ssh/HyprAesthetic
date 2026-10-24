@@ -1,12 +1,11 @@
 #!/usr/bin/bash
 # HyprAesthetic Auto-Installer for Arch Linux / CachyOS
 # Run on a minimal installation as a regular user (not root)
+# Must be run from inside the cloned HyprAesthetic repo
 
 set -euo pipefail
 
 USER_NAME=$(whoami)
-REPO_URL="https://github.com/TheLinuxGuy-ssh/HyprAesthetic"
-REPO_DIR="HyprAesthetic"
 
 # Colors
 RED='\033[0;31m'
@@ -251,49 +250,17 @@ setup_gdm() {
     log_ok "GDM enabled"
 }
 
-# ─── Repo detection ──────────────────────────────────────────────────
+# ─── Deploy configs ──────────────────────────────
 
-find_repo_root() {
-    # 1. Current directory
-    if [[ -f "ha-theme" ]] && git remote get-url origin 2>/dev/null | grep -qi "hyprasthetic"; then
-        echo "."; return 0
-    fi
-    # 2. Git root
-    local git_root
-    git_root=$(git rev-parse --show-toplevel 2>/dev/null) || return 1
-    if [[ -f "$git_root/ha-theme" ]] && git -C "$git_root" remote get-url origin 2>/dev/null | grep -qi "hyprasthetic"; then
-        echo "$git_root"; return 0
-    fi
-    # 3. Common locations
-    for dir in "$HOME/HyprAesthetic" "$HOME/.local/share/HyprAesthetic" "/opt/HyprAesthetic"; do
-        if [[ -f "$dir/ha-theme" ]] && git -C "$dir" remote get-url origin 2>/dev/null | grep -qi "hyprasthetic"; then
-            echo "$dir"; return 0
-        fi
-    done
-    return 1
-}
-
-# ─── Clone repo & deploy configs ──────────────────────────────
-
-clone_and_install() {
-    # Find or clone repo
-    local repo_root
-    repo_root=$(find_repo_root) || repo_root=""
-    
-    if [[ -n "$repo_root" ]]; then
-        log_info "Found HyprAesthetic repo at: $repo_root"
-        cd "$repo_root"
-        REPO_DIR="."
-    else
-        log_info "Cloning HyprAesthetic..."
-        if [[ -d "$REPO_DIR" ]]; then
-            log_warn "Directory $REPO_DIR exists, pulling latest..."
-            cd "$REPO_DIR"
-            git pull
-        else
-            git clone "$REPO_URL"
-            cd "$REPO_DIR"
-        fi
+deploy_configs() {
+    # Verify we're in the right place
+    if [[ ! -f "ha-theme" ]]; then
+        log_err "Not in HyprAesthetic repo root."
+        log_err "Please run from inside the cloned repo:"
+        log_err "  git clone https://github.com/TheLinuxGuy-ssh/HyprAesthetic"
+        log_err "  cd HyprAesthetic"
+        log_err "  ./autoinstall.sh"
+        exit 1
     fi
 
     # Fix toji_2 wallpaper filename mismatch
@@ -408,7 +375,7 @@ enable_services() {
     log_ok "Services enabled"
 }
 
-# ─── Final steps ────────────────────────────────────────────────────
+# ─── Final steps ────────────────────────────────────────────────
 
 print_summary() {
     echo
@@ -451,18 +418,18 @@ prompt_reboot() {
     fi
 }
 
-# ─── Main ───────────────────────────────────────────────────────────
+# ─── Main ──────────────────────────────────────────────────────────
 
 main() {
     clear
     cat <<'EOF'
 ██╗  ██╗██╗   ██╗██████╗ ██████╗  █████╗ ███████╗███████╗████████╗██╗  ██╗███████╗████████╗██╗ ██████╗
-██║  ██║╚██╗ ██╔╝██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝╚══██╔══╝██║  ██║██╔════╝╚══██╔══╝██║██╔════╝
+██║  ██║╚██╗ ██╔╝██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝╚══██╔══╝██║  ██║██╔════╝╚══██══╝██║██╔════╝
 ███████║ ╚████╔╝ ██████╔╝██████╔╝███████║█████╗  ███████╗   ██║   ███████║█████╗     ██║   ██║██║     
 ██╔══██║  ╚██╔╝  ██╔═══╝ ██╔══██╗██╔══██║██╔══╝  ╚════██║   ██║   ██╔══██║██╔══╝     ██║   ██║██║     
 ██║  ██║   ██║   ██║     ██║  ██║██║  ██║███████╗███████║   ██║   ██║  ██║███████╗   ██║   ██║╚██████╗
 ╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝ ╚═════╝
-                                                                                                      
+                                                                                                       
 
        HyprAesthetic Auto-Installer for Arch / CachyOS
 EOF
@@ -521,7 +488,7 @@ EOF
 
     setup_gdm
     enable_services
-    clone_and_install
+    deploy_configs
 
     print_summary
     prompt_reboot
