@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -38,6 +39,10 @@ def session_start() -> int:
     except KeyError:
         _log(log, f"theme not found: {theme}")
         return 0
+
+    _ensure_wallpaper_daemon(log)
+    time.sleep(0.3)
+
     if prefs.get("widgets") and shutil_which("eww"):
         engine.apply(theme, components=["eww"])
         _log(log, "Started eww")
@@ -51,6 +56,43 @@ def session_start() -> int:
         subprocess.Popen(["hyprwave"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     _log(log, "Session start complete")
     return 0
+
+
+def _ensure_wallpaper_daemon(log: Path) -> None:
+    """Start swww-daemon or awww-daemon if not already running."""
+    if _running("swww-daemon") or _running("awww-daemon"):
+        return
+    if shutil_which("swww-daemon"):
+        subprocess.Popen(["swww-daemon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        _log(log, "Started swww-daemon")
+        for _ in range(30):
+            if _running("swww-daemon"):
+                break
+            time.sleep(0.1)
+    elif shutil_which("awww-daemon"):
+        subprocess.Popen(["awww-daemon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        _log(log, "Started awww-daemon")
+        for _ in range(30):
+            if _running("awww-daemon"):
+                break
+            time.sleep(0.1)
+    else:
+        _log(log, "No wallpaper daemon found (swww-daemon or awww-daemon)")
+
+
+def shutil_which(cmd: str) -> str | None:
+    return shutil.which(cmd)
+
+
+def _running(name: str) -> bool:
+    return subprocess.run(["pgrep", "-x", name], capture_output=True).returncode == 0
+
+
+def _log(path: Path, message: str) -> None:
+    from datetime import datetime
+
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] {message}\n")
 
 
 def shutil_which(cmd: str) -> str | None:
