@@ -74,7 +74,7 @@ success_fg = "{{palette.base00}}"
 bar = "waybar"
 bar_style = "v4"
 launcher = "rofi"
-widgets = ["clock", "quote", "system"]
+widgets = ["clock", "quote", "music", "weather", "system"]
 
 [hypr]
 gaps_in = 6

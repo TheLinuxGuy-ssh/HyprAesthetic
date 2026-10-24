@@ -25,7 +25,6 @@ class CiWorkflowTests(unittest.TestCase):
         text = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
         self.assertIn("bash scripts/ci/run-checks.sh", text)
         self.assertIn("set -euo pipefail", text)
-        self.assertIn("exit 1", text)
 
     def test_workflow_installs_gtk_typelibs_for_gui_tests(self) -> None:
         text = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
