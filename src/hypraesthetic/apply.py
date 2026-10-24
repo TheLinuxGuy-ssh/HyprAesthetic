@@ -796,7 +796,37 @@ class ApplyEngine:
         tool = self.which("awww") or self.which("swww")
         if not tool:
             return
+        self._ensure_wallpaper_daemon()
         self.runner([tool, "img", str(path), "--transition-type", "none"], check=False)
+
+    def _ensure_wallpaper_daemon(self) -> None:
+        if self.which("pgrep") and (
+            self.runner(["pgrep", "-x", "swww-daemon"], check=False, capture_output=True).returncode == 0
+            or self.runner(["pgrep", "-x", "awww-daemon"], check=False, capture_output=True).returncode == 0
+        ):
+            return
+        if self.which("swww-daemon"):
+            self.popen(
+                ["swww-daemon"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            for _ in range(30):
+                if self.runner(["pgrep", "-x", "swww-daemon"], check=False, capture_output=True).returncode == 0:
+                    break
+                time.sleep(0.1)
+        elif self.which("awww-daemon"):
+            self.popen(
+                ["awww-daemon"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            for _ in range(30):
+                if self.runner(["pgrep", "-x", "awww-daemon"], check=False, capture_output=True).returncode == 0:
+                    break
+                time.sleep(0.1)
 
     def _apply_bar_font(self, dest: Path, prefs: Prefs) -> None:
         family = font_family_only(str(prefs.get("fonts.bar") or ""))
