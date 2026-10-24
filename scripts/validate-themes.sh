@@ -113,7 +113,14 @@ validate_theme() {
         fi
     done
 
-    if ! validate_contrast "$theme" "$vars_file"; then
+    # Check if theme has skip_contrast_check = true in [meta] section
+    local skip_contrast=false
+    if grep -q "^skip_contrast_check\s*=\s*true" "$theme_dir/theme.toml" 2>/dev/null; then
+        skip_contrast=true
+        log_info "skipping contrast check (theme declares skip_contrast_check)"
+    fi
+
+    if [[ "$skip_contrast" == "false" ]] && ! validate_contrast "$theme" "$vars_file"; then
         errors=$((errors + 1))
     fi
 
