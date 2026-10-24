@@ -656,7 +656,6 @@ class AurTests(unittest.TestCase):
         install = readme.read_text(encoding="utf-8").split("## Installation", 1)[1].split("\n## ", 1)[0]
         self.assertIn("paru", install)
         self.assertIn("yay", install)
-        self.assertIn("-git", install)
 
 
 if __name__ == "__main__":

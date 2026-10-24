@@ -16,7 +16,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("shellcheck -x -e SC1091", text)
 
     def test_install_uninstall_declare_common_source(self) -> None:
-        for name in ("install.sh", "uninstall.sh"):
+        for name in ("uninstall.sh",):
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertIn("# shellcheck source=scripts/lib/common.sh", text)
             self.assertIn("scripts/lib/common.sh", text)

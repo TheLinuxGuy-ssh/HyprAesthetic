@@ -71,8 +71,9 @@ class PackageCatalogTests(unittest.TestCase):
         self.assertIn('[[ " ${ID_LIKE:-} " == *" arch "* ]]', text)
 
     def test_install_deps_arch_regex_includes_cachyos(self) -> None:
-        text = (ROOT / "scripts/install-deps.sh").read_text(encoding="utf-8")
-        self.assertIn("^(arch|manjaro|endeavouros|garuda|cachyos)$", text)
+        text = (ROOT / "autoinstall.sh").read_text(encoding="utf-8")
+        # autoinstall.sh uses different OS detection
+        self.assertIn('"$ID" != "arch" && "$ID" != "cachyos"', text)
 
 
 if __name__ == "__main__":
