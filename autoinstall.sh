@@ -188,7 +188,7 @@ setup_gdm() {
     log_ok "GDM enabled"
 }
 
-# ─── Clone repo & run ha-theme install ──────────────────────────────
+# ─── Clone repo & deploy configs ──────────────────────────────
 
 clone_and_install() {
     log_info "Cloning HyprAesthetic..."
@@ -209,8 +209,93 @@ clone_and_install() {
 
     chmod +x ha-theme
 
-    log_info "Running ha-theme install (automatic mode)..."
-    ./ha-theme install --mode automatic --yes
+    # 1. Save AUTOMATIC_SELECTION to prefs.toml
+    log_info "Saving automatic selection to prefs.toml..."
+    python3 -c "
+import sys
+sys.path.insert(0, 'src')
+from hypraesthetic.prefs import Prefs, AUTOMATIC_SELECTION
+prefs = Prefs.load()
+for k, v in AUTOMATIC_SELECTION.items():
+    prefs.set(k, v)
+prefs.save()
+print('Saved automatic selection to prefs.toml')
+"
+
+    # 2. Create CLI symlinks and add to PATH
+    log_info "Creating CLI symlinks..."
+    mkdir -p ~/.local/bin
+    ln -sf "$(pwd)/ha-theme" ~/.local/bin/ha-theme
+    cat > ~/.local/bin/hat <<'EOF'
+#!/usr/bin/env bash
+exec ha-theme "$@"
+EOF
+    chmod +x ~/.local/bin/hat
+    if [[ -f "$(pwd)/scripts/rofi-wallpaper-menu.sh" ]]; then
+        ln -sf "$(pwd)/scripts/rofi-wallpaper-menu.sh" ~/.local/bin/hyprwall
+    fi
+
+    # Add ~/.local/bin to shell rc files if not already present
+    for rc in ~/.bashrc ~/.zshrc; do
+        if [[ -f "$rc" ]] && ! grep -q '\.local/bin' "$rc" 2>/dev/null; then
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$rc"
+            log_info "Added ~/.local/bin to PATH in $rc"
+        fi
+    done
+
+    # 3. Write root config
+    log_info "Writing root config..."
+    mkdir -p ~/.config/HyprAesthetic
+    echo "$(pwd)" > ~/.config/HyprAesthetic/root
+
+    # 4. Write session/desktop files
+    log_info "Writing session/desktop files..."
+    mkdir -p ~/.local/share/applications
+    mkdir -p ~/.local/share/wayland-sessions
+    cat > ~/.local/share/applications/hyprland.desktop <<'EOF'
+[Desktop Entry]
+Name=Hyprland
+Comment=Hyprland Wayland compositor
+Exec=Hyprland
+Type=Application
+DesktopNames=Hyprland
+Keywords=tiling;wayland;compositor;
+EOF
+
+    cat > ~/.local/share/applications/hypraesthetic.desktop <<'EOF'
+[Desktop Entry]
+Name=HyprAesthetic
+Comment=Hyprland made easy
+Exec=ha-theme gui
+Icon=preferences-desktop-theme
+Terminal=false
+Type=Application
+Categories=Settings;DesktopSettings;
+EOF
+
+    cp ~/.local/share/applications/hyprland.desktop ~/.local/share/wayland-sessions/hyprland.desktop
+
+    # 5. Run backup before config deploy
+    log_info "Running backup..."
+    ./scripts/backup-configs.sh backup
+
+    # 6. Deploy configs via ApplyEngine (sky theme)
+    log_info "Deploying HyprAesthetic configs (automatic mode, sky theme)..."
+    python3 -c "
+import sys
+sys.path.insert(0, 'src')
+from hypraesthetic.apply import ApplyEngine
+from pathlib import Path
+
+engine = ApplyEngine(live=True, repo_root=Path('.'))
+result = engine.apply('sky', restart=False)
+if result.errors:
+    for err in result.errors:
+        print(f'error: {err}', file=sys.stderr)
+    sys.exit(1)
+print('Theme applied:', result.theme)
+print('Components:', ', '.join(result.applied))
+"
 
     log_ok "HyprAesthetic installed"
 }
@@ -240,6 +325,8 @@ print_summary() {
     echo "  • Wallpaper daemon (swww) with session-start autostart"
     echo "  • GDM display manager (enabled)"
     echo "  • NetworkManager, Bluetooth (enabled)"
+    echo
+    echo "Default theme: sky"
     echo
     echo "Next steps:"
     echo "  1. Reboot into GDM → select Hyprland session"
