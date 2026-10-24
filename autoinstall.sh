@@ -155,9 +155,6 @@ BASE_PACKAGES=(
 
     # Audio (PipeWire)
     pipewire
-    pipewire-pulse
-    pipewire-alsa
-    wireplumber
 
     # Utils
     nano
@@ -224,8 +221,6 @@ enable_services() {
     log_info "Enabling system services..."
     sudo systemctl enable NetworkManager
     sudo systemctl enable bluetooth
-    sudo systemctl enable pipewire-pulse
-    sudo systemctl enable wireplumber
     log_ok "Services enabled"
 }
 
@@ -244,7 +239,7 @@ print_summary() {
     echo "  • Fonts: JetBrainsMono Nerd, Iosevka Nerd, Noto Emoji"
     echo "  • Wallpaper daemon (swww) with session-start autostart"
     echo "  • GDM display manager (enabled)"
-    echo "  • NetworkManager, Bluetooth, PipeWire (enabled)"
+    echo "  • NetworkManager, Bluetooth (enabled)"
     echo
     echo "Next steps:"
     echo "  1. Reboot into GDM → select Hyprland session"
