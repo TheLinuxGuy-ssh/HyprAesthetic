@@ -54,8 +54,20 @@ check_internet() {
 # ─── AUR helper selection ───────────────────────────────────────────
 
 select_aur_helper() {
+    # First, check if yay or paru is already installed
+    if command -v yay &>/dev/null; then
+        AUR_HELPER="yay"
+        log_ok "Found existing AUR helper: yay"
+        return
+    elif command -v paru &>/dev/null; then
+        AUR_HELPER="paru"
+        log_ok "Found existing AUR helper: paru"
+        return
+    fi
+
+    # Neither installed - prompt user
     echo
-    echo "Select AUR helper:"
+    echo "Select AUR helper to install:"
     echo "  1) yay  (default, written in Go)"
     echo "  2) paru (written in Rust, faster)"
     echo
@@ -67,7 +79,7 @@ select_aur_helper() {
         2) AUR_HELPER="paru" ;;
         *) log_err "Invalid choice"; exit 1 ;;
     esac
-    log_ok "AUR helper: $AUR_HELPER"
+    log_ok "Selected AUR helper: $AUR_HELPER"
 }
 
 install_aur_helper() {
@@ -244,7 +256,7 @@ EOF
     # Add ~/.local/bin to shell rc files if not already present
     for rc in ~/.bashrc ~/.zshrc; do
         if [[ -f "$rc" ]] && ! grep -q '\.local/bin' "$rc" 2>/dev/null; then
-            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$rc"
+            echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> "$rc"
             log_info "Added ~/.local/bin to PATH in $rc"
         fi
     done
@@ -252,7 +264,7 @@ EOF
     # 3. Write root config
     log_info "Writing root config..."
     mkdir -p ~/.config/HyprAesthetic
-    echo "$(pwd)" > ~/.config/HyprAesthetic/root
+    pwd > ~/.config/HyprAesthetic/root
 
     # 4. Write session/desktop files
     log_info "Writing session/desktop files..."

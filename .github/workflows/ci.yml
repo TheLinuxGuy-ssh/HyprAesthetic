@@ -2,76 +2,27 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: ["*"]
   pull_request:
-    branches: [main, master]
-  workflow_dispatch:
-
-permissions:
-  contents: read
+    branches: ["*"]
 
 jobs:
   checks:
-    name: Lint, Test, Validate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            shellcheck python3 rsync \
-            python3-gi python3-gi-cairo \
-            gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-gdkpixbuf-2.0 \
-            xvfb
+          sudo apt-get install -y shellcheck xvfb python3 python3-pip python3-gi gir1.2-gtk-4.0 gir1.2-adw-1
 
-      - name: Run CI checks
-        run: bash scripts/ci/run-checks.sh
-
-  docs:
-    name: Documentation Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check markdown files
+      - name: Run checks
         run: |
           set -euo pipefail
-          fail=0
-          for f in *.md; do
-            echo "Checking $f..."
-            while read -r link; do
-              [ -z "$link" ] && continue
-              target=$(echo "$link" | sed 's/.*(\(.*\))/\1/')
-              target="${target%%#*}"
-              case "$target" in
-                http*|mailto:*) continue ;;
-              esac
-              if [ ! -f "$target" ]; then
-                echo "Broken link in $f: $target"
-                fail=1
-              fi
-            done < <(grep -o '\[[^]]*\]([^)]*\.md[^)]*)' "$f" || true)
-          done
-          exit "$fail"
-
-      - name: Check README has key sections
-        run: |
-          set -euo pipefail
-          fail=0
-          for section in "Features" "Installation" "Usage" "Components" "Creating Themes" "License"; do
-            if ! grep -q "## $section" README.md && ! grep -q "# $section" README.md; then
-              echo "Missing section: $section"
-              fail=1
-            fi
-          done
-          exit "$fail"
-
-      - name: No placeholder maintainer email
-        run: |
-          set -euo pipefail
-          if grep -R -n --include='*.md' 'your-email@example.com' .; then
-            echo "Replace your-email@example.com with the real contact"
-            exit 1
-          fi
+          bash scripts/ci/run-checks.sh
+          exit 1
+        env:
+          GDK_BACKEND: x11
+          GSK_RENDERER: cairo

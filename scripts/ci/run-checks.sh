@@ -7,12 +7,11 @@ export HYPRAESTHETIC_ROOT="$ROOT"
 export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
 
 echo "=== Bash syntax ==="
-bash -n install.sh
+bash -n autoinstall.sh
 bash -n uninstall.sh
 bash -n ha-theme
 bash -n scripts/theme-switcher.sh
 bash -n scripts/backup-configs.sh
-bash -n scripts/install-deps.sh
 bash -n scripts/session-start.sh
 bash -n scripts/validate-themes.sh
 bash -n scripts/validate-rofi-contrast.sh
@@ -25,7 +24,7 @@ done
 
 echo "=== Shellcheck ==="
 if command -v shellcheck >/dev/null 2>&1; then
-    shellcheck -x -e SC1091 install.sh uninstall.sh ha-theme
+    shellcheck -x -e SC1091 autoinstall.sh uninstall.sh ha-theme
     shellcheck -x -e SC1091 scripts/*.sh
     shellcheck -x -e SC1091 scripts/lib/*.sh
 else
@@ -60,7 +59,7 @@ test -f CONTRIBUTING.md
 test -f CODE_OF_CONDUCT.md
 test -f SECURITY.md
 test -f .gitignore
-test -f install.sh
+test -f autoinstall.sh
 test -f uninstall.sh
 test -f ha-theme
 test -f scripts/theme-switcher.sh
@@ -70,7 +69,7 @@ test -f data/packages.toml
 test -f data/store-index.toml
 test -d themes/spartan
 test -f themes/spartan/theme.toml
-test -x install.sh
+test -x autoinstall.sh
 test -x uninstall.sh
 test -x ha-theme
 test -x scripts/theme-switcher.sh
