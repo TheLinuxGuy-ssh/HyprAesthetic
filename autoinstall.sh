@@ -174,6 +174,56 @@ BASE_PACKAGES=(
     pacman-contrib
 )
 
+# Core utilities (installed by default)
+UTILITY_PACKAGES=(
+    evince
+    sushi
+    loupe
+    file-roller
+    gnome-calculator
+    pavucontrol
+    blueman
+    nm-connection-editor
+    gnome-disk-utility
+    gnome-system-monitor
+    btop
+    unzip
+    p7zip
+    unrar
+    rsync
+    reflector
+)
+
+# Media & codecs (installed by default)
+MEDIA_PACKAGES=(
+    vlc
+    mpv
+    gst-plugins-base
+    gst-plugins-good
+    gst-plugins-bad
+    gst-plugins-ugly
+    gst-libav
+    ffmpeg
+)
+
+# Browser packages (prompt)
+BROWSER_PACKAGES=(
+    firefox
+)
+
+# AUR browser packages
+AUR_BROWSER_PACKAGES=(
+    brave-bin
+)
+
+# AUR extras packages (prompt)
+AUR_EXTRA_PACKAGES=(
+    visual-studio-code-bin
+    obsidian
+    localsend-bin
+    spotify-launcher
+)
+
 # Automatic selection packages (from data/packages.toml -> arch family)
 AUTO_PACKAGES=(
     waybar
@@ -184,6 +234,7 @@ AUTO_PACKAGES=(
     neovim
     python-gobject
     libadwaita
+    hyprshot
 )
 
 # AUR packages for automatic selection
@@ -200,12 +251,38 @@ setup_gdm() {
     log_ok "GDM enabled"
 }
 
+# ─── Repo detection ──────────────────────────────────────────────────
+
+find_repo_root() {
+    # 1. Current directory
+    if [[ -f "ha-theme" ]] && git remote get-url origin 2>/dev/null | grep -qi "hyprasthetic"; then
+        echo "."; return 0
+    fi
+    # 2. Git root
+    local git_root
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null) || return 1
+    if [[ -f "$git_root/ha-theme" ]] && git -C "$git_root" remote get-url origin 2>/dev/null | grep -qi "hyprasthetic"; then
+        echo "$git_root"; return 0
+    fi
+    # 3. Common locations
+    for dir in "$HOME/HyprAesthetic" "$HOME/.local/share/HyprAesthetic" "/opt/HyprAesthetic"; do
+        if [[ -f "$dir/ha-theme" ]] && git -C "$dir" remote get-url origin 2>/dev/null | grep -qi "hyprasthetic"; then
+            echo "$dir"; return 0
+        fi
+    done
+    return 1
+}
+
 # ─── Clone repo & deploy configs ──────────────────────────────
 
 clone_and_install() {
-    # Check if we're already in the HyprAesthetic repo root
-    if [[ -f "ha-theme" ]] && git remote get-url origin 2>/dev/null | grep -q "HyprAesthetic"; then
-        log_info "Already in HyprAesthetic repo, using current directory..."
+    # Find or clone repo
+    local repo_root
+    repo_root=$(find_repo_root) || repo_root=""
+    
+    if [[ -n "$repo_root" ]]; then
+        log_info "Found HyprAesthetic repo at: $repo_root"
+        cd "$repo_root"
         REPO_DIR="."
     else
         log_info "Cloning HyprAesthetic..."
@@ -315,6 +392,10 @@ print('Theme applied:', result.theme)
 print('Components:', ', '.join(result.applied))
 "
 
+    # 7. Run doctor to verify
+    log_info "Running doctor to verify installation..."
+    python3 -m hypraesthetic doctor || true
+
     log_ok "HyprAesthetic installed"
 }
 
@@ -343,6 +424,12 @@ print_summary() {
     echo "  • Wallpaper daemon (swww) with session-start autostart"
     echo "  • GDM display manager (enabled)"
     echo "  • NetworkManager, Bluetooth (enabled)"
+    echo "  • Core utilities: evince, sushi, loupe, file-roller, gnome-calculator,"
+    echo "    pavucontrol, blueman, nm-connection-editor, gnome-disk-utility,"
+    echo "    gnome-system-monitor, btop, unzip, p7zip, unrar, rsync, reflector"
+    echo "  • Media & codecs: vlc, mpv, gst-plugins-*, ffmpeg"
+    echo "  • Browser: firefox (+ brave-bin from AUR if selected)"
+    echo "  • AUR extras: VS Code, Obsidian, LocalSend, Spotify (if selected)"
     echo
     echo "Default theme: sky"
     echo
@@ -399,9 +486,38 @@ EOF
 
     install_aur_helper
 
+    # Install base + utility + media packages (all by default)
+    log_info "Installing base packages..."
     install_packages "${BASE_PACKAGES[@]}"
+    
+    log_info "Installing core utilities..."
+    install_packages "${UTILITY_PACKAGES[@]}"
+    
+    log_info "Installing media players & codecs..."
+    install_packages "${MEDIA_PACKAGES[@]}"
+    
+    log_info "Installing automatic selection packages..."
     install_packages "${AUTO_PACKAGES[@]}"
+    
+    log_info "Installing AUR packages (eww-git, hyprwave)..."
     install_aur_packages "${AUR_AUTO_PACKAGES[@]}"
+
+    # Browser selection
+    echo
+    read -rp "$(echo -e "${YELLOW}Install browser (firefox + brave-bin from AUR)? [Y/n]: ${NC}")" browser_choice
+    if [[ ! "$browser_choice" =~ ^[Nn]$ ]]; then
+        log_info "Installing browser packages..."
+        install_packages "${BROWSER_PACKAGES[@]}"
+        install_aur_packages "${AUR_BROWSER_PACKAGES[@]}"
+    fi
+
+    # AUR extras
+    echo
+    read -rp "$(echo -e "${YELLOW}Install AUR extras (VS Code, Obsidian, LocalSend, Spotify)? [y/N]: ${NC}")" aur_extras_choice
+    if [[ "$aur_extras_choice" =~ ^[Yy]$ ]]; then
+        log_info "Installing AUR extras..."
+        install_aur_packages "${AUR_EXTRA_PACKAGES[@]}"
+    fi
 
     setup_gdm
     enable_services
