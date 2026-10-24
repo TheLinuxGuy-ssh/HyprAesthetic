@@ -279,8 +279,8 @@ EOF
     log_info "Running backup..."
     ./scripts/backup-configs.sh backup
 
-    # 6. Deploy configs via ApplyEngine (toji theme)
-    log_info "Deploying HyprAesthetic configs (automatic mode, toji theme)..."
+    # 6. Deploy configs via ApplyEngine (sky theme)
+    log_info "Deploying HyprAesthetic configs (automatic mode, sky theme)..."
     python3 -c "
 import sys
 sys.path.insert(0, 'src')
@@ -288,7 +288,7 @@ from hypraesthetic.apply import ApplyEngine
 from pathlib import Path
 
 engine = ApplyEngine(live=True, repo_root=Path('.'))
-result = engine.apply('toji', restart=False)
+result = engine.apply('sky', restart=False)
 if result.errors:
     for err in result.errors:
         print(f'error: {err}', file=sys.stderr)
@@ -325,6 +325,8 @@ print_summary() {
     echo "  • Wallpaper daemon (swww) with session-start autostart"
     echo "  • GDM display manager (enabled)"
     echo "  • NetworkManager, Bluetooth (enabled)"
+    echo
+    echo "Default theme: sky"
     echo
     echo "Next steps:"
     echo "  1. Reboot into GDM → select Hyprland session"
