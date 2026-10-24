@@ -7,7 +7,7 @@ ROOT_WARNING = (
     "You are running as root. The recommended install is as a normal user\n"
     "with sudo (the installer will call sudo for packages). As root, configs\n"
     "are written under /root and a normal desktop session will not see them.\n"
-    "If you ran sudo ./install.sh, drop sudo and run ./install.sh as yourself."
+    "If you ran sudo ./autoinstall.sh, drop sudo and run ./autoinstall.sh as yourself."
 )
 
 

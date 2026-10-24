@@ -10,7 +10,7 @@ from hypraesthetic.privilege import ROOT_WARNING, allow_root_install, privileged
 class PrivilegeTests(unittest.TestCase):
     def test_warning_mentions_root_and_sudo_user(self) -> None:
         self.assertIn("running as root", ROOT_WARNING)
-        self.assertIn("sudo ./install.sh", ROOT_WARNING)
+        self.assertIn("sudo ./autoinstall.sh", ROOT_WARNING)
         self.assertIn("/root", ROOT_WARNING)
 
     def test_non_root_is_allowed(self) -> None:

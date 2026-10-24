@@ -13,7 +13,7 @@ from hypraesthetic.catalog import ThemeCatalog
 from hypraesthetic.doctor import Doctor
 from hypraesthetic.export_theme import export_theme
 from hypraesthetic.install_theme import ThemeInstaller
-from hypraesthetic.installer import Installer
+
 from hypraesthetic.paths import current_theme_file, repo_root
 from hypraesthetic.prefs import Prefs
 from hypraesthetic.preset import prepare_preset_switch
@@ -35,7 +35,6 @@ Usage: ha-theme <command>
   backup | restore [timestamp]
   menu [--restart] | wallpaper-menu
   session-start
-  install [--mode automatic|custom] [--theme NAME] [--yes]
   install-theme <path-or-git-url>
   store list | store search <query> | store install <name-or-url> | store refresh [url]
   prefs get [key] | prefs set <key> <value>
@@ -90,8 +89,6 @@ def dispatch(cmd: str, rest: list[str]) -> int:
         return _bash("validate-rofi-contrast.sh", rest)
     if cmd == "session-start":
         return cmd_session_start()
-    if cmd == "install":
-        return cmd_install(rest)
     if cmd in {"install-theme", "theme-install"}:
         if not rest:
             print("Usage: ha-theme install-theme <path-or-git-url>", file=sys.stderr)
@@ -232,53 +229,6 @@ def cmd_doctor() -> int:
         print(f"{len(report.missing_required)} required check(s) failed")
         return 1
     print("Doctor complete")
-    return 0
-
-
-def cmd_install(rest: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="ha-theme install")
-    parser.add_argument("--mode", choices=("automatic", "custom"), default=None)
-    parser.add_argument("--theme", default=None)
-    parser.add_argument("--yes", action="store_true")
-    parser.add_argument("--preset", default=None)
-    ns = parser.parse_args(rest)
-    mode = ns.mode or _ask_mode()
-    selection = None
-    if ns.preset:
-        selection = Prefs.load(Path(ns.preset)).data
-        mode = selection.get("mode", "custom")
-    elif mode == "custom":
-        selection = _ask_selection()
-    theme = ns.theme or _ask_theme()
-    installer = Installer(
-        assume_yes=ns.yes or mode == "automatic",
-        root_assume=ns.yes,
-        aur_assume=ns.yes or not sys.stdin.isatty(),
-        apply_fn=lambda name: ApplyEngine().apply(name),
-        backup_fn=lambda: _bash("backup-configs.sh", ["backup"]),
-    )
-    if not installer.allow_root():
-        print("Root install declined. Re-run as your user.")
-        return 1
-    try:
-        result = installer.run(mode=mode, theme=theme, selection=selection)
-    except PermissionError as err:
-        if str(err) != "root install declined":
-            raise
-        print("Root install declined. Re-run as your user.")
-        return 1
-    if result.packages_skipped:
-        print("Packages were skipped:")
-        for pkg in result.packages_skipped:
-            print(f"  - {pkg}")
-        print(
-            f"Install incomplete ({result.mode}, theme={result.theme}). "
-            "Required packages were not installed."
-        )
-        print("Re-run with --yes to install packages, or install them yourself.")
-        return 1
-    print(f"Installation complete ({result.mode}, theme={result.theme})")
-    print("Log out and select Hyprland from your display manager if this is a first install.")
     return 0
 
 
