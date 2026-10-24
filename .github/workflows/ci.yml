@@ -22,7 +22,6 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/ci/run-checks.sh
-          exit 1
         env:
           GDK_BACKEND: x11
           GSK_RENDERER: cairo
