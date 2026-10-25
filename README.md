@@ -298,7 +298,7 @@ More bars live in [`layouts/bars/`](layouts/bars). Made in-house: `default`, `co
 Not a terminal person? Run **`hat gui`** and click around. Every theme is a tile. Click one and your desktop changes. GIF previews even play right inside the tile.
 
 <p align="center">
-  <img src="docs/screenshots/gui/overview.jpg" alt="The HyprAesthetic control center, open on the Presets page" width="100%">
+  <img src="docs/screenshots/gui/overview.webp" alt="The HyprAesthetic control center, open on the Presets page" width="100%">
 </p>
 
 Eight pages. One clear job each.
