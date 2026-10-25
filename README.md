@@ -241,39 +241,46 @@ Want more? Run `hat store list` to see what else you can install. Or [make your 
 
 Love your colors but not your bar? Swap **just the bar**. Click a bar tile in `hat gui` and it uses your current theme's colors.
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="layouts/bars/default/screenshot-2026-04-19_19-38-35.png" alt="Desktop with the island top bar, terminal, and music widgets" width="100%"><br>
-      <b>Island bar</b>
-    </td>
-    <td align="center" width="50%">
-      <img src="layouts/bars/cyberpunk/V2.9e.png" alt="Desktop with a thin top bar, clock, visualizer, and music widgets" width="100%"><br>
-      <b>Thin bar + widgets</b>
-    </td>
-  </tr>
-</table>
+### Theme Bar Previews
 
 <table>
   <tr>
-    <td align="center" width="33%">
-      <img src="layouts/bars/v7/preview.png" alt="The v7 Waybar layout" width="100%"><br>
-      <b>v7</b>
+    <td align="center" width="25%">
+      <img src="themes/a70/preview.png" alt="a70 bar preview" width="100%"><br>
+      <b>a70</b>
     </td>
-    <td align="center" width="33%">
-      <img src="layouts/bars/v4/preview.png" alt="The v4 Waybar layout" width="100%"><br>
-      <b>v4</b>
+    <td align="center" width="25%">
+      <img src="themes/choso/preview.png" alt="choso bar preview" width="100%"><br>
+      <b>choso</b>
     </td>
-    <td align="center" width="33%">
-      <img src="layouts/bars/v6.a/preview.png" alt="The v6.a Waybar layout" width="100%"><br>
-      <b>v6.a</b>
+    <td align="center" width="25%">
+      <img src="themes/jjk/preview.png" alt="jjk bar preview" width="100%"><br>
+      <b>jjk</b>
+    </td>
+    <td align="center" width="25%">
+      <img src="themes/sky/preview.png" alt="sky bar preview" width="100%"><br>
+      <b>sky</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="themes/spartan/preview.png" alt="spartan bar preview" width="100%"><br>
+      <b>spartan</b>
+    </td>
+    <td align="center" width="25%">
+      <img src="themes/tanjiro/preview.png" alt="tanjiro bar preview" width="100%"><br>
+      <b>tanjiro</b>
+    </td>
+    <td align="center" width="25%">
+      <img src="themes/toji/preview.png" alt="toji bar preview" width="100%"><br>
+      <b>toji</b>
+    </td>
+    <td align="center" width="25%">
+      <img src="themes/toji_2/preview.png" alt="toji_2 bar preview" width="100%"><br>
+      <b>toji_2</b>
     </td>
   </tr>
 </table>
-
-<p align="center">
-  <img src="docs/screenshots/bar-strip.gif" alt="A thin Waybar strip, close up" width="100%">
-</p>
 
 Only want one piece of a theme? Use `hat switch-waybar <theme>` or `hat switch-wallpaper <theme>`.
 
