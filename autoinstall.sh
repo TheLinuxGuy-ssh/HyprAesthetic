@@ -252,6 +252,8 @@ setup_gdm() {
 
 # ─── Deploy configs ──────────────────────────────
 
+DOTFILES_ONLY=false
+
 deploy_configs() {
     # Verify we're in the right place
     if [[ ! -f "ha-theme" ]]; then
@@ -360,8 +362,12 @@ print('Components:', ', '.join(result.applied))
 "
 
     # 7. Run doctor to verify
-    log_info "Running doctor to verify installation..."
-    python3 -m hypraesthetic doctor || true
+    if [[ "$DOTFILES_ONLY" == "false" ]]; then
+        log_info "Running doctor to verify installation..."
+        python3 -m hypraesthetic doctor || true
+    else
+        log_info "Skipping doctor (dotfiles-only mode)"
+    fi
 
     log_ok "HyprAesthetic installed"
 }
@@ -383,28 +389,53 @@ print_summary() {
     echo -e "${GREEN}║  HyprAesthetic installation complete!                     ║${NC}"
     echo -e "${GREEN}╚══════════════════════════════════════════════════════════╝${NC}"
     echo
-    echo "What was installed:"
-    echo "  • Hyprland + required portals & polkit"
-    echo "  • Waybar, Rofi, Kitty, Nautilus, Dunst, Neovim"
-    echo "  • Eww (widgets) + Hyprwave (media island) from AUR"
-    echo "  • Fonts: JetBrainsMono Nerd, Iosevka Nerd, Noto Emoji"
-    echo "  • Wallpaper daemon (swww) with session-start autostart"
-    echo "  • GDM display manager (enabled)"
-    echo "  • NetworkManager, Bluetooth (enabled)"
-    echo "  • Core utilities: evince, sushi, loupe, file-roller, gnome-calculator,"
-    echo "    pavucontrol, blueman, nm-connection-editor, gnome-disk-utility,"
-    echo "    gnome-system-monitor, btop, unzip, p7zip, unrar, rsync, reflector"
-    echo "  • Media & codecs: vlc, mpv, gst-plugins-*, ffmpeg"
-    echo "  • Browser: firefox (+ brave-bin from AUR if selected)"
-    echo "  • AUR extras: VS Code, Obsidian, LocalSend, Spotify (if selected)"
-    echo
-    echo "Default theme: sky"
-    echo
-    echo "Next steps:"
-    echo "  1. Reboot into GDM → select Hyprland session"
-    echo "  2. Run 'ha-theme gui' for the control center"
-    echo "  3. Run 'hyprwall' to pick wallpapers"
-    echo
+    
+    if [[ "$DOTFILES_ONLY" == "true" ]]; then
+        echo "What was installed (dotfiles-only mode):"
+        echo "  • HyprAesthetic configs and dotfiles deployed"
+        echo "  • CLI tools: ha-theme, hat, hyprwall linked to ~/.local/bin"
+        echo "  • Session/desktop files for GDM/Wayland"
+        echo "  • prefs.toml with automatic selection"
+        echo "  • Backup of existing configs created"
+        echo
+        echo "Skipped (dotfiles-only mode):"
+        echo "  • Package installation"
+        echo "  • GDM display manager setup"
+        echo "  • Service enablement (NetworkManager, Bluetooth)"
+        echo "  • Doctor verification"
+        echo
+        echo "Default theme: sky"
+        echo
+        echo "Next steps:"
+        echo "  1. Install required packages manually for your distro"
+        echo "  2. Run 'ha-theme gui' for the control center"
+        echo "  3. Run 'hyprwall' to pick wallpapers"
+        echo "  4. Enable GDM and services manually if needed"
+        echo
+    else
+        echo "What was installed:"
+        echo "  • Hyprland + required portals & polkit"
+        echo "  • Waybar, Rofi, Kitty, Nautilus, Dunst, Neovim"
+        echo "  • Eww (widgets) + Hyprwave (media island) from AUR"
+        echo "  • Fonts: JetBrainsMono Nerd, Iosevka Nerd, Noto Emoji"
+        echo "  • Wallpaper daemon (swww) with session-start autostart"
+        echo "  • GDM display manager (enabled)"
+        echo "  • NetworkManager, Bluetooth (enabled)"
+        echo "  • Core utilities: evince, sushi, loupe, file-roller, gnome-calculator,"
+        echo "    pavucontrol, blueman, nm-connection-editor, gnome-disk-utility,"
+        echo "    gnome-system-monitor, btop, unzip, p7zip, unrar, rsync, reflector"
+        echo "  • Media & codecs: vlc, mpv, gst-plugins-*, ffmpeg"
+        echo "  • Browser: firefox (+ brave-bin from AUR if selected)"
+        echo "  • AUR extras: VS Code, Obsidian, LocalSend, Spotify (if selected)"
+        echo
+        echo "Default theme: sky"
+        echo
+        echo "Next steps:"
+        echo "  1. Reboot into GDM → select Hyprland session"
+        echo "  2. Run 'ha-theme gui' for the control center"
+        echo "  3. Run 'hyprwall' to pick wallpapers"
+        echo
+    fi
 }
 
 prompt_reboot() {
@@ -421,77 +452,109 @@ prompt_reboot() {
 # ─── Main ──────────────────────────────────────────────────────────
 
 main() {
+    # Parse arguments
+    DOTFILES_ONLY=false
+    for arg in "$@"; do
+        case $arg in
+            --dotfiles|--dotfiles-only)
+                DOTFILES_ONLY=true
+                ;;
+            --help|-h)
+                echo "Usage: ./autoinstall.sh [--dotfiles]"
+                echo "  --dotfiles    Deploy configs only (skip packages, GDM, services)"
+                exit 0
+                ;;
+        esac
+    done
+
     clear
     cat <<'EOF'
 ██╗  ██╗██╗   ██╗██████╗ ██████╗  █████╗ ███████╗███████╗████████╗██╗  ██╗███████╗████████╗██╗ ██████╗
 ██║  ██║╚██╗ ██╔╝██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝╚══██╔══╝██║  ██║██╔════╝╚══██══╝██║██╔════╝
 ███████║ ╚████╔╝ ██████╔╝██████╔╝███████║█████╗  ███████╗   ██║   ███████║█████╗     ██║   ██║██║     
 ██╔══██║  ╚██╔╝  ██╔═══╝ ██╔══██╗██╔══██║██╔══╝  ╚════██║   ██║   ██╔══██║██╔══╝     ██║   ██║██║     
-██║  ██║   ██║   ██║     ██║  ██║██║  ██║███████╗███████║   ██║   ██║  ██║███████╗   ██║   ██║╚██████╗
+██║  ██║   ██║   ██║     ██║  ██║██║  ██║███████╗███████╗   ██║   ██║  ██║███████╗   ██║   ██║╚██████╗
 ╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝ ╚═════╝
-                                                                                                       
+                                                                                                        
 
        HyprAesthetic Auto-Installer for Arch / CachyOS
 EOF
     echo
 
-    check_os
+    # Always run these checks
     check_not_root
     check_internet
 
-    select_aur_helper
+    if [[ "$DOTFILES_ONLY" == "false" ]]; then
+        check_os
+        
+        select_aur_helper
 
-    echo
-    read -rp "$(echo -e "${YELLOW}Proceed with installation? [y/N]: ${NC}")" confirm
-    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-        log_info "Installation cancelled."
-        exit 0
+        echo
+        read -rp "$(echo -e "${YELLOW}Proceed with installation? [y/N]: ${NC}")" confirm
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            log_info "Installation cancelled."
+            exit 0
+        fi
+
+        log_info "Updating package databases..."
+        sudo pacman -Sy
+
+        install_aur_helper
+
+        # Install base + utility + media packages (all by default)
+        log_info "Installing base packages..."
+        install_packages "${BASE_PACKAGES[@]}"
+        
+        log_info "Installing core utilities..."
+        install_packages "${UTILITY_PACKAGES[@]}"
+        
+        log_info "Installing media players & codecs..."
+        install_packages "${MEDIA_PACKAGES[@]}"
+        
+        log_info "Installing automatic selection packages..."
+        install_packages "${AUTO_PACKAGES[@]}"
+        
+        log_info "Installing AUR packages (eww-git, hyprwave)..."
+        install_aur_packages "${AUR_AUTO_PACKAGES[@]}"
+
+        # Browser selection
+        echo
+        read -rp "$(echo -e "${YELLOW}Install browser (firefox + brave-bin from AUR)? [Y/n]: ${NC}")" browser_choice
+        if [[ ! "$browser_choice" =~ ^[Nn]$ ]]; then
+            log_info "Installing browser packages..."
+            install_packages "${BROWSER_PACKAGES[@]}"
+            install_aur_packages "${AUR_BROWSER_PACKAGES[@]}"
+        fi
+
+        # AUR extras
+        echo
+        read -rp "$(echo -e "${YELLOW}Install AUR extras (VS Code, Obsidian, LocalSend, Spotify)? [y/N]: ${NC}")" aur_extras_choice
+        if [[ "$aur_extras_choice" =~ ^[Yy]$ ]]; then
+            log_info "Installing AUR extras..."
+            install_aur_packages "${AUR_EXTRA_PACKAGES[@]}"
+        fi
+
+        setup_gdm
+        enable_services
+    else
+        log_info "Dotfiles-only mode: skipping package installation, GDM, and services"
+        # Still need OS check for dotfiles mode
+        check_os
+        log_info "Running in dotfiles-only mode (--dotfiles)"
     fi
 
-    log_info "Updating package databases..."
-    sudo pacman -Sy
-
-    install_aur_helper
-
-    # Install base + utility + media packages (all by default)
-    log_info "Installing base packages..."
-    install_packages "${BASE_PACKAGES[@]}"
-    
-    log_info "Installing core utilities..."
-    install_packages "${UTILITY_PACKAGES[@]}"
-    
-    log_info "Installing media players & codecs..."
-    install_packages "${MEDIA_PACKAGES[@]}"
-    
-    log_info "Installing automatic selection packages..."
-    install_packages "${AUTO_PACKAGES[@]}"
-    
-    log_info "Installing AUR packages (eww-git, hyprwave)..."
-    install_aur_packages "${AUR_AUTO_PACKAGES[@]}"
-
-    # Browser selection
-    echo
-    read -rp "$(echo -e "${YELLOW}Install browser (firefox + brave-bin from AUR)? [Y/n]: ${NC}")" browser_choice
-    if [[ ! "$browser_choice" =~ ^[Nn]$ ]]; then
-        log_info "Installing browser packages..."
-        install_packages "${BROWSER_PACKAGES[@]}"
-        install_aur_packages "${AUR_BROWSER_PACKAGES[@]}"
-    fi
-
-    # AUR extras
-    echo
-    read -rp "$(echo -e "${YELLOW}Install AUR extras (VS Code, Obsidian, LocalSend, Spotify)? [y/N]: ${NC}")" aur_extras_choice
-    if [[ "$aur_extras_choice" =~ ^[Yy]$ ]]; then
-        log_info "Installing AUR extras..."
-        install_aur_packages "${AUR_EXTRA_PACKAGES[@]}"
-    fi
-
-    setup_gdm
-    enable_services
     deploy_configs
 
     print_summary
-    prompt_reboot
+    
+    if [[ "$DOTFILES_ONLY" == "false" ]]; then
+        prompt_reboot
+    else
+        echo
+        log_info "Dotfiles deployment complete. No reboot required for configs."
+        log_info "Run 'ha-theme gui' to open the control center"
+    fi
 }
 
 main "$@"
