@@ -243,44 +243,47 @@ Love your colors but not your bar? Swap **just the bar**. Click a bar tile in `h
 
 ### Theme Bar Previews
 
-<table>
-  <tr>
-    <td align="center" width="25%">
-      <img src="themes/a70/preview.png" alt="a70 bar preview" width="100%"><br>
-      <b>a70</b>
-    </td>
-    <td align="center" width="25%">
-      <img src="themes/choso/preview.png" alt="choso bar preview" width="100%"><br>
-      <b>choso</b>
-    </td>
-    <td align="center" width="25%">
-      <img src="themes/jjk/preview.png" alt="jjk bar preview" width="100%"><br>
-      <b>jjk</b>
-    </td>
-    <td align="center" width="25%">
-      <img src="themes/sky/preview.png" alt="sky bar preview" width="100%"><br>
-      <b>sky</b>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="25%">
-      <img src="themes/spartan/preview.png" alt="spartan bar preview" width="100%"><br>
-      <b>spartan</b>
-    </td>
-    <td align="center" width="25%">
-      <img src="themes/tanjiro/preview.png" alt="tanjiro bar preview" width="100%"><br>
-      <b>tanjiro</b>
-    </td>
-    <td align="center" width="25%">
-      <img src="themes/toji/preview.png" alt="toji bar preview" width="100%"><br>
-      <b>toji</b>
-    </td>
-    <td align="center" width="25%">
-      <img src="themes/toji_2/preview.png" alt="toji_2 bar preview" width="100%"><br>
-      <b>toji_2</b>
-    </td>
-  </tr>
-</table>
+<div align="center">
+
+<img src="themes/a70/preview.png" alt="a70 bar preview" width="100%"><br>
+<b>a70</b>
+
+---
+
+<img src="themes/choso/preview.png" alt="choso bar preview" width="100%"><br>
+<b>choso</b>
+
+---
+
+<img src="themes/jjk/preview.png" alt="jjk bar preview" width="100%"><br>
+<b>jjk</b>
+
+---
+
+<img src="themes/sky/preview.png" alt="sky bar preview" width="100%"><br>
+<b>sky</b>
+
+---
+
+<img src="themes/spartan/preview.png" alt="spartan bar preview" width="100%"><br>
+<b>spartan</b>
+
+---
+
+<img src="themes/tanjiro/preview.png" alt="tanjiro bar preview" width="100%"><br>
+<b>tanjiro</b>
+
+---
+
+<img src="themes/toji/preview.png" alt="toji bar preview" width="100%"><br>
+<b>toji</b>
+
+---
+
+<img src="themes/toji_2/preview.png" alt="toji_2 bar preview" width="100%"><br>
+<b>toji_2</b>
+
+</div>
 
 Only want one piece of a theme? Use `hat switch-waybar <theme>` or `hat switch-wallpaper <theme>`.
 
