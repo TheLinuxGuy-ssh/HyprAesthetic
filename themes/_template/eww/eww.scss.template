@@ -144,7 +144,7 @@ window {
 
 .cpu_bar, .mem_bar, .bright_bar, .bat_bar, .disk_bar, scale trough {
   all: unset;
-  background-color: $border;
+  background-color: $surface;
   border-radius: 2px;
   min-height: 2px;
   min-width: 140px;
@@ -156,13 +156,13 @@ window {
 }
 
 .cpu_bar scale trough highlight {
-  background-color: $primary;
+  background-color: $foreground;
 }
 .mem_bar scale trough highlight {
-  background-color: $primary;
+  background-color: $foreground;
 }
 .disk_bar scale trough highlight {
-  background-color: $primary;
+  background-color: $foreground;
 }
 .bright_bar scale trough highlight {
   background-color: $warning;
@@ -233,7 +233,7 @@ window {
 }
 
 .song {
-  color: $primary;
+  color: $foreground;
   font-size: 14px;
   font-weight: bold;
   margin: 0;
@@ -253,12 +253,12 @@ window {
   color: $foreground;
 }
 .btn_play {
-  color: $primary;
+  color: $foreground;
 }
 
 .music_bar scale trough highlight {
   all: unset;
-  background-color: $primary;
+  background-color: $foreground;
   border-radius: 2px;
 }
 .music_bar scale trough {
