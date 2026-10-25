@@ -539,8 +539,6 @@ EOF
         enable_services
     else
         log_info "Dotfiles-only mode: skipping package installation, GDM, and services"
-        # Still need OS check for dotfiles mode
-        check_os
         log_info "Running in dotfiles-only mode (--dotfiles)"
     fi
 
