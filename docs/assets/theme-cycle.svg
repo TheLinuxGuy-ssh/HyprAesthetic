@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 460" width="1200" height="460" role="img" aria-labelledby="ttl desc">
+  <title id="ttl">One command. Whole desktop. New vibe.</title>
+  <desc id="desc">An illustrated desktop. A terminal types "hat switch" and the whole screen changes color, one theme after another.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#e2dfd0"/>
+      <stop offset=".10" stop-color="#a9c1d9"/>
+      <stop offset=".24" stop-color="#2563b8"/>
+      <stop offset=".42" stop-color="#0b2d6b"/>
+      <stop offset=".62" stop-color="#061436"/>
+      <stop offset="1" stop-color="#030611"/>
+    </linearGradient>
+    <pattern id="grid" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect x="1" y="1" width="5" height="5" fill="#9cc4ff" fill-opacity=".05"/>
+      <path d="M0 .5H6M.5 0V6" stroke="#000" stroke-opacity=".32" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="dropg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1ea0dc"/><stop offset="1" stop-color="#23d4c4"/>
+    </linearGradient>
+    <filter id="tglow" x="-10%" y="-40%" width="120%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="dglow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="wp0" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#cdd7df"/><stop offset="0.16" stop-color="#7fa6d6"/><stop offset="0.38" stop-color="#1f5fc0"/><stop offset="0.66" stop-color="#0a2a66"/><stop offset="1" stop-color="#04102e"/></linearGradient><linearGradient id="wp1" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#f0d4e4"/><stop offset="0.16" stop-color="#d98ab8"/><stop offset="0.38" stop-color="#a02a74"/><stop offset="0.66" stop-color="#4a1050"/><stop offset="1" stop-color="#1c0720"/></linearGradient><linearGradient id="wp2" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#d6efe3"/><stop offset="0.16" stop-color="#7fd1ab"/><stop offset="0.38" stop-color="#18966e"/><stop offset="0.66" stop-color="#0b4a45"/><stop offset="1" stop-color="#04201f"/></linearGradient><linearGradient id="wp3" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#f3e3c4"/><stop offset="0.16" stop-color="#e0b070"/><stop offset="0.38" stop-color="#b8651d"/><stop offset="0.66" stop-color="#5a2a0c"/><stop offset="1" stop-color="#230f05"/></linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="46"/></filter>
+    <clipPath id="card"><rect width="1200" height="460" rx="28"/></clipPath>
+    <clipPath id="screen"><rect x="650" y="80" width="480" height="296" rx="12"/></clipPath>
+  </defs>
+  <style>
+    svg{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono","DejaVu Sans Mono",monospace}
+    .f{fill:currentColor}
+    .s{fill:none;stroke:currentColor}
+
+    /* two accent colors that change with every "theme" (16s loop, brand blue is on screen the longest) */
+    .c1{color:#29b6ea;animation:cyc1 16s infinite}
+    .c2{color:#9fc3ee;animation:cyc2 16s infinite}
+    @keyframes cyc1{0%,10%{color:#29b6ea}15%,35%{color:#ff5fa8}40%,60%{color:#3ddc97}65%,85%{color:#ffb454}90%,100%{color:#29b6ea}}
+    @keyframes cyc2{0%,10%{color:#9fc3ee}15%,35%{color:#c792ff}40%,60%{color:#c8f169}65%,85%{color:#ff7675}90%,100%{color:#9fc3ee}}
+
+    /* wallpapers cross-fade on top of the blue one */
+    .ov1{opacity:0;animation:ov1 16s infinite}
+    .ov2{opacity:0;animation:ov2 16s infinite}
+    .ov3{opacity:0;animation:ov3 16s infinite}
+    @keyframes ov1{0%,10%{opacity:0}15%,35%{opacity:1}40%,100%{opacity:0}}
+    @keyframes ov2{0%,35%{opacity:0}40%,60%{opacity:1}65%,100%{opacity:0}}
+    @keyframes ov3{0%,60%{opacity:0}65%,85%{opacity:1}90%,100%{opacity:0}}
+
+    /* typing: 4s per command, 1.6s typing, then the desktop repaints */
+    .typed{animation:typing 4s infinite}
+    @keyframes typing{0%{clip-path:inset(0 100% 0 0);animation-timing-function:steps(18,end)}40%,100%{clip-path:inset(0 0 0 0)}}
+    .cur{transform:translateX(162px);animation:curmove 4s infinite}
+    @keyframes curmove{0%{transform:translateX(0);animation-timing-function:steps(18,end)}40%,100%{transform:translateX(162px)}}
+    .blink{animation:blink 1s steps(1,end) infinite}
+    @keyframes blink{0%,50%{opacity:1}50.01%,100%{opacity:0}}
+    .o1{opacity:.3;animation:o1 4s infinite}
+    .o2{opacity:.3;animation:o2 4s infinite}
+    .o3{opacity:.3;animation:o3 4s infinite}
+    @keyframes o1{0%,41%{opacity:0}45%,100%{opacity:.3}}
+    @keyframes o2{0%,46%{opacity:0}50%,100%{opacity:.3}}
+    @keyframes o3{0%,51%{opacity:0}55%,100%{opacity:.3}}
+
+    /* widgets that keep moving */
+    .prog{transform-box:fill-box;transform-origin:0 50%;animation:prog 8s linear infinite}
+    @keyframes prog{0%{transform:scaleX(.06)}100%{transform:scaleX(1)}}
+    .eq{transform-box:fill-box;transform-origin:50% 100%;animation:eq 1.2s ease-in-out infinite alternate}
+    .e2{animation-duration:.9s;animation-delay:-.3s}
+    .e3{animation-duration:1.4s;animation-delay:-.6s}
+    .e4{animation-duration:1s;animation-delay:-.2s}
+    .e5{animation-duration:1.1s;animation-delay:-.8s}
+    @keyframes eq{0%{transform:scaleY(.25)}100%{transform:scaleY(1)}}
+    .br{transform-box:fill-box;transform-origin:0 50%;animation:br 3.2s ease-in-out infinite alternate}
+    .b2{animation-delay:-1s}
+    .b3{animation-delay:-2s}
+    @keyframes br{0%{transform:scaleX(.9)}100%{transform:scaleX(1)}}
+    .spark{stroke-dasharray:100;stroke-dashoffset:0;animation:spark 6s ease-in-out infinite}
+    @keyframes spark{0%{stroke-dashoffset:100}40%,85%{stroke-dashoffset:0}100%{stroke-dashoffset:-100}}
+
+    @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+
+  <g clip-path="url(#card)"><rect width="1200" height="460" fill="url(#sky)"/><rect width="1200" height="460" fill="#02040c" fill-opacity="0.1"/><rect width="1200" height="460" fill="url(#grid)"/></g>
+  <g clip-path="url(#card)">
+    <circle cx="890" cy="228" r="190" class="f c1" opacity=".20" filter="url(#soft)"/>
+  </g>
+  <rect x=".75" y=".75" width="1198.5" height="458.5" rx="27.5" fill="none" stroke="#ffffff" stroke-opacity=".14" stroke-width="1.5"/>
+
+  <!-- words (left) -->
+  <g filter="url(#tglow)"><path transform="translate(64 190) scale(3.5)" d="M3 -12h4v1h-4zM2 -11h6v1h-6zM6 -10h2v1h-2zM2 -10h2v1h-2zM106 -13h3v5h-3zM23 -9h4v1h-4zM61 -9h4v1h-4zM76 -9h2v1h-2zM43 -9h5v1h-5zM53 -9h4v1h-4zM11 -9h3v1h-3zM91 -9h3v1h-3zM102 -9h3v1h-3zM95 -9h3v1h-3zM66 -9h2v1h-2zM15 -9h3v1h-3zM83 -9h5v1h-5zM71 -9h4v1h-4zM82 -8h7v1h-7zM61 -8h8v1h-8zM71 -8h8v1h-8zM102 -8h7v1h-7zM52 -8h6v1h-6zM22 -8h6v1h-6zM11 -8h8v1h-8zM42 -8h7v1h-7zM91 -8h8v1h-8zM82 -7h1v1h-1zM21 -7h3v1h-3zM48 -7h1v1h-1zM86 -7h3v1h-3zM41 -7h4v1h-4zM26 -7h3v1h-3zM84 -6h5v1h-5zM21 -6h8v2h-8zM82 -5h7v1h-7zM6 -9h3v6h-3zM1 -9h3v6h-3zM41 -6h3v3h-3zM21 -4h3v1h-3zM56 -7h3v5h-3zM51 -7h3v5h-3zM106 -7h3v5h-3zM101 -7h3v5h-3zM86 -4h3v2h-3zM81 -4h3v2h-3zM2 -3h2v1h-2zM6 -3h2v1h-2zM48 -3h1v1h-1zM28 -3h1v1h-1zM41 -3h4v1h-4zM21 -3h4v1h-4zM81 -2h8v1h-8zM102 -2h7v1h-7zM22 -2h7v1h-7zM52 -2h6v1h-6zM2 -2h6v1h-6zM42 -2h7v1h-7zM77 -7h2v7h-2zM96 -7h3v7h-3zM91 -7h3v7h-3zM61 -7h2v7h-2zM74 -7h2v7h-2zM16 -7h3v7h-3zM67 -7h2v7h-2zM11 -7h3v7h-3zM71 -7h2v7h-2zM64 -7h2v7h-2zM114 -3h3v3h-3zM3 -1h4v1h-4zM53 -1h4v1h-4zM102 -1h3v1h-3zM43 -1h5v1h-5zM106 -1h3v1h-3zM82 -1h3v1h-3zM86 -1h3v1h-3zM23 -1h5v1h-5z" fill="#f5f8ff"/></g><g filter="url(#tglow)"><path transform="translate(64 254) scale(3.5)" d="M31 -13h5v2h-5zM103 -12h3v3h-3zM11 -13h3v5h-3zM66 -13h3v5h-3zM0 -12h2v4h-2zM8 -12h2v4h-2zM23 -9h4v1h-4zM73 -9h4v1h-4zM121 -9h3v1h-3zM82 -9h6v1h-6zM43 -9h4v1h-4zM125 -9h3v1h-3zM62 -9h3v1h-3zM15 -9h3v1h-3zM113 -9h4v1h-4zM96 -9h2v1h-2zM91 -13h3v6h-3zM101 -9h8v2h-8zM81 -8h8v1h-8zM121 -8h7v1h-7zM72 -8h6v1h-6zM62 -8h7v1h-7zM42 -8h6v1h-6zM112 -8h6v1h-6zM95 -8h3v1h-3zM22 -8h6v1h-6zM11 -8h8v1h-8zM76 -7h3v1h-3zM41 -7h3v1h-3zM91 -7h6v1h-6zM88 -7h1v1h-1zM71 -7h3v1h-3zM81 -7h3v1h-3zM46 -7h3v1h-3zM4 -9h2v4h-2zM1 -8h2v3h-2zM7 -8h2v3h-2zM91 -6h5v1h-5zM81 -6h6v1h-6zM41 -6h8v2h-8zM71 -6h8v2h-8zM82 -5h6v1h-6zM91 -5h6v1h-6zM41 -4h3v1h-3zM71 -4h3v1h-3zM95 -4h2v1h-2zM33 -11h3v9h-3zM116 -7h3v5h-3zM61 -7h3v5h-3zM21 -7h3v5h-3zM111 -7h3v5h-3zM126 -7h3v5h-3zM121 -7h3v5h-3zM66 -7h3v5h-3zM103 -7h3v5h-3zM26 -7h3v5h-3zM86 -4h3v2h-3zM71 -3h4v1h-4zM48 -3h1v1h-1zM81 -3h1v1h-1zM95 -3h3v1h-3zM41 -3h4v1h-4zM78 -3h1v1h-1zM81 -2h8v1h-8zM121 -2h7v1h-7zM96 -2h2v1h-2zM62 -2h7v1h-7zM33 -2h6v1h-6zM112 -2h6v1h-6zM72 -2h7v1h-7zM103 -2h6v1h-6zM22 -2h6v1h-6zM42 -2h7v1h-7zM16 -7h3v7h-3zM11 -7h3v7h-3zM6 -5h3v5h-3zM1 -5h3v5h-3zM91 -4h3v4h-3zM134 -3h3v3h-3zM23 -1h4v1h-4zM73 -1h5v1h-5zM43 -1h5v1h-5zM82 -1h6v1h-6zM113 -1h4v1h-4zM66 -1h3v1h-3zM96 -1h3v1h-3zM125 -1h3v1h-3zM62 -1h3v1h-3zM104 -1h5v1h-5zM34 -1h5v1h-5zM121 -1h3v5h-3z" fill="#f5f8ff"/></g><g filter="url(#tglow)"><g class="c1"><path transform="translate(64 318) scale(3.5)" d="M54 -14h3v3h-3zM1 -12h3v2h-3zM61 -13h3v5h-3zM13 -9h4v1h-4zM73 -9h4v1h-4zM65 -9h3v1h-3zM46 -9h3v2h-3zM41 -9h3v2h-3zM52 -9h5v2h-5zM61 -8h7v1h-7zM12 -8h6v1h-6zM72 -8h6v1h-6zM6 -12h3v6h-3zM1 -10h4v4h-4zM28 -9h2v3h-2zM20 -9h2v3h-2zM16 -7h3v1h-3zM11 -7h3v1h-3zM71 -7h3v1h-3zM76 -7h3v1h-3zM42 -7h2v2h-2zM46 -7h2v2h-2zM24 -7h2v3h-2zM27 -6h2v2h-2zM21 -6h2v2h-2zM11 -6h8v2h-8zM71 -6h8v2h-8zM42 -5h6v1h-6zM11 -4h3v1h-3zM71 -4h3v1h-3zM21 -4h8v1h-8zM54 -7h3v5h-3zM66 -7h3v5h-3zM61 -7h3v5h-3zM5 -6h4v4h-4zM18 -3h1v1h-1zM21 -3h3v1h-3zM78 -3h1v1h-1zM26 -3h3v1h-3zM11 -3h4v1h-4zM71 -3h4v1h-4zM43 -4h4v3h-4zM12 -2h7v1h-7zM61 -2h7v1h-7zM72 -2h7v1h-7zM1 -6h3v6h-3zM84 -3h3v3h-3zM51 -2h9v2h-9zM22 -2h2v2h-2zM6 -2h3v2h-3zM26 -2h2v2h-2zM73 -1h5v1h-5zM61 -1h3v1h-3zM65 -1h3v1h-3zM44 -1h2v1h-2zM13 -1h5v1h-5z" fill="#f5f8ff" style="fill:currentColor"/></g></g>
+
+  <!-- monitor -->
+  <rect x="872" y="386" width="36" height="14" fill="#0b1d45"/>
+  <rect x="822" y="400" width="136" height="8" rx="4" fill="#0b1d45"/>
+  <rect x="640" y="70" width="500" height="316" rx="20" fill="#030814" stroke="#1d3f7a" stroke-width="3"/>
+
+  <g clip-path="url(#screen)">
+    <rect x="650" y="80" width="480" height="296" fill="url(#wp0)"/>
+    <rect x="650" y="80" width="480" height="296" fill="url(#wp1)" class="ov1"/>
+    <rect x="650" y="80" width="480" height="296" fill="url(#wp2)" class="ov2"/>
+    <rect x="650" y="80" width="480" height="296" fill="url(#wp3)" class="ov3"/>
+    <rect x="650" y="80" width="480" height="296" fill="url(#grid)" opacity=".8"/>
+    <circle cx="1040" cy="170" r="84" class="f c1" opacity=".16"/>
+    <path d="M650 376 L650 300 L720 262 L790 306 L870 240 L960 310 L1040 270 L1130 318 L1130 376 Z" fill="#000000" opacity=".28"/>
+
+    <!-- top bar -->
+    <rect x="662" y="90" width="456" height="26" rx="13" class="c1" style="fill:#050b1e;stroke:currentColor;stroke-opacity:.6"/>
+    <rect x="676" y="98" width="26" height="10" rx="5" class="f c1"/>
+    <circle cx="713" cy="103" r="5" fill="#7f9bc4" opacity=".45"/>
+    <circle cx="729" cy="103" r="5" fill="#7f9bc4" opacity=".45"/>
+    <circle cx="745" cy="103" r="5" fill="#7f9bc4" opacity=".45"/>
+    <text x="890" y="107" font-size="12" font-weight="600" fill="#eaf2ff" text-anchor="middle">12:00</text>
+    <rect x="1008" y="98" width="30" height="10" rx="5" class="f c2"/>
+    <rect x="1044" y="98" width="30" height="10" rx="5" class="f c1" opacity=".7"/>
+    <rect x="1080" y="98" width="26" height="10" rx="5" fill="#7f9bc4" opacity=".5"/>
+
+    <!-- terminal (the active window) -->
+    <rect x="662" y="126" width="214" height="240" rx="10" fill="#050b1e" stroke="#1d3f7a" stroke-width="1.5"/>
+    <rect x="662" y="126" width="214" height="240" rx="10" class="s c1" stroke-width="2.2" filter="url(#glow)"/>
+    <circle cx="678" cy="142" r="3.5" fill="#2a5aa8"/>
+    <circle cx="692" cy="142" r="3.5" fill="#2a5aa8"/>
+    <circle cx="706" cy="142" r="3.5" fill="#2a5aa8"/>
+    <rect x="664" y="154" width="210" height="1" fill="#0f2a5e"/>
+    <text x="676" y="178" class="mono f c2" font-size="15" font-weight="700">$</text>
+    <text x="694" y="178" class="mono typed" font-size="15" fill="#eaf2ff" textLength="162" lengthAdjust="spacingAndGlyphs">hat switch &lt;theme&gt;</text>
+    <g class="cur"><g class="c2"><rect x="694" y="165" width="8" height="16" rx="1.5" class="f blink"/></g></g>
+    <g class="c1"><rect x="676" y="200" width="150" height="8" rx="4" class="f o1"/></g>
+    <rect x="676" y="218" width="112" height="8" rx="4" fill="#7f9bc4" class="o1"/>
+    <rect x="676" y="236" width="168" height="8" rx="4" fill="#7f9bc4" class="o2"/>
+    <g class="c1"><rect x="676" y="254" width="86" height="8" rx="4" class="f o2"/></g>
+    <rect x="676" y="272" width="134" height="8" rx="4" fill="#7f9bc4" class="o3"/>
+    <rect x="676" y="290" width="104" height="8" rx="4" fill="#7f9bc4" class="o3"/>
+
+    <!-- music widget -->
+    <rect x="886" y="126" width="232" height="108" rx="10" fill="#050b1e" stroke="#1d3f7a" stroke-width="1.5"/>
+    <rect x="898" y="138" width="48" height="48" rx="9" class="f c1" opacity=".92"/>
+    <circle cx="922" cy="162" r="16" fill="#050b1e" opacity=".35"/>
+    <circle cx="922" cy="162" r="6" class="f c2"/>
+    <circle cx="922" cy="162" r="1.8" fill="#050b1e"/>
+    <rect x="958" y="146" width="104" height="9" rx="4.5" fill="#eaf2ff" opacity=".8"/>
+    <rect x="958" y="163" width="68" height="7" rx="3.5" fill="#7f9bc4" opacity=".55"/>
+    <g class="c2">
+      <rect x="1074" y="160" width="4" height="28" rx="2" class="eq f"/>
+      <rect x="1082" y="160" width="4" height="28" rx="2" class="eq e2 f"/>
+      <rect x="1090" y="160" width="4" height="28" rx="2" class="eq e3 f"/>
+      <rect x="1098" y="160" width="4" height="28" rx="2" class="eq e4 f"/>
+      <rect x="1106" y="160" width="4" height="28" rx="2" class="eq e5 f"/>
+    </g>
+    <rect x="898" y="198" width="208" height="5" rx="2.5" fill="#12306a"/>
+    <g class="c1"><rect x="898" y="198" width="208" height="5" rx="2.5" class="prog f"/></g>
+    <polygon points="976,212 976,224 967,218" fill="#7f9bc4"/>
+    <circle cx="1002" cy="218" r="10" class="f c1"/>
+    <polygon points="998,213 998,223 1007,218" fill="#050b1e"/>
+    <polygon points="1028,212 1028,224 1037,218" fill="#7f9bc4"/>
+
+    <!-- system widget -->
+    <rect x="886" y="244" width="232" height="122" rx="10" fill="#050b1e" stroke="#1d3f7a" stroke-width="1.5"/>
+    <text x="900" y="271" font-size="11" font-weight="600" fill="#7f9bc4">CPU</text>
+    <text x="900" y="299" font-size="11" font-weight="600" fill="#7f9bc4">RAM</text>
+    <text x="900" y="327" font-size="11" font-weight="600" fill="#7f9bc4">DISK</text>
+    <rect x="946" y="262" width="160" height="10" rx="5" fill="#12306a"/>
+    <rect x="946" y="290" width="160" height="10" rx="5" fill="#12306a"/>
+    <rect x="946" y="318" width="160" height="10" rx="5" fill="#12306a"/>
+    <g class="c1"><rect x="946" y="262" width="99" height="10" rx="5" class="br f"/></g>
+    <g class="c2"><rect x="946" y="290" width="66" height="10" rx="5" class="br b2 f"/></g>
+    <g class="c1"><rect x="946" y="318" width="125" height="10" rx="5" class="br b3 f"/></g>
+    <g class="c2"><path d="M900 352 L920 346 L941 354 L961 340 L982 348 L1002 338 L1022 350 L1043 342 L1063 348 L1084 336 L1104 344" pathLength="100" class="s spark" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+  </g>
+
+  <!-- signature -->
+  <g transform="translate(1120 398) scale(0.3538)" filter="url(#dglow)"><path d="M41 6C41 36 6 58 6 88C6 110 26 124 50 124C74 124 94 110 94 88C94 58 59 36 59 6" fill="none" stroke="url(#dropg)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

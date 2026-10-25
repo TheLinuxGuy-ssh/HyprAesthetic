@@ -245,42 +245,42 @@ Love your colors but not your bar? Swap **just the bar**. Click a bar tile in `h
 
 <div align="center">
 
-<img src="themes/a70/preview.png" alt="a70 bar preview" width="100%"><br>
+<img src="themes/a70/bar.png" alt="a70 bar preview" width="100%"><br>
 <b>a70</b>
 
 ---
 
-<img src="themes/choso/preview.png" alt="choso bar preview" width="100%"><br>
+<img src="themes/choso/bar.png" alt="choso bar preview" width="100%"><br>
 <b>choso</b>
 
 ---
 
-<img src="themes/jjk/preview.png" alt="jjk bar preview" width="100%"><br>
+<img src="themes/jjk/bar.png" alt="jjk bar preview" width="100%"><br>
 <b>jjk</b>
 
 ---
 
-<img src="themes/sky/preview.png" alt="sky bar preview" width="100%"><br>
+<img src="themes/sky/bar.png" alt="sky bar preview" width="100%"><br>
 <b>sky</b>
 
 ---
 
-<img src="themes/spartan/preview.png" alt="spartan bar preview" width="100%"><br>
+<img src="themes/spartan/bar.png" alt="spartan bar preview" width="100%"><br>
 <b>spartan</b>
 
 ---
 
-<img src="themes/tanjiro/preview.png" alt="tanjiro bar preview" width="100%"><br>
+<img src="themes/tanjiro/bar.png" alt="tanjiro bar preview" width="100%"><br>
 <b>tanjiro</b>
 
 ---
 
-<img src="themes/toji/preview.png" alt="toji bar preview" width="100%"><br>
+<img src="themes/toji/bar.png" alt="toji bar preview" width="100%"><br>
 <b>toji</b>
 
 ---
 
-<img src="themes/toji_2/preview.png" alt="toji_2 bar preview" width="100%"><br>
+<img src="themes/toji_2/bar.png" alt="toji_2 bar preview" width="100%"><br>
 <b>toji_2</b>
 
 </div>
@@ -446,7 +446,7 @@ The control center needs GTK4, libadwaita and PyGObject.
 Keyboard shortcuts have their own section: [Keybinds](#keybinds).
 
 <details>
-<summary><b>📚 Every command</b></summary>
+<summary><b>Every command</b></summary>
 
 ```bash
 hat list                                    # all themes
@@ -473,7 +473,7 @@ hat version
 
 <a id="keybinds"></a>
 
-## ⌨️ Keybinds
+## Keybinds
 
 <kbd>Super</kbd> is your Windows key.
 
@@ -560,7 +560,7 @@ hat version
 
 <a id="make-a-theme"></a>
 
-## 🎨 Make your own theme
+## Make your own theme
 
 A theme is a small folder. You don't copy a 200-file rice just to try new colors.
 
@@ -682,7 +682,7 @@ Want it in the store too? Add it to [`data/store-index.toml`](data/store-index.t
 
 <a id="settings"></a>
 
-## ⚙️ Your settings
+## Your settings
 
 | File | What it is |
 |---|---|
@@ -692,7 +692,7 @@ Want it in the store too? Add it to [`data/store-index.toml`](data/store-index.t
 
 <a id="faq"></a>
 
-## ❓ FAQ
+## FAQ
 
 <details>
 <summary><b>Does it work with Sway, GNOME or KDE?</b></summary>
