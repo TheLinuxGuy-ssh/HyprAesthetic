@@ -51,7 +51,7 @@ An installer, theme packs and a control center, all in one. Hyprland only.
 <br>
 
 <p align="center">
-  <img src="docs/screenshots/hero.png" alt="A Hyprland desktop themed with HyprAesthetic" width="100%">
+  <img src="docs/screenshots/hero.gif" alt="A Hyprland desktop themed with HyprAesthetic" width="100%">
 </p>
 
 <p align="center">
@@ -64,7 +64,7 @@ An installer, theme packs and a control center, all in one. Hyprland only.
 
 <a id="what-is-it"></a>
 
-## 🌈 So… what is this?
+## So… what is this?
 
 **HyprAesthetic** makes [Hyprland](https://github.com/hyprwm/Hyprland) look amazing. And it keeps things easy.
 
@@ -88,15 +88,15 @@ HyprAesthetic fixes that. You get **themes**. A theme is a tiny folder. Switch i
 <table>
   <tr>
     <td width="33%" valign="top">
-      <h3>🎨 One command</h3>
+      <h3>One command</h3>
       Type <code>hat switch &lt;theme&gt;</code>. Your windows, bar, widgets, launcher, terminal, notifications and apps all change together.
     </td>
     <td width="33%" valign="top">
-      <h3>🧩 Tiny themes</h3>
+      <h3>Tiny themes</h3>
       A theme is 16 colors, a wallpaper and a preview image. No more copying 200 files just to try a new palette.
     </td>
     <td width="33%" valign="top">
-      <h3>🖱️ Click or type</h3>
+      <h3>Click or type</h3>
       Like terminals? Use <code>hat</code>. Not yet? Open the control center and click a tile.
     </td>
   </tr>
@@ -104,7 +104,7 @@ HyprAesthetic fixes that. You get **themes**. A theme is a tiny folder. Switch i
 
 <a id="quick-start"></a>
 
-## ⚡ Quick start
+## Quick start
 
 **Full install (packages + configs):**
 
@@ -135,7 +135,7 @@ Run it as a normal user with sudo. If you run it as root, it warns you and asks 
   <sub><b>↑ The installer, start to finish.</b></sub>
 </p>
 
-**Works on:**
+**Works on: (excluding autoinstall script)**
 <img src="https://img.shields.io/badge/Arch-family-1793D1?style=for-the-badge&logo=archlinux&logoColor=white" alt="Arch family">
 <img src="https://img.shields.io/badge/Fedora-incl.%20Asahi-51A2DA?style=for-the-badge&logo=fedora&logoColor=white" alt="Fedora, including Asahi">
 <img src="https://img.shields.io/badge/Ubuntu%20%2F%20Debian-supported-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu and Debian">
@@ -164,22 +164,10 @@ hat switch spartan     # change your whole desktop
 
 It has two modes:
 
-| | ⚡ Automatic | 🎚️ Custom |
+| | Default | Dotfiles (--dotfiles) |
 |---|---|---|
-| **Good for** | "Just set me up." | "Let me choose." |
-| **You get** | Hyprland, Waybar, widgets, Kitty, Nautilus and the project fonts | You pick the bar, the widgets, the file manager and the terminal |
-
-In both modes it then:
-
-1. Installs the right packages for your distro
-2. **Backs up your current configs** (`hypr`, `waybar`, `hyprwave`, `eww`, `rofi`, `kitty`, `gtk-3.0`, `gtk-4.0`, `dunst`, `nvim`)
-3. Applies a theme
-4. Creates your `prefs.toml`
-5. Adds `ha-theme`, `hat` and `hyprwall` to `~/.local/bin`
-
-In Custom mode the installer asks before it installs packages. Add `--yes` to skip the question. If you say no, or there is no terminal to ask in, it skips the packages and tells you the install is incomplete.
-
-Hyprwave and eww are optional on distros that don't have a package for them. The package names for each distro are in [`data/packages.toml`](data/packages.toml).
+| **Good for** | "Install Everything" | "I just need the config files" |
+| **You get** | Package Installation + Dotfiles | Dotfiles only |
 
 </details>
 
@@ -187,7 +175,7 @@ Hyprwave and eww are optional on distros that don't have a package for them. The
 
 <a id="themes"></a>
 
-## 🖼️ Themes: proof, not promises
+## Themes: proof, not promises
 
 These themes come in the box. Click one in the control center, or type its name.
 
@@ -199,7 +187,7 @@ These themes come in the box. Click one in the control center, or type its name.
       <code>hat switch toji</code>
     </td>
     <td align="center" width="33%">
-      <a href="themes/toji_2/toji_2.png"><img src="themes/toji_2/toji_2.png" alt="The toji_2 theme" width="100%"></a><br>
+      <a href="themes/toji_2/toji_red.png"><img src="themes/toji_2/toji_red.png" alt="The toji_2 theme" width="100%"></a><br>
       <b>toji_2</b><br>
       <code>hat switch toji_2</code>
     </td>
@@ -249,7 +237,7 @@ Want more? Run `hat store list` to see what else you can install. Or [make your 
 
 <a id="bars"></a>
 
-## 🧱 Bars
+## Bars
 
 Love your colors but not your bar? Swap **just the bar**. Click a bar tile in `hat gui` and it uses your current theme's colors.
 
@@ -295,12 +283,12 @@ More bars live in [`layouts/bars/`](layouts/bars). Made in-house: `default`, `co
 
 <a id="control-center"></a>
 
-## 🎛️ Control center
+## Control center
 
 Not a terminal person? Run **`hat gui`** and click around. Every theme is a tile. Click one and your desktop changes. GIF previews even play right inside the tile.
 
 <p align="center">
-  <img src="docs/screenshots/gui/overview.png" alt="The HyprAesthetic control center, open on the Presets page" width="100%">
+  <img src="docs/screenshots/gui/overview.jpg" alt="The HyprAesthetic control center, open on the Presets page" width="100%">
 </p>
 
 Eight pages. One clear job each.
@@ -378,7 +366,7 @@ The control center needs GTK4, libadwaita and PyGObject.
 
 <a id="features"></a>
 
-## ✨ Everything in the box
+## Everything in the box
 
 <table>
   <tr>
@@ -427,7 +415,7 @@ The control center needs GTK4, libadwaita and PyGObject.
 
 <a id="cheat-sheet"></a>
 
-## ⌨️ Cheat sheet
+## Cheat sheet
 
 `hat` is a short name for `ha-theme`. Use whichever you like.
 
@@ -481,10 +469,80 @@ hat version
 
 | Keys | What it does |
 |---|---|
-| <kbd>Super</kbd> + <kbd>A</kbd> | Open the theme picker (the same as `hat menu --restart`) |
-| <kbd>Super</kbd> + <kbd>W</kbd> | Open `hyprwall`, which HyprAesthetic installs for you |
+| <kbd>Super</kbd> + <kbd>A</kbd> | Open the theme picker (same as `hat menu --restart`) |
+| <kbd>Super</kbd> + <kbd>W</kbd> | Open `hyprwall` (wallpaper picker) |
 
-<!-- ✏️ Add the rest of the default binds here: terminal, file manager, close window, workspaces, and so on. One table per group works well. -->
+### Window Management
+
+| Keys | What it does |
+|---|---|
+| <kbd>Super</kbd> + <kbd>X</kbd> | Close focused window |
+| <kbd>Super</kbd> + <kbd>F</kbd> | Toggle floating |
+| <kbd>Super</kbd> + <kbd>Space</kbd> | Toggle fullscreen |
+| <kbd>Super</kbd> + <kbd>J</kbd> | Toggle split layout (dwindle) |
+| <kbd>Super</kbd> + <kbd>M</kbd> | Open display manager (`hyprdisplay`) |
+| <kbd>Super</kbd> + <kbd>P</kbd> | Toggle pseudo-tiled |
+| <kbd>Super</kbd> + <kbd>L</kbd> | Lock screen |
+
+### Applications
+
+| Keys | What it does |
+|---|---|
+| <kbd>Super</kbd> + <kbd>T</kbd> | Open terminal (kitty) |
+| <kbd>Super</kbd> + <kbd>E</kbd> | Open file manager (nautilus) |
+| <kbd>Super</kbd> + <kbd>B</kbd> | Open browser (firefox) |
+
+### Launcher & Menus
+
+| Keys | What it does |
+|---|---|
+| <kbd>Super</kbd> + <kbd>R</kbd> | Open app launcher (rofi) |
+| <kbd>Alt</kbd> + <kbd>Space</kbd> | Rofi application launcher (drun) |
+| <kbd>Super</kbd> + <kbd>A</kbd> | Theme picker (`hat menu --restart`) |
+
+### Clipboard & Tools
+
+| Keys | What it does |
+|---|---|
+| <kbd>Super</kbd> + <kbd>V</kbd> | Clipboard history (cliphist) |
+| <kbd>Super</kbd> + <kbd>Tab</kbd> | Color picker (`hyprpicker`) |
+| <kbd>Alt</kbd> + <kbd>S</kbd> | Screenshot region (`hyprshot`) |
+| <kbd>Super</kbd> + <kbd>W</kbd> | Wallpaper picker (`hyprwall`) |
+
+### Window Focus & Navigation
+
+| Keys | What it does |
+|---|---|
+| <kbd>Super</kbd> + <kbd>←/→/↑/↓</kbd> | Focus window in direction |
+| <kbd>Super</kbd> + <kbd>1-0</kbd> | Switch to workspace 1-10 |
+| <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>1-0</kbd> | Move window to workspace 1-10 |
+| <kbd>Super</kbd> + <kbd>S</kbd> | Toggle scratchpad (special workspace) |
+| <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Move window to scratchpad |
+| <kbd>Super</kbd> + <kbd>Scroll</kbd> | Cycle through workspaces |
+| <kbd>Super</kbd> + <kbd>LMB</kbd> | Drag window |
+| <kbd>Super</kbd> + <kbd>RMB</kbd> | Resize window |
+
+### Media & Hardware Keys
+
+| Keys | What it does |
+|---|---|
+| <kbd>XF86AudioRaiseVolume</kbd> | Volume up |
+| <kbd>XF86AudioLowerVolume</kbd> | Volume down |
+| <kbd>XF86AudioMute</kbd> | Toggle mute |
+| <kbd>XF86AudioMicMute</kbd> | Toggle mic mute |
+| <kbd>XF86MonBrightnessUp</kbd> | Brightness up |
+| <kbd>XF86MonBrightnessDown</kbd> | Brightness down |
+| <kbd>XF86AudioNext</kbd> | Next track |
+| <kbd>XF86AudioPrev</kbd> | Previous track |
+| <kbd>XF86AudioPlay/Pause</kbd> | Play/Pause toggle |
+
+### Power & Session
+
+| Keys | What it does |
+|---|---|
+| <kbd>Lid Close</kbd> | Suspend system |
+
+---
 
 **Want your own keybinds?** Put them in `~/.config/hypr/custom.lua`. HyprAesthetic creates that file once, only if it is missing, and never touches it again. Switching themes will not overwrite your binds.
 
