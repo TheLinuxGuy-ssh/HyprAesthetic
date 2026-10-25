@@ -80,6 +80,10 @@ CSS = b"""
 .ha-tile:hover {
   border-color: alpha(@accent_color, 0.55);
 }
+.ha-preview {
+  min-width: 420px;
+  min-height: 262px;
+}
 .ha-hero .ha-preview {
   min-width: 640px;
   min-height: 360px;
