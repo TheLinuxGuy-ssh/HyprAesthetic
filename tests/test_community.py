@@ -52,19 +52,32 @@ class CommunityFilesTests(unittest.TestCase):
     def test_readme_has_required_headings(self) -> None:
         text = (ROOT / "README.md").read_text(encoding="utf-8")
         for heading in (
-            "## Features",
-            "## Installation",
-            "## Usage",
-            "## Components",
-            "## Creating Themes",
+            "## Quick start",
+            "## Themes: proof, not promises",
+            "## Bars",
+            "## Control center",
+            "## How it works",
+            "## Everything in the box",
+            "## Cheat sheet",
+            "## Keybinds",
+            "## Make your own theme",
+            "## Your settings",
+            "## FAQ",
+            "## Join in",
+            "## Thanks",
             "## License",
         ):
             self.assertIn(heading, text, heading)
 
     def test_readme_leads_with_banner_and_bar_shots(self) -> None:
         text = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("261e14f7-dc42-4a0d-bcd6-718b5793f7b9", text)
-        self.assertIn("layouts/bars/default/screenshot-2026-04-19_19-38-35.png", text)
-        self.assertIn("layouts/bars/cyberpunk/V2.9e.png", text)
-        self.assertIn("layouts/bars/v7/preview.png", text)
-        self.assertLess(text.find("261e14f7-dc42-4a0d-bcd6-718b5793f7b9"), text.find("## Installation"))
+        self.assertIn("docs/assets/banner.png", text)
+        self.assertIn("themes/a70/bar.png", text)
+        self.assertIn("themes/choso/bar.png", text)
+        self.assertIn("themes/jjk/bar.png", text)
+        self.assertIn("themes/sky/bar.png", text)
+        self.assertIn("themes/spartan/bar.png", text)
+        self.assertIn("themes/tanjiro/bar.png", text)
+        self.assertIn("themes/toji/bar.png", text)
+        self.assertIn("themes/toji_2/bar.png", text)
+        self.assertLess(text.find("docs/assets/banner.png"), text.find("## Quick start"))
