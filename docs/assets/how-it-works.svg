@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 510" width="1200" height="510" role="img" aria-labelledby="ttl desc">
+  <title id="ttl">How HyprAesthetic works</title>
+  <desc id="desc">Step 1: a theme is a small folder with theme.toml, a wallpaper and a preview. Step 2: you run hat switch. Step 3: Hyprland, Waybar, eww, Hyprwave, Rofi, Kitty, GTK, Dunst and Neovim all get repainted.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#e2dfd0"/>
+      <stop offset=".10" stop-color="#a9c1d9"/>
+      <stop offset=".24" stop-color="#2563b8"/>
+      <stop offset=".42" stop-color="#0b2d6b"/>
+      <stop offset=".62" stop-color="#061436"/>
+      <stop offset="1" stop-color="#030611"/>
+    </linearGradient>
+    <pattern id="grid" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect x="1" y="1" width="5" height="5" fill="#9cc4ff" fill-opacity=".05"/>
+      <path d="M0 .5H6M.5 0V6" stroke="#000" stroke-opacity=".32" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="dropg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1ea0dc"/><stop offset="1" stop-color="#23d4c4"/>
+    </linearGradient>
+    <filter id="tglow" x="-10%" y="-40%" width="120%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="dglow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="ringg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#29b6ea"/><stop offset="1" stop-color="#9fc3ee"/></linearGradient>
+    <linearGradient id="wpi" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#cdd7df"/><stop offset=".45" stop-color="#2f7be0"/><stop offset="1" stop-color="#0a2a66"/></linearGradient>
+    <clipPath id="card"><rect width="1200" height="510" rx="28"/></clipPath>
+  </defs>
+  <style>
+    svg{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono","DejaVu Sans Mono",monospace}
+    .flow{stroke-dasharray:6 10;animation:flow 1.2s linear infinite}
+    @keyframes flow{to{stroke-dashoffset:-16}}
+    .spin{transform-box:fill-box;transform-origin:50% 50%;animation:spin 14s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .paint{opacity:0;animation:paint 4.5s ease-in-out infinite}
+    @keyframes paint{0%,55%,100%{opacity:0}12%,38%{opacity:1}}
+    .t2{animation-delay:.18s}.t3{animation-delay:.36s}.t4{animation-delay:.18s}.t5{animation-delay:.36s}
+    .t6{animation-delay:.54s}.t7{animation-delay:.36s}.t8{animation-delay:.54s}.t9{animation-delay:.72s}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+
+  <g clip-path="url(#card)"><rect width="1200" height="510" fill="url(#sky)"/><rect width="1200" height="510" fill="#02040c" fill-opacity="0.3"/><rect width="1200" height="510" fill="url(#grid)"/></g>
+  <rect x=".75" y=".75" width="1198.5" height="508.5" rx="27.5" fill="none" stroke="#ffffff" stroke-opacity=".14" stroke-width="1.5"/>
+
+  <!-- step headers -->
+  <rect x="40" y="34" width="36" height="36" rx="6" fill="#050d24" stroke="#e2dfd0" stroke-width="2"/><path transform="translate(48.0 64) scale(2)" d="M3 -12h4v1h-4zM1 -11h6v1h-6zM1 -10h2v1h-2zM4 -10h3v8h-3zM1 -2h9v2h-9z" fill="#e2dfd0"/><g filter="url(#tglow)"><path transform="translate(90 64) scale(2)" d="M14 -14h3v3h-3zM1 -12h6v1h-6zM1 -11h7v1h-7zM73 -12h3v3h-3zM81 -13h3v5h-3zM53 -9h5v1h-5zM101 -9h4v1h-4zM113 -9h4v1h-4zM93 -9h4v1h-4zM85 -9h3v1h-3zM23 -9h5v1h-5zM36 -9h2v1h-2zM106 -9h2v1h-2zM31 -13h3v6h-3zM71 -9h8v2h-8zM12 -9h5v2h-5zM81 -8h8v1h-8zM92 -8h6v1h-6zM52 -8h7v1h-7zM22 -8h7v1h-7zM35 -8h3v1h-3zM112 -8h6v1h-6zM101 -8h8v1h-8zM6 -10h3v4h-3zM1 -10h3v4h-3zM52 -7h1v1h-1zM28 -7h1v1h-1zM116 -7h3v1h-3zM111 -7h3v1h-3zM96 -7h3v1h-3zM56 -7h3v1h-3zM31 -7h6v1h-6zM91 -7h3v1h-3zM21 -7h4v1h-4zM31 -6h5v1h-5zM1 -6h7v1h-7zM54 -6h5v1h-5zM111 -6h8v2h-8zM91 -6h8v2h-8zM52 -5h7v1h-7zM31 -5h6v1h-6zM1 -5h6v1h-6zM21 -6h3v3h-3zM111 -4h3v1h-3zM91 -4h3v1h-3zM35 -4h2v1h-2zM73 -7h3v5h-3zM14 -7h3v5h-3zM56 -4h3v2h-3zM51 -4h3v2h-3zM28 -3h1v1h-1zM111 -3h4v1h-4zM118 -3h1v1h-1zM91 -3h4v1h-4zM98 -3h1v1h-1zM35 -3h3v1h-3zM21 -3h4v1h-4zM92 -2h7v1h-7zM51 -2h8v1h-8zM112 -2h7v1h-7zM73 -2h6v1h-6zM22 -2h7v1h-7zM36 -2h2v1h-2zM107 -7h2v7h-2zM86 -7h3v7h-3zM81 -7h3v7h-3zM104 -7h2v7h-2zM101 -7h2v7h-2zM31 -4h3v4h-3zM1 -4h3v4h-3zM11 -2h9v2h-9zM93 -1h5v1h-5zM56 -1h3v1h-3zM52 -1h3v1h-3zM36 -1h3v1h-3zM113 -1h5v1h-5zM23 -1h5v1h-5zM74 -1h5v1h-5z" fill="#f5f8ff"/></g>
+  <rect x="450" y="34" width="36" height="36" rx="6" fill="#050d24" stroke="#9fc3ee" stroke-width="2"/><path transform="translate(458.0 64) scale(2)" d="M2 -12h5v1h-5zM1 -11h7v1h-7zM1 -10h1v1h-1zM6 -10h3v2h-3zM6 -8h2v1h-2zM5 -7h3v1h-3zM4 -6h3v1h-3zM3 -5h3v1h-3zM2 -4h3v1h-3zM2 -3h2v1h-2zM1 -2h8v2h-8z" fill="#9fc3ee"/><g filter="url(#tglow)"><path transform="translate(500 64) scale(2)" d="M3 -12h4v1h-4zM2 -11h6v1h-6zM6 -10h2v1h-2zM2 -10h2v1h-2zM106 -13h3v5h-3zM23 -9h4v1h-4zM61 -9h4v1h-4zM76 -9h2v1h-2zM43 -9h5v1h-5zM53 -9h4v1h-4zM11 -9h3v1h-3zM91 -9h3v1h-3zM102 -9h3v1h-3zM95 -9h3v1h-3zM66 -9h2v1h-2zM15 -9h3v1h-3zM83 -9h5v1h-5zM71 -9h4v1h-4zM82 -8h7v1h-7zM61 -8h8v1h-8zM71 -8h8v1h-8zM102 -8h7v1h-7zM52 -8h6v1h-6zM22 -8h6v1h-6zM11 -8h8v1h-8zM42 -8h7v1h-7zM91 -8h8v1h-8zM82 -7h1v1h-1zM21 -7h3v1h-3zM48 -7h1v1h-1zM86 -7h3v1h-3zM41 -7h4v1h-4zM26 -7h3v1h-3zM84 -6h5v1h-5zM21 -6h8v2h-8zM82 -5h7v1h-7zM6 -9h3v6h-3zM1 -9h3v6h-3zM41 -6h3v3h-3zM21 -4h3v1h-3zM56 -7h3v5h-3zM51 -7h3v5h-3zM106 -7h3v5h-3zM101 -7h3v5h-3zM86 -4h3v2h-3zM81 -4h3v2h-3zM2 -3h2v1h-2zM6 -3h2v1h-2zM48 -3h1v1h-1zM28 -3h1v1h-1zM41 -3h4v1h-4zM21 -3h4v1h-4zM81 -2h8v1h-8zM102 -2h7v1h-7zM22 -2h7v1h-7zM52 -2h6v1h-6zM2 -2h6v1h-6zM42 -2h7v1h-7zM77 -7h2v7h-2zM96 -7h3v7h-3zM91 -7h3v7h-3zM61 -7h2v7h-2zM74 -7h2v7h-2zM16 -7h3v7h-3zM67 -7h2v7h-2zM11 -7h3v7h-3zM71 -7h2v7h-2zM64 -7h2v7h-2zM43 -1h5v1h-5zM3 -1h4v1h-4zM53 -1h4v1h-4zM82 -1h3v1h-3zM106 -1h3v1h-3zM86 -1h3v1h-3zM102 -1h3v1h-3zM23 -1h5v1h-5z" fill="#f5f8ff"/></g>
+  <rect x="860" y="34" width="36" height="36" rx="6" fill="#050d24" stroke="#29b6ea" stroke-width="2"/><path transform="translate(868.0 64) scale(2)" d="M2 -12h5v1h-5zM1 -11h8v1h-8zM1 -10h1v1h-1zM6 -10h3v2h-3zM3 -8h5v2h-5zM5 -6h4v1h-4zM6 -5h3v2h-3zM1 -3h1v1h-1zM5 -3h4v1h-4zM1 -2h7v1h-7zM2 -1h5v1h-5z" fill="#29b6ea"/><g filter="url(#tglow)"><path transform="translate(910 64) scale(2)" d="M94 -14h3v3h-3zM4 -12h2v1h-2zM113 -12h3v3h-3zM25 -9h3v1h-3zM75 -9h3v1h-3zM21 -9h3v1h-3zM11 -9h3v1h-3zM71 -9h3v1h-3zM101 -9h3v1h-3zM56 -9h3v1h-3zM105 -9h3v1h-3zM52 -9h3v1h-3zM32 -9h6v1h-6zM15 -9h3v1h-3zM63 -9h4v1h-4zM83 -9h5v1h-5zM3 -11h4v4h-4zM92 -9h5v2h-5zM111 -9h8v2h-8zM11 -8h7v1h-7zM71 -8h7v1h-7zM82 -8h7v1h-7zM31 -8h8v1h-8zM52 -8h7v1h-7zM62 -8h6v1h-6zM101 -8h8v1h-8zM21 -8h7v1h-7zM61 -7h3v1h-3zM82 -7h1v1h-1zM38 -7h1v1h-1zM86 -7h3v1h-3zM31 -7h3v1h-3zM52 -7h4v1h-4zM66 -7h3v1h-3zM2 -7h2v2h-2zM6 -7h2v2h-2zM84 -6h5v1h-5zM31 -6h6v1h-6zM61 -6h8v2h-8zM82 -5h7v1h-7zM32 -5h6v1h-6zM2 -5h6v2h-6zM61 -4h3v1h-3zM94 -7h3v5h-3zM76 -7h3v5h-3zM21 -7h3v5h-3zM113 -7h3v5h-3zM16 -7h3v5h-3zM71 -7h3v5h-3zM11 -7h3v5h-3zM26 -7h3v5h-3zM86 -4h3v2h-3zM81 -4h3v2h-3zM36 -4h3v2h-3zM2 -3h2v1h-2zM6 -3h2v1h-2zM31 -3h1v1h-1zM68 -3h1v1h-1zM61 -3h4v1h-4zM81 -2h8v1h-8zM11 -2h7v1h-7zM71 -2h7v1h-7zM31 -2h8v1h-8zM113 -2h6v1h-6zM62 -2h7v1h-7zM21 -2h7v1h-7zM106 -7h3v7h-3zM101 -7h3v7h-3zM52 -6h3v6h-3zM91 -2h9v2h-9zM6 -2h3v2h-3zM1 -2h3v2h-3zM25 -1h3v1h-3zM75 -1h3v1h-3zM82 -1h3v1h-3zM63 -1h5v1h-5zM86 -1h3v1h-3zM32 -1h6v1h-6zM15 -1h3v1h-3zM114 -1h5v1h-5zM21 -1h3v5h-3zM11 -1h3v5h-3zM71 -1h3v5h-3z" fill="#f5f8ff"/></g>
+
+  <!-- column A: a theme is a tiny folder -->
+  <rect x="40" y="112" width="300" height="324" rx="18" fill="#050d24" stroke="#1d3f7a" stroke-width="1.5"/>
+  <rect x="40" y="112" width="300" height="324" rx="18" fill="url(#grid)" opacity=".5"/>
+  <path d="M56 113 V96 a8 8 0 0 1 8 -8 H122 a8 8 0 0 1 8 8 V113 Z" fill="#0b1f4d"/>
+  <text x="68" y="106" class="mono" font-size="13" fill="#9fc3ee">mytheme/</text>
+
+  <rect x="62" y="150" width="13" height="13" rx="3" fill="#29b6ea"/>
+  <rect x="79" y="150" width="13" height="13" rx="3" fill="#ff5fa8"/>
+  <rect x="62" y="167" width="13" height="13" rx="3" fill="#3ddc97"/>
+  <rect x="79" y="167" width="13" height="13" rx="3" fill="#ffb454"/>
+  <text x="108" y="166" class="mono" font-size="17" font-weight="700" fill="#f3f6ff">theme.toml</text>
+  <text x="108" y="188" font-size="13" fill="#7f9bc4">16 colors and a few settings</text>
+  <rect x="60" y="206" width="262" height="1" fill="#0f2a5e"/>
+
+  <rect x="62" y="224" width="30" height="30" rx="7" fill="url(#wpi)"/>
+  <polygon points="64,252 73,240 79,247 84,241 90,252" fill="#f3f6ff" opacity=".85"/>
+  <circle cx="84" cy="232" r="3" fill="#e2dfd0"/>
+  <text x="108" y="240" class="mono" font-size="17" font-weight="700" fill="#f3f6ff">wallpaper.jpg</text>
+  <text x="108" y="262" font-size="13" fill="#7f9bc4">your background</text>
+  <rect x="60" y="280" width="262" height="1" fill="#0f2a5e"/>
+
+  <rect x="63" y="299" width="28" height="28" rx="7" fill="none" stroke="#29b6ea" stroke-width="2"/>
+  <polygon points="73,306 73,320 85,313" fill="#29b6ea"/>
+  <text x="108" y="314" class="mono" font-size="17" font-weight="700" fill="#f3f6ff">preview.png</text>
+  <text x="108" y="336" font-size="13" fill="#7f9bc4">shows up in the control center</text>
+
+  <rect x="60" y="360" width="262" height="58" rx="10" fill="none" stroke="#2a5aa8" stroke-width="1.5" stroke-dasharray="5 5"/>
+  <text x="76" y="384" class="mono" font-size="15" fill="#7f9bc4">overrides/</text>
+  <text x="76" y="406" font-size="12.5" fill="#5d7aa8">only if you want a different layout</text>
+
+  <!-- arrow A to B -->
+  <line x1="348" y1="274" x2="430" y2="274" stroke="#12306a" stroke-width="3" stroke-linecap="round"/>
+  <line x1="348" y1="274" x2="430" y2="274" stroke="#29b6ea" stroke-width="3" stroke-linecap="round" class="flow"/>
+  <polygon points="446,274 430,265 430,283" fill="#29b6ea"/>
+
+  <!-- column B: one command -->
+  <rect x="450" y="112" width="300" height="324" rx="18" fill="#050d24" stroke="#1d3f7a" stroke-width="1.5"/>
+  <rect x="450" y="112" width="300" height="324" rx="18" fill="url(#grid)" opacity=".5"/>
+  <circle cx="600" cy="196" r="54" fill="none" stroke="#12306a" stroke-width="6"/>
+  <circle cx="600" cy="196" r="54" fill="none" stroke="url(#ringg)" stroke-width="6" stroke-linecap="round" stroke-dasharray="230 109" class="spin"/>
+  <g transform="translate(575.4 164.512) scale(0.4923)" filter="url(#dglow)"><path d="M41 6C41 36 6 58 6 88C6 110 26 124 50 124C74 124 94 110 94 88C94 58 59 36 59 6" fill="none" stroke="url(#dropg)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g filter="url(#tglow)"><path transform="translate(483.0 300) scale(1.8)" d="M114 -14h3v3h-3zM44 -12h2v1h-2zM73 -12h3v3h-3zM103 -12h3v3h-3zM81 -13h3v5h-3zM25 -9h3v1h-3zM53 -9h4v1h-4zM21 -9h3v1h-3zM11 -9h3v1h-3zM62 -9h6v1h-6zM93 -9h4v1h-4zM123 -9h5v1h-5zM36 -9h3v1h-3zM85 -9h3v1h-3zM32 -9h3v1h-3zM6 -12h3v5h-3zM1 -12h3v5h-3zM43 -11h4v4h-4zM16 -9h3v2h-3zM71 -9h8v2h-8zM101 -9h8v2h-8zM112 -9h5v2h-5zM81 -8h8v1h-8zM92 -8h6v1h-6zM32 -8h7v1h-7zM122 -8h7v1h-7zM52 -8h6v1h-6zM61 -8h8v1h-8zM21 -8h7v1h-7zM12 -8h2v2h-2zM96 -7h3v1h-3zM61 -7h3v1h-3zM128 -7h1v1h-1zM56 -7h3v1h-3zM91 -7h3v1h-3zM51 -7h3v1h-3zM68 -7h1v1h-1zM121 -7h4v1h-4zM32 -7h4v1h-4zM42 -7h2v2h-2zM46 -7h2v2h-2zM1 -7h8v2h-8zM61 -6h6v1h-6zM12 -6h3v1h-3zM16 -7h2v3h-2zM51 -6h8v2h-8zM91 -6h8v2h-8zM62 -5h6v1h-6zM13 -5h2v1h-2zM121 -6h3v3h-3zM42 -5h6v2h-6zM91 -4h3v1h-3zM51 -4h3v1h-3zM21 -7h3v5h-3zM73 -7h3v5h-3zM103 -7h3v5h-3zM114 -7h3v5h-3zM26 -7h3v5h-3zM13 -4h4v2h-4zM66 -4h3v2h-3zM58 -3h1v1h-1zM91 -3h4v1h-4zM42 -3h2v1h-2zM51 -3h4v1h-4zM46 -3h2v1h-2zM128 -3h1v1h-1zM121 -3h4v1h-4zM61 -3h1v1h-1zM98 -3h1v1h-1zM92 -2h7v1h-7zM52 -2h7v1h-7zM73 -2h6v1h-6zM122 -2h7v1h-7zM14 -2h3v1h-3zM103 -2h6v1h-6zM61 -2h8v1h-8zM21 -2h7v1h-7zM86 -7h3v7h-3zM81 -7h3v7h-3zM32 -6h3v6h-3zM6 -5h3v5h-3zM1 -5h3v5h-3zM46 -2h3v2h-3zM41 -2h3v2h-3zM111 -2h9v2h-9zM53 -1h5v1h-5zM25 -1h3v1h-3zM93 -1h5v1h-5zM104 -1h5v1h-5zM123 -1h5v1h-5zM62 -1h6v1h-6zM74 -1h5v1h-5zM14 -1h2v2h-2zM13 1h3v1h-3zM21 -1h3v5h-3zM12 2h3v2h-3z" fill="#f5f8ff"/></g>
+  <text x="600" y="330" text-anchor="middle" font-size="17" font-weight="700" fill="#b9d3ee" textLength="138" lengthAdjust="spacingAndGlyphs">reads your theme,</text>
+  <text x="600" y="352" text-anchor="middle" font-size="17" font-weight="700" fill="#b9d3ee" textLength="178" lengthAdjust="spacingAndGlyphs">then paints every app.</text>
+  <rect x="490" y="376" width="220" height="40" rx="20" fill="#030814" stroke="#1d3f7a" stroke-width="1.5"/>
+  <text x="600" y="402" text-anchor="middle" class="mono" font-size="16" fill="#eaf2ff"><tspan fill="#29b6ea" font-weight="700">$</tspan> hat switch &lt;theme&gt;</text>
+
+  <!-- arrow B to C -->
+  <line x1="758" y1="274" x2="840" y2="274" stroke="#12306a" stroke-width="3" stroke-linecap="round"/>
+  <line x1="758" y1="274" x2="840" y2="274" stroke="#9fc3ee" stroke-width="3" stroke-linecap="round" class="flow"/>
+  <polygon points="856,274 840,265 840,283" fill="#9fc3ee"/>
+
+  <!-- column C: nine apps -->
+  <g style="color:#29b6ea">
+    <rect x="860" y="124" width="90" height="90" rx="14" fill="#050d24" stroke="#1d3f7a" stroke-width="1.5"/>
+    <rect x="860" y="124" width="90" height="90" rx="14" class="paint" style="fill:currentColor;fill-opacity:.18;stroke:currentColor;stroke-width:2"/>
+    <rect x="874" y="138" width="26" height="26" rx="7" fill="currentColor"/>
+    <text x="873" y="194" font-size="13.5" font-weight="700" fill="#eaf2ff">Hyprland</text>
+  </g>
+  <g style="color:#e2dfd0">
+    <rect x="965" y="124" width="90" height="90" rx="14" fill="#050d24" stroke="#1d3f7a" stroke-width="1.5"/>
+    <rect x="965" y="124" width="90" height="90" rx="14" class="paint t2" style="fill:currentColor;fill-opacity:.18;stroke:currentColor;stroke-width:2"/>
+    <rect x="979" y="138" width="26" height="26" rx="7" fill="currentColor"/>
+    <text x="978" y="194" font-size="13.5" font-weight="700" fill="#eaf2ff">Waybar</text>
+  </g>
+  <g style="color:#9fc3ee">
+    <rect x="1070" y="124" width="90" height="90" rx="14" fill="#050d24" stroke="#1d3f7a" stroke-width="1.5"/>
+    <rect x="1070" y="124" width="90" height="90" rx="14" class="paint t3" style="fill:currentColor;fill-opacity:.18;stroke:currentColor;stroke-width:2"/>
+    <rect x="1084" y="138" width="26" height="26" rx="7" fill="currentColor"/>
+    <text x="1083" y="194" font-size="13.5" font-weight="700" fill="#eaf2ff">eww</text>
+  </g>
+  <g style="color:#2f7be0">
+    <rect x="860" y="229" width="90" height="90" rx="14" fill="#050d24" stroke="#1d3f7a" stroke-width="1.5"/>
+    <rect x="860" y="229" width="90" height="90" rx="14" class="paint t4" style="fill:currentColor;fill-opacity:.18;stroke:currentColor;stroke-width:2"/>
+    <rect x="874" y="243" width="26" height="26" rx="7" fill="currentColor"/>
+    <text x="873" y="299" font-size="13.5" font-weight="700" fill="#eaf2ff">Hyprwave</text>
+  </g>
+  <g style="color:#22d2c2">
+    <rect x="965" y="229" width="90" height="90" rx="14" fill="#050d24" stroke="#1d3f7a" stroke-width="1.5"/>
+    <rect x="965" y="229" width="90" height="90" rx="14" class="paint t5" style="fill:currentColor;fill-opacity:.18;stroke:currentColor;stroke-width:2"/>
+    <rect x="979" y="243" width="26" height="26" rx="7" fill="currentColor"/>
+    <text x="978" y="299" font-size="13.5" font-weight="700" fill="#eaf2ff">Rofi</text>
+  </g>
+  <g style="color:#f3f6ff">
+    <rect x="1070" y="229" width="90" height="90" rx="14" fill="#050d24" stroke="#1d3f7a" stroke-width="1.5"/>
+    <rect x="1070" y="229" width="90" height="90" rx="14" class="paint t6" style="fill:currentColor;fill-opacity:.18;stroke:currentColor;stroke-width:2"/>
+    <rect x="1084" y="243" width="26" height="26" rx="7" fill="currentColor"/>
+    <text x="1083" y="299" font-size="13.5" font-weight="700" fill="#eaf2ff">Kitty</text>
+  </g>
+  <g style="color:#5a8fd6">
+    <rect x="860" y="334" width="90" height="90" rx="14" fill="#050d24" stroke="#1d3f7a" stroke-width="1.5"/>
+    <rect x="860" y="334" width="90" height="90" rx="14" class="paint t7" style="fill:currentColor;fill-opacity:.18;stroke:currentColor;stroke-width:2"/>
+    <rect x="874" y="348" width="26" height="26" rx="7" fill="currentColor"/>
+    <text x="873" y="404" font-size="13.5" font-weight="700" fill="#eaf2ff">GTK</text>
+  </g>
+  <g style="color:#b8d4f0">
+    <rect x="965" y="334" width="90" height="90" rx="14" fill="#050d24" stroke="#1d3f7a" stroke-width="1.5"/>
+    <rect x="965" y="334" width="90" height="90" rx="14" class="paint t8" style="fill:currentColor;fill-opacity:.18;stroke:currentColor;stroke-width:2"/>
+    <rect x="979" y="348" width="26" height="26" rx="7" fill="currentColor"/>
+    <text x="978" y="404" font-size="13.5" font-weight="700" fill="#eaf2ff">Dunst</text>
+  </g>
+  <g style="color:#1fa8dc">
+    <rect x="1070" y="334" width="90" height="90" rx="14" fill="#050d24" stroke="#1d3f7a" stroke-width="1.5"/>
+    <rect x="1070" y="334" width="90" height="90" rx="14" class="paint t9" style="fill:currentColor;fill-opacity:.18;stroke:currentColor;stroke-width:2"/>
+    <rect x="1084" y="348" width="26" height="26" rx="7" fill="currentColor"/>
+    <text x="1083" y="404" font-size="13.5" font-weight="700" fill="#eaf2ff">Neovim</text>
+  </g>
+
+  <g filter="url(#tglow)"><path transform="translate(250.0 486) scale(2)" d="M45 -13h5v1h-5zM114 -14h3v3h-3zM294 -14h3v3h-3zM164 -14h3v3h-3zM61 -13h5v2h-5zM3 -12h4v1h-4zM44 -12h6v1h-6zM151 -12h3v2h-3zM2 -11h6v1h-6zM313 -12h3v3h-3zM44 -11h3v2h-3zM6 -10h2v1h-2zM2 -10h2v1h-2zM336 -13h3v5h-3zM76 -13h3v5h-3zM23 -9h4v1h-4zM263 -9h4v1h-4zM92 -9h3v1h-3zM125 -9h3v1h-3zM171 -9h3v1h-3zM215 -9h3v1h-3zM96 -9h3v1h-3zM301 -9h3v1h-3zM252 -9h3v1h-3zM305 -9h3v1h-3zM175 -9h3v1h-3zM53 -9h4v1h-4zM183 -9h4v1h-4zM221 -9h3v1h-3zM232 -9h6v1h-6zM256 -9h3v1h-3zM283 -9h5v1h-5zM225 -9h3v1h-3zM323 -9h4v1h-4zM271 -9h3v1h-3zM83 -9h4v1h-4zM121 -9h3v1h-3zM11 -9h3v1h-3zM275 -9h3v1h-3zM211 -9h3v1h-3zM203 -9h5v1h-5zM332 -9h3v1h-3zM15 -9h3v1h-3zM72 -9h3v1h-3zM42 -9h8v2h-8zM112 -9h5v2h-5zM292 -9h5v2h-5zM162 -9h5v2h-5zM311 -9h8v2h-8zM221 -8h7v1h-7zM231 -8h8v1h-8zM182 -8h6v1h-6zM52 -8h6v1h-6zM121 -8h8v1h-8zM11 -8h8v1h-8zM271 -8h7v1h-7zM282 -8h7v1h-7zM301 -8h8v1h-8zM171 -8h8v1h-8zM211 -8h7v1h-7zM82 -8h6v1h-6zM332 -8h7v1h-7zM202 -8h7v1h-7zM322 -8h6v1h-6zM72 -8h7v1h-7zM22 -8h6v1h-6zM92 -8h7v1h-7zM262 -8h6v1h-6zM252 -8h7v1h-7zM156 -12h3v6h-3zM151 -10h4v4h-4zM206 -7h3v1h-3zM261 -7h3v1h-3zM186 -7h3v1h-3zM238 -7h1v1h-1zM282 -7h1v1h-1zM21 -7h3v1h-3zM181 -7h3v1h-3zM202 -7h1v1h-1zM86 -7h3v1h-3zM231 -7h3v1h-3zM92 -7h4v1h-4zM326 -7h3v1h-3zM252 -7h4v1h-4zM286 -7h3v1h-3zM81 -7h3v1h-3zM266 -7h3v1h-3zM321 -7h3v1h-3zM26 -7h3v1h-3zM284 -6h5v1h-5zM204 -6h5v1h-5zM231 -6h6v1h-6zM81 -6h8v2h-8zM321 -6h8v2h-8zM261 -6h8v2h-8zM21 -6h8v2h-8zM181 -6h8v2h-8zM282 -5h7v1h-7zM232 -5h6v1h-6zM202 -5h7v1h-7zM1 -9h3v6h-3zM6 -9h3v6h-3zM261 -4h3v1h-3zM21 -4h3v1h-3zM181 -4h3v1h-3zM81 -4h3v1h-3zM321 -4h3v1h-3zM63 -11h3v9h-3zM226 -7h3v5h-3zM336 -7h3v5h-3zM76 -7h3v5h-3zM294 -7h3v5h-3zM164 -7h3v5h-3zM221 -7h3v5h-3zM56 -7h3v5h-3zM276 -7h3v5h-3zM331 -7h3v5h-3zM51 -7h3v5h-3zM71 -7h3v5h-3zM313 -7h3v5h-3zM216 -7h3v5h-3zM271 -7h3v5h-3zM211 -7h3v5h-3zM114 -7h3v5h-3zM155 -6h4v4h-4zM281 -4h3v2h-3zM206 -4h3v2h-3zM201 -4h3v2h-3zM236 -4h3v2h-3zM286 -4h3v2h-3zM188 -3h1v1h-1zM181 -3h4v1h-4zM2 -3h2v1h-2zM6 -3h2v1h-2zM328 -3h1v1h-1zM231 -3h1v1h-1zM88 -3h1v1h-1zM321 -3h4v1h-4zM81 -3h4v1h-4zM268 -3h1v1h-1zM28 -3h1v1h-1zM261 -3h4v1h-4zM21 -3h4v1h-4zM221 -2h7v1h-7zM231 -2h8v1h-8zM52 -2h6v1h-6zM322 -2h7v1h-7zM82 -2h7v1h-7zM271 -2h7v1h-7zM63 -2h6v1h-6zM22 -2h7v1h-7zM262 -2h7v1h-7zM281 -2h8v1h-8zM211 -2h7v1h-7zM332 -2h7v1h-7zM313 -2h6v1h-6zM72 -2h7v1h-7zM182 -2h7v1h-7zM201 -2h8v1h-8zM2 -2h6v1h-6zM301 -7h3v7h-3zM171 -7h3v7h-3zM126 -7h3v7h-3zM16 -7h3v7h-3zM306 -7h3v7h-3zM121 -7h3v7h-3zM176 -7h3v7h-3zM11 -7h3v7h-3zM44 -7h3v7h-3zM92 -6h3v6h-3zM151 -6h3v6h-3zM252 -6h3v6h-3zM134 -3h3v3h-3zM344 -3h3v3h-3zM111 -2h9v2h-9zM291 -2h9v2h-9zM161 -2h9v2h-9zM156 -2h3v2h-3zM64 -1h5v1h-5zM3 -1h4v1h-4zM215 -1h3v1h-3zM336 -1h3v1h-3zM206 -1h3v1h-3zM76 -1h3v1h-3zM323 -1h5v1h-5zM53 -1h4v1h-4zM232 -1h6v1h-6zM83 -1h5v1h-5zM314 -1h5v1h-5zM225 -1h3v1h-3zM282 -1h3v1h-3zM263 -1h5v1h-5zM23 -1h5v1h-5zM275 -1h3v1h-3zM286 -1h3v1h-3zM332 -1h3v1h-3zM202 -1h3v1h-3zM72 -1h3v1h-3zM183 -1h5v1h-5zM221 -1h3v5h-3zM271 -1h3v5h-3zM211 -1h3v5h-3z" fill="#f5f8ff"/></g>
+  <g transform="translate(1122 446) scale(0.3538)" filter="url(#dglow)"><path d="M41 6C41 36 6 58 6 88C6 110 26 124 50 124C74 124 94 110 94 88C94 58 59 36 59 6" fill="none" stroke="url(#dropg)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg>

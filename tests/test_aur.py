@@ -653,7 +653,7 @@ class AurTests(unittest.TestCase):
 
     def test_readme_installation_mentions_aur_helper(self) -> None:
         readme = Path(__file__).resolve().parents[1] / "README.md"
-        install = readme.read_text(encoding="utf-8").split("## Installation", 1)[1].split("\n## ", 1)[0]
+        install = readme.read_text(encoding="utf-8").split("## Quick start", 1)[1].split("\n## ", 1)[0]
         self.assertIn("paru", install)
         self.assertIn("yay", install)
 
