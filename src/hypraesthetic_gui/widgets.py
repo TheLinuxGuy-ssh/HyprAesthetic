@@ -195,7 +195,7 @@ def _flow() -> Gtk.FlowBox:
         max_children_per_line=4,
         min_children_per_line=2,
         selection_mode=Gtk.SelectionMode.NONE,
-        homogeneous=True,
+        homogeneous=False,
         row_spacing=14,
         column_spacing=14,
         valign=Gtk.Align.START,
@@ -234,6 +234,8 @@ def _tile(
                 placeholder=placeholder,
             )
         )
+        # Set button size to match preview + title/subtitle space
+        button.set_size_request(width, height + 60)
     else:
         box.append(preview_widget(image, color, placeholder=placeholder))
     name = Gtk.Label(label=title, xalign=0, wrap=True)
