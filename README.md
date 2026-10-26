@@ -1,20 +1,3 @@
-<!--
-  📸 IMAGE SLOTS
-  Every picture in this README already has a placeholder file.
-  To fill a slot: replace the file and keep the SAME NAME. That's it.
-  Want a GIF where a PNG is used (or the other way round)? Change the file extension in this README.
-
-    docs/screenshots/hero.png ............ your best desktop shot      (1920x1080)
-    docs/screenshots/demo-switch.gif ..... a theme switch, recorded    (1280x720)
-    docs/screenshots/installer.gif ....... the installer, recorded     (1280x720)
-    docs/screenshots/bar-strip.gif ....... the thin bar, close up      (1600x200)
-    docs/screenshots/themes/NAME.png ..... one per theme, 9 in total   (1280x720)
-    docs/screenshots/gui/PAGE.png ........ control center, 9 in total  (1280x800)
-
-  docs/assets/banner.png is your own banner. theme-cycle, how-it-works, palette and divider are
-  drawn in the same style, so the whole page looks like one thing.
--->
-
 <div align="center">
 
 <img src="docs/assets/banner.png" alt="HyprAesthetic. Linux Hyprland. Made Simple." width="100%">
@@ -182,54 +165,49 @@ These themes come in the box. Click one in the control center, or type its name.
 <table>
   <tr>
     <td align="center" width="33%">
-      <a href="themes/toji/toji.png"><img src="themes/toji/toji.png" alt="The toji theme" width="100%"></a><br>
+      <a href="themes/toji/desktop.png"><img src="themes/toji/desktop.png" alt="The toji theme" width="100%"></a><br>
       <b>toji</b><br>
       <code>hat switch toji</code>
     </td>
     <td align="center" width="33%">
-      <a href="themes/toji_2/toji_red.png"><img src="themes/toji_2/toji_red.png" alt="The toji_2 theme" width="100%"></a><br>
+      <a href="themes/toji_2/desktop.png"><img src="themes/toji_2/desktop.png" alt="The toji_2 theme" width="100%"></a><br>
       <b>toji_2</b><br>
       <code>hat switch toji_2</code>
     </td>
     <td align="center" width="33%">
-      <a href="themes/a70/a70.png"><img src="themes/a70/a70.png" alt="The a70 theme" width="100%"></a><br>
+      <a href="themes/a70/desktop.png"><img src="themes/a70/desktop.png" alt="The a70 theme" width="100%"></a><br>
       <b>a70</b><br>
       <code>hat switch a70</code>
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
-      <a href="themes/spartan/spartan.png"><img src="themes/spartan/spartan.png" alt="The spartan theme" width="100%"></a><br>
+      <a href="themes/spartan/desktop.png"><img src="themes/spartan/desktop.png" alt="The spartan theme" width="100%"></a><br>
       <b>spartan</b><br>
       <code>hat switch spartan</code>
     </td>
     <td align="center" width="33%">
-      <a href="themes/choso/choso.png"><img src="themes/choso/choso.png" alt="The choso theme" width="100%"></a><br>
+      <a href="themes/choso/desktop.png"><img src="themes/choso/desktop.png" alt="The choso theme" width="100%"></a><br>
       <b>choso</b><br>
       <code>hat switch choso</code>
     </td>
     <td align="center" width="33%">
-      <a href="themes/jjk/jjk.png"><img src="themes/jjk/jjk.png" alt="The jjk theme" width="100%"></a><br>
+      <a href="themes/jjk/desktop.png"><img src="themes/jjk/desktop.png" alt="The jjk theme" width="100%"></a><br>
       <b>jjk</b><br>
       <code>hat switch jjk</code>
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
-      <a href="themes/sky/sky.png"><img src="themes/sky/sky.png" alt="The sky theme" width="100%"></a><br>
+      <a href="themes/sky/desktop.png"><img src="themes/sky/desktop.png" alt="The sky theme" width="100%"></a><br>
       <b>sky</b><br>
       <code>hat switch sky</code>
     </td>
     <td align="center" width="33%">
-      <a href="themes/tanjiro/tanjiro.png"><img src="themes/tanjiro/tanjiro.png" alt="The tanjiro theme" width="100%"></a><br>
+      <a href="themes/tanjiro/desktop.png"><img src="themes/tanjiro/desktop.png" alt="The tanjiro theme" width="100%"></a><br>
       <b>tanjiro</b><br>
       <code>hat switch tanjiro</code>
     </td>
-    <!-- <td align="center" width="33%">
-      <a href="docs/screenshots/themes/tojivsukuna.png"><img src="docs/screenshots/themes/tojivsukuna.png" alt="The tojivsukuna theme" width="100%"></a><br>
-      <b>tojivsukuna</b><br>
-      <code>hat switch tojivsukuna</code>
-    </td> -->
   </tr>
 </table>
 
